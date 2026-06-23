@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "1p3a 高亮 + 收集到 GitHub",
+  "version": "0.6.1",
+  "description": "在 1point3acres 论坛列表按时间高亮最近帖子；并可把面经/JD/签证等正文或截图（右键/快捷键/一键）存到 GitHub 仓库（inbox/），供 Claude 下次读取、打标签、总结。",
+  "permissions": ["storage", "activeTab", "scripting", "contextMenus"],
+  "host_permissions": [
+    "https://www.1point3acres.com/*",
+    "https://api.github.com/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "commands": {
+    "capture-fullpage": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "整页截图 + 正文 一键存到 inbox（默认按面经）"
+    }
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "1p3a 高亮 + 收集"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.1point3acres.com/bbs/forum-*",
+        "https://www.1point3acres.com/bbs/forum.php*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
