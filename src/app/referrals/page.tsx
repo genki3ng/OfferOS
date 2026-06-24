@@ -11,14 +11,16 @@ import { renderInline, renderMarkdown } from "@/lib/markdown";
 import ReferralAdvance from "@/components/ReferralAdvance";
 import ReferralKit, { type KitJob } from "@/components/ReferralKit";
 import ColdOutreachKit from "@/components/ColdOutreachKit";
+import { getDict } from "@/i18n/server";
 
 export const metadata: Metadata = { title: "内推渠道" };
 
-/** 渠道第一列 → 公司基名（"Vertex Cloud/示例"→Vertex Cloud、"Northwind ①"→Northwind） */
+/** 渠道第一列 → 公司基名（"TikTok/字节"→TikTok、"eBay ①"→eBay、"DoorDash ②"→DoorDash） */
 const baseName = (cell: string) =>
   cell.replace(/[*_`①②③]/g, "").split(/[/／（(]/)[0].trim();
 
-export default function ReferralsPage() {
+export default async function ReferralsPage() {
+  const d = await getDict();
   const { header, rows } = getReferrals();
   const tracker = getTracker();
   const md = readDoc("pipeline/referrals.md") ?? "";
@@ -65,10 +67,10 @@ export default function ReferralsPage() {
 
   return (
     <>
-      <h1 className="page-title">🤝 内推渠道</h1>
+      <h1 className="page-title">{d.referrals.title}</h1>
       <p className="page-sub">
-        源文件：<Link href="/docs/pipeline/referrals">pipeline/referrals.md</Link> ·
-        状态流：找到 → 已联系 → 已发材料 → 已提交内推 → 已投递
+        {d.referrals.subSrc}<Link href="/docs/pipeline/referrals">pipeline/referrals.md</Link>
+        {d.referrals.subFlow}
       </p>
 
       <div className="card section">
@@ -115,15 +117,15 @@ export default function ReferralsPage() {
       {missing.length > 0 && (
         <div className="card section">
           <div className="card-title">
-            🕳 还缺内推的公司（{missing.length} 家）
-            <span className="more muted">点「🧭 解决」：LinkedIn 冷启动 / 找熟人 / 放弃直接网申</span>
+            {d.referrals.missingTitle(missing.length)}
+            <span className="more muted">{d.referrals.missingHint}</span>
           </div>
           <ul className="next-list">
             {missing.map((t) => (
               <li key={t.name}>
                 <span className="who">
                   {t.slug ? <Link href={`/companies/${t.slug}`}>{t.name}</Link> : t.name}{" "}
-                  <span className={`tier-badge tier-${t.tier}`}>{["", "一", "二", "三"][t.tier]}</span>
+                  <span className={`tier-badge tier-${t.tier}`}>{d.referrals.tier[t.tier]}</span>
                 </span>
                 <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                   <ColdOutreachKit
@@ -142,14 +144,14 @@ export default function ReferralsPage() {
             ))}
           </ul>
           <p className="muted small" style={{ marginBottom: 0 }}>
-            话术全文（A 熟人 / B 陌生人，中英）：
+            {d.referrals.templatesPre}
             <Link href="/docs/pipeline/referral-outreach-templates">referral-outreach-templates.md</Link>
           </p>
         </div>
       )}
 
       <div className="card">
-        <div className="card-title">📄 referrals.md 全文（含规矩与备注）</div>
+        <div className="card-title">{d.referrals.fullTextTitle}</div>
         <article
           className="prose"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(md, "pipeline") }}

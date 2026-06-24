@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { SprintTask, SprintWeek } from "@/lib/data";
+import { useDict } from "@/i18n/client";
 import TaskList from "./TaskList";
 
 const PATH = "prep/sprint-plan.md";
@@ -15,6 +16,7 @@ export default function TodayCard({
   weeks: SprintWeek[];
   parallel: SprintTask[];
 }) {
+  const d = useDict().todayCard;
   const [today, setToday] = useState("");
   useEffect(() => setToday(new Date().toISOString().slice(0, 10)), []);
   if (!today || !weeks.length) return null;
@@ -30,25 +32,25 @@ export default function TodayCard({
   return (
     <div className="card">
       <div className="card-title">
-        ☀️ 今日聚焦 · {week.title.split("：")[0]}
+        {d.title(week.title.split("：")[0])}
         <Link className="more" href="/docs/prep/sprint-plan">
-          完整计划 →
+          {d.fullPlan}
         </Link>
       </div>
-      <div className="bar slim" title={`本周 ${doneCount}/${total}`}>
+      <div className="bar slim" title={d.weekProgress(doneCount, total)}>
         <i style={{ width: `${total ? Math.round((doneCount / total) * 100) : 0}%` }} />
       </div>
       <TaskList
         path={PATH}
         items={week.tasks}
         limit={6}
-        doneLabel="本周已完成"
-        emptyText="本周任务全部完成 🎉 去练手或推进内推。"
+        doneLabel={d.doneLabel}
+        emptyText={d.emptyText}
       />
       {openParallel.length > 0 && (
         <>
           <div className="muted small" style={{ margin: "10px 0 4px" }}>
-            并行轨 · 内推 outreach
+            {d.parallelTrack}
           </div>
           <TaskList path={PATH} items={openParallel} limit={3} />
         </>

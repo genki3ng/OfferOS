@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getDocIndex, getResumeExports } from "@/lib/data";
+import { getDict } from "@/i18n/server";
 
 export const metadata: Metadata = { title: "文档" };
 
-export default function DocsIndexPage() {
+export default async function DocsIndexPage() {
   const groups = getDocIndex();
   const exports = new Map(getResumeExports().map((e) => [e.source.replace(/\.md$/, ""), e]));
+  const d = await getDict();
   return (
     <>
-      <h1 className="page-title">🗃 全部文档</h1>
+      <h1 className="page-title">{d.docs.title}</h1>
       <p className="page-sub">
-        仓库里所有功课的入口（公司档案见 <Link href="/pipeline">Pipeline</Link>）。
-        简历类文档带 ⬇️ 最新导出件（构建时自动生成）。
+        {d.docs.subPre}<Link href="/pipeline">{d.docs.subMid}</Link>{d.docs.subPost}
       </p>
       <div className="grid grid-2">
         {groups.map((g) => (
@@ -26,8 +27,8 @@ export default function DocsIndexPage() {
                     <Link href={`/docs/${f.rel}`}>{f.title}</Link>
                     {exp && (
                       <span className="small muted">
-                        {" "}· <a href={exp.docx} download>⬇️docx</a> ·{" "}
-                        <a href={exp.html} target="_blank" rel="noreferrer">html</a>
+                        {" "}· <a href={exp.docx} download>{d.docs.docx}</a> ·{" "}
+                        <a href={exp.html} target="_blank" rel="noreferrer">{d.docs.html}</a>
                       </span>
                     )}
                   </li>

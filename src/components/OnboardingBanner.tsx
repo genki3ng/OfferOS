@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useDict } from "@/i18n/client";
 
 const KEY = "jh_onboarding_dismissed";
 
@@ -11,6 +12,7 @@ const KEY = "jh_onboarding_dismissed";
  * 引导用户先用 /onboard 向导把它变成自己的；配置完成后回到可关闭的提示。
  */
 export default function OnboardingBanner({ unconfigured = false }: { unconfigured?: boolean }) {
+  const d = useDict();
   const [show, setShow] = useState(false);
   useEffect(() => {
     setShow(unconfigured || localStorage.getItem(KEY) !== "1");
@@ -30,25 +32,29 @@ export default function OnboardingBanner({ unconfigured = false }: { unconfigure
     >
       <div style={{ flex: "1 1 280px", minWidth: 260 }}>
         <div className="card-title" style={{ marginBottom: 4 }}>
-          {unconfigured ? "🚀 开始设置" : "👋 新手上路"}
+          {unconfigured ? d.onboardingBanner.titleUnconfigured : d.onboardingBanner.titleConfigured}
         </div>
         <div className="muted small">
           {unconfigured ? (
             <>
-              这个仓库还是<strong>模板态</strong>。用 <Link href="/onboard">/onboard</Link>{" "}
-              向导回答几个问题（目标角色 / 级别 / 目标公司 / 名字），就会把站点个性化成你的、并选好对应角色的备战模板。
-              也可以把仓库交给 <strong>Claude / Codex</strong>，按 <code>SETUP.md</code> 引导你装依赖、部署到 Vercel、配密码与 PAT。
+              {d.onboardingBanner.unconfiguredPre}
+              <strong>{d.onboardingBanner.unconfiguredBold}</strong>
+              {d.onboardingBanner.unconfiguredMid}
+              <Link href="/onboard">/onboard</Link>
+              {d.onboardingBanner.unconfiguredAfterLink}
+              <strong>{d.onboardingBanner.unconfiguredCodexBold}</strong>
+              {d.onboardingBanner.unconfiguredBeforeCode}
+              <code>SETUP.md</code>
+              {d.onboardingBanner.unconfiguredAfterCode}
             </>
           ) : (
-            <>
-              这是一个「你 + Claude」协作的求职指挥台 —— 仓库里的 markdown 就是数据库，网站只是看板。改完直接 push，Vercel 自动重建上线。
-            </>
+            <>{d.onboardingBanner.configured}</>
           )}
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <Link className="btn-primary" href="/onboard">
-          {unconfigured ? "开始设置 →" : "重跑上手向导"}
+          {unconfigured ? d.onboardingBanner.ctaUnconfigured : d.onboardingBanner.ctaConfigured}
         </Link>
         {!unconfigured && (
           <button
@@ -58,7 +64,7 @@ export default function OnboardingBanner({ unconfigured = false }: { unconfigure
               setShow(false);
             }}
           >
-            知道了
+            {d.onboardingBanner.dismiss}
           </button>
         )}
       </div>

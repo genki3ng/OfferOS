@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTracker, getOpenings, pillClass } from "@/lib/data";
 import { renderInline } from "@/lib/markdown";
+import { getDict } from "@/i18n/server";
 import StatusCell from "./StatusCell";
 import PipelineCompanyJobs, { PipelineJob } from "./PipelineCompanyJobs";
 import LivePipeline, { LiveBadge, StatusHint } from "./LivePipeline";
@@ -11,12 +12,12 @@ export const metadata: Metadata = { title: "公司" };
 // 按求职旅程的「阶段」分组（比按数据类型的表格更贴 pipeline 的心智 = 推进/移动）。
 // 顺序 = 越靠后越深，最深的（Offer）在最上，给士气。每家落入第一个匹配的阶段。
 const STAGES = [
-  { key: "offer", label: "Offer · 谈判", color: "var(--sage)", test: (s: string) => /offer|negotiation|decision|入职/i.test(s) },
-  { key: "interview", label: "面试中", color: "var(--coral)", test: (s: string) => /phone|onsite|panel|首轮|终面|interview/i.test(s) },
-  { key: "recruiter", label: "招聘电话 / Screen", color: "var(--amber)", test: (s: string) => /recruiter|screen/i.test(s) },
-  { key: "submitted", label: "已投 · 内推", color: "var(--plum)", test: (s: string) => /applied|referral|已投|内推/i.test(s) },
-  { key: "watching", label: "在追 · 观察", color: "var(--ink-faint)", test: () => true },
-];
+  { key: "offer", labelKey: "stageOffer", color: "var(--sage)", test: (s: string) => /offer|negotiation|decision|入职/i.test(s) },
+  { key: "interview", labelKey: "stageInterview", color: "var(--coral)", test: (s: string) => /phone|onsite|panel|首轮|终面|interview/i.test(s) },
+  { key: "recruiter", labelKey: "stageRecruiter", color: "var(--amber)", test: (s: string) => /recruiter|screen/i.test(s) },
+  { key: "submitted", labelKey: "stageSubmitted", color: "var(--plum)", test: (s: string) => /applied|referral|已投|内推/i.test(s) },
+  { key: "watching", labelKey: "stageWatching", color: "var(--ink-faint)", test: () => true },
+] as const;
 const stageOf = (status: string) => STAGES.find((st) => st.test(status))?.key ?? "watching";
 
 const GRADS = [
@@ -37,7 +38,8 @@ function initials(name: string) {
   return (letters.slice(0, 2) || name.slice(0, 2)).replace(/^./, (c) => c.toUpperCase());
 }
 
-export default function PipelinePage() {
+export default async function PipelinePage() {
+  const d = await getDict();
   const tracker = getTracker();
   const slugs = tracker.map((r) => r.slug).filter((s): s is string => !!s);
 
@@ -62,11 +64,11 @@ export default function PipelinePage() {
 
   return (
     <LivePipeline slugs={slugs}>
-      <h1 className="page-title">🏢 公司</h1>
+      <h1 className="page-title">{d.pipeline.title}</h1>
       <p className="page-sub">
-        按<b>旅程阶段</b>看每家公司（不再是一张表）——一眼知道谁在推进、谁卡住、球在谁手里。卡内可直接改状态、标投递进度。源文件：
-        <Link href="/docs/pipeline/tracker"> pipeline/tracker.md</Link>。徽章 <span className="tier-badge tier-1">一</span>
-        <span className="tier-badge tier-2">二</span><span className="tier-badge tier-3">三</span> = 想去程度。
+        {d.pipeline.subPre}<b>{d.pipeline.subStage}</b>{d.pipeline.subPost}
+        <Link href="/docs/pipeline/tracker"> pipeline/tracker.md</Link>{d.pipeline.subBadge}<span className="tier-badge tier-1">一</span>
+        <span className="tier-badge tier-2">二</span><span className="tier-badge tier-3">三</span>{d.pipeline.subBadgeTail}
       </p>
 
       <div className="board">
@@ -79,8 +81,8 @@ export default function PipelinePage() {
             <section className="stage-group" key={st.key}>
               <div className="stage-head" style={{ color: st.color }}>
                 <span className="st-dot" style={{ background: st.color }} />
-                <h2 style={{ color: "var(--ink)" }}>{st.label}</h2>
-                <span className="st-count">{rows.length} 家</span>
+                <h2 style={{ color: "var(--ink)" }}>{d.pipeline[st.labelKey]}</h2>
+                <span className="st-count">{d.pipeline.count(rows.length)}</span>
               </div>
               <div className="cmd-grid">
                 {rows.map((r) => {
@@ -99,7 +101,7 @@ export default function PipelinePage() {
                           <span className="role">{r.role}</span>
                         </div>
                         {r.careers && (
-                          <a className="cmd-careers" href={r.careers} target="_blank" rel="noopener noreferrer" title="官方招聘页">
+                          <a className="cmd-careers" href={r.careers} target="_blank" rel="noopener noreferrer" title={d.pipeline.careersTitle}>
                             💼
                           </a>
                         )}
@@ -117,7 +119,7 @@ export default function PipelinePage() {
 
                       {r.referral && (
                         <div className="cmd-ref">
-                          <span className="lbl">内推</span>
+                          <span className="lbl">{d.pipeline.referral}</span>
                           <span
                             className={pillClass(r.referral)}
                             style={{ whiteSpace: "normal" }}
@@ -141,7 +143,7 @@ export default function PipelinePage() {
       </div>
 
       <p className="muted small" style={{ marginTop: 22 }}>
-        符号：🟢 友好 · 🟡 待核/有保留 · 🔴 风险 · 👑 day-1 PERM · ✅ 已确认。卡片按状态自动归入阶段（改状态后下次重建重新归位）。
+        {d.pipeline.legend}
       </p>
       <LiveBadge />
     </LivePipeline>

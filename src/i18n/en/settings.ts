@@ -1,0 +1,73 @@
+const settings = {
+  // Page header
+  pageTitle: "⚙️ Settings",
+  pageSub: "Once you set up the write channel, every interactive feature unlocks (checking off tasks, changing status, self-grading practice, assigning work to Claude).",
+
+  // GitHub Token card
+  tokenCardTitle: "GitHub Token (Write Channel)",
+  tokenIntroPre: "Every write = your browser commits directly to ",
+  tokenIntroPost: "'s main branch → Vercel rebuilds automatically (live in about 1 minute). The token is stored only in ",
+  tokenIntroDevice: "this device's browser",
+  tokenIntroEnd: ".",
+  tokenTrustPre: "🔒 Stored only in this device's browser · authorizes only the ",
+  tokenTrustPost: " repository · read/write file contents only · revoke anytime on GitHub. Once set up, you unlock: checking off tasks / changing status / self-grading practice / assigning work.",
+  tokenPlaceholder: "github_pat_…",
+  save: "Save",
+  testConnection: "Test connection",
+  clear: "Clear",
+  savedToBrowser: "Saved to this browser's localStorage (not committed)",
+  cleared: "Cleared",
+  testing: "Testing…",
+  failed: "Failed",
+
+  // How to get token card
+  howToTitle: "How to get a token",
+  howToStep1Pre: "GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token → under Repository access pick only ",
+  howToStep1Post: " → Permissions → Contents: ",
+  howToStep1Perm: "Read and write",
+  howToStep1End: ".",
+  howToStep2Pre: "Paste the generated ",
+  howToStep2Mid: " above, click ",
+  howToStep2Save: "Save",
+  howToStep2Then: ", then click ",
+  howToStep2Test: "Test connection",
+  howToStep2End: " to confirm.",
+  howToStep3: "To use it on a phone or tablet, save it once in that device's browser too.",
+  howToNote: "(If you've installed the 1point3acres collector extension, that fine-grained PAT has the same permissions and can be reused directly.)",
+
+  // Wallpaper card
+  wallpaperTitle: "🖼 Glass Wallpaper",
+  wallpaperIntroPre: "Upload a wallpaper as your background — the frosted glass blur and refraction look best over a photo (applies to the ",
+  wallpaperIntroTheme: "Liquid Glass theme",
+  wallpaperIntroPost: " only; a wide landscape image works best).",
+  wallpaperHasToken: "Token set up: uploads commit to the repository automatically, ",
+  wallpaperHasTokenBold: "live on all devices in about 1 minute",
+  wallpaperHasTokenEnd: ".",
+  wallpaperNoToken: "No token set up: the wallpaper is stored on this device only; set up the token above, then upload again to sync across all devices.",
+  wallpaperUrlPlaceholder: "Or paste an image URL (https://…, this device only)",
+  apply: "Apply",
+  currentSourcePrefix: "Current source: ",
+  sourceDevice: "This device",
+  sourceRepo: "Repository (shared across devices)",
+  clearWallpaper: "Clear wallpaper",
+  offWithRepoPrefix: "Wallpaper is turned off on this device (the repository wallpaper is still there). Upload again or ",
+  restoreRepoWallpaper: "restore repository wallpaper",
+
+  // Wallpaper status messages
+  compressing: "Compressing…",
+  syncingToRepo: "Live on this device — syncing to the repository…",
+  syncedToRepo: "✅ Synced to the repository — after about a 1-minute rebuild, it goes live on all devices automatically",
+  deviceOkRepoFailed: (err: string) => `✅ Live on this device; ✗ repository sync failed: ${err}`,
+  unknownError: "Unknown error",
+  setDeviceOnly: "✅ Set (this device only). Set up a token above, then upload once more to sync across all devices.",
+  readImageFailed: "Failed to read image",
+  errorPrefix: (msg: string) => "✗ " + msg,
+  setUrlWallpaper: "✅ URL wallpaper set (URL wallpapers are stored on this device only and not synced)",
+  clearingRepoWallpaper: "Clearing the repository wallpaper…",
+  clearedWithRepo: "✅ Cleared (including the repository wallpaper; all devices revert to the default light pool in about 1 minute)",
+  deviceClearedRepoFailed: (err: string) => `Cleared on this device; ✗ failed to clear the repository wallpaper: ${err}`,
+  deviceWallpaperOff: "Wallpaper turned off on this device (the repository wallpaper is still there and other devices are unaffected; set up a token to clear it too)",
+  clearedToDefault: "Cleared — reverted to the default light pool background",
+};
+
+export default settings;

@@ -8,6 +8,7 @@ import {
   autoAdvanceReferralOnApply,
   type AppStatus,
 } from "@/lib/githubClient";
+import { useDict } from "@/i18n/client";
 import { useLivePipeline } from "./LivePipeline";
 
 export interface PipelineJob {
@@ -20,13 +21,7 @@ export interface PipelineJob {
   appStatus: AppStatus;
 }
 
-const STATUS_OPTS: { value: AppStatus; label: string }[] = [
-  { value: "", label: "待投" },
-  { value: "applied", label: "📮 已投" },
-  { value: "interview", label: "🗣️ 面试中" },
-  { value: "offer", label: "🏆 Offer" },
-  { value: "rejected", label: "🛑 被拒" },
-];
+const STATUS_VALUES: AppStatus[] = ["", "applied", "interview", "offer", "rejected"];
 const ATT_ICON: Record<string, string> = { love: "💚", no: "🚫", "": "" };
 
 export default function PipelineCompanyJobs({
@@ -38,6 +33,7 @@ export default function PipelineCompanyJobs({
   companyName: string;
   jobs: PipelineJob[];
 }) {
+  const d = useDict();
   const [open, setOpen] = useState(false);
   const [jobs, setJobs] = useState(initial);
   const [dirty, setDirty] = useState(false); // 本会话改过 → 不被实时数据覆盖
@@ -47,6 +43,13 @@ export default function PipelineCompanyJobs({
   const [msg, setMsg] = useState("");
   const { jobs: liveJobs, live } = useLivePipeline();
   const fresh = liveJobs[slug];
+  const statusLabel: Record<AppStatus, string> = {
+    "": d.pipelineJobs.optTodo,
+    applied: d.pipelineJobs.optApplied,
+    interview: d.pipelineJobs.optInterview,
+    offer: d.pipelineJobs.optOffer,
+    rejected: d.pipelineJobs.optRejected,
+  };
 
   useEffect(() => setCanWrite(!!getToken()), []);
 
@@ -66,7 +69,7 @@ export default function PipelineCompanyJobs({
     setDirty(true);
     setBusy(j.anchor);
     setStatusOv((o) => ({ ...o, [j.anchor]: v }));
-    setMsg("提交中…");
+    setMsg(d.pipelineJobs.submitting);
     try {
       await saveOpeningAppStatus(slug, j.anchor, v, j.title);
       let extra = "";
@@ -74,16 +77,16 @@ export default function PipelineCompanyJobs({
         // D 已在 saveOpeningAppStatus 里记了投递台账；E 尝试联动内推状态
         try {
           const advanced = await autoAdvanceReferralOnApply(companyName);
-          if (advanced) extra = ` · 内推「${advanced}」→已投递`;
+          if (advanced) extra = d.pipelineJobs.refAdvanced(advanced);
         } catch {
           /* 内推联动 best-effort，失败忽略 */
         }
-        extra = " · 已记投递台账" + extra;
+        extra = d.pipelineJobs.loggedApplication + extra;
       }
-      setMsg("已更新（约 1 分钟后全站同步）" + extra);
+      setMsg(d.pipelineJobs.updated(extra));
     } catch (e) {
       setStatusOv((o) => ({ ...o, [j.anchor]: j.appStatus }));
-      setMsg(`✗ ${e instanceof Error ? e.message : "失败"}`);
+      setMsg(d.pipelineJobs.error(e instanceof Error ? e.message : d.pipelineJobs.failed));
     } finally {
       setBusy("");
       setTimeout(() => setMsg(""), 5000);
@@ -92,16 +95,16 @@ export default function PipelineCompanyJobs({
 
   const remove = async (j: PipelineJob) => {
     if (!canWrite || busy) return;
-    if (!confirm(`从 pipeline 移除「${j.title}」？（= 取消 📌 投递清单标记）`)) return;
+    if (!confirm(d.pipelineJobs.confirmRemove(j.title))) return;
     setDirty(true);
     setBusy(j.anchor);
-    setMsg("移除中…");
+    setMsg(d.pipelineJobs.removing);
     try {
       await saveOpeningPin(slug, j.anchor, false, j.title);
       setJobs((js) => js.filter((x) => x.anchor !== j.anchor));
-      setMsg("已移出 pipeline");
+      setMsg(d.pipelineJobs.removed);
     } catch (e) {
-      setMsg(`✗ ${e instanceof Error ? e.message : "失败"}`);
+      setMsg(d.pipelineJobs.error(e instanceof Error ? e.message : d.pipelineJobs.failed));
     } finally {
       setBusy("");
       setTimeout(() => setMsg(""), 5000);
@@ -111,8 +114,8 @@ export default function PipelineCompanyJobs({
   return (
     <div className="pl-jobs">
       <button className="pl-jobs-toggle" onClick={() => setOpen((o) => !o)}>
-        {open ? "▾" : "▸"} 📋 {jobs.length} 个会投的岗
-        {appliedCount ? ` · 已投 ${appliedCount}` : ""}
+        {open ? "▾" : "▸"} {d.pipelineJobs.toggle(jobs.length)}
+        {appliedCount ? d.pipelineJobs.appliedCount(appliedCount) : ""}
       </button>
       {open && (
         <div className="pl-jobs-list">
@@ -126,11 +129,11 @@ export default function PipelineCompanyJobs({
                   value={statusOf(j)}
                   disabled={!canWrite || !!busy}
                   onChange={(e) => setStatus(j, e.target.value as AppStatus)}
-                  title={canWrite ? "投递进度" : "在 ⚙️ 设置配 token 后可改"}
+                  title={canWrite ? d.pipelineJobs.statusTitleOn : d.pipelineJobs.statusTitleOff}
                 >
-                  {STATUS_OPTS.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
+                  {STATUS_VALUES.map((v) => (
+                    <option key={v} value={v}>
+                      {statusLabel[v]}
                     </option>
                   ))}
                 </select>
@@ -141,7 +144,7 @@ export default function PipelineCompanyJobs({
                 </span>
                 {j.location && <span className="muted small">{j.location}</span>}
                 {isUrl && (
-                  <a href={j.anchor} target="_blank" rel="noopener noreferrer" title="打开 JD">
+                  <a href={j.anchor} target="_blank" rel="noopener noreferrer" title={d.pipelineJobs.openJd}>
                     ↗
                   </a>
                 )}
@@ -149,7 +152,7 @@ export default function PipelineCompanyJobs({
                   className="pl-job-remove"
                   disabled={!canWrite || !!busy}
                   onClick={() => remove(j)}
-                  title={canWrite ? "从 pipeline 移除（取消 📌）" : "需配 token"}
+                  title={canWrite ? d.pipelineJobs.removeTitleOn : d.pipelineJobs.removeTitleOff}
                 >
                   ✕
                 </button>

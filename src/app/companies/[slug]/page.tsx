@@ -14,6 +14,7 @@ import {
 import { renderMarkdown, renderInline } from "@/lib/markdown";
 import Prose from "@/components/Prose";
 import QuickPanel from "@/components/QuickPanel";
+import { getDict } from "@/i18n/server";
 
 export function generateStaticParams() {
   return getCompanySlugs().map((slug) => ({ slug }));
@@ -50,6 +51,7 @@ const ARROW = (
 
 export default async function CompanyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const d = await getDict();
   const md = readDoc(`pipeline/companies/${slug}.md`);
   if (!md) notFound();
 
@@ -75,14 +77,14 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
         .replace(new RegExp(slug + "-?", "i"), "")
         .replace(/-/g, " ")
         .trim();
-      return { id: f, label: short ? `速备包 · ${short}` : "速备包" };
+      return { id: f, label: short ? d.company.briefPrefix(short) : d.company.brief };
     });
   const hasNote = getCompanyNotes().includes(slug);
 
   return (
     <>
       <p className="small">
-        <Link href="/pipeline">← 公司</Link>
+        <Link href="/pipeline">{d.company.back}</Link>
       </p>
 
       <section className="tile co-hero section">
@@ -96,7 +98,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
             {row?.role && <span className="role">{row.role}</span>}
           </div>
           {row?.careers && (
-            <a className="cmd-careers" href={row.careers} target="_blank" rel="noopener noreferrer" title="官方招聘页">
+            <a className="cmd-careers" href={row.careers} target="_blank" rel="noopener noreferrer" title={d.company.careersTitle}>
               💼
             </a>
           )}
@@ -116,22 +118,22 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
 
         {row?.next && (
           <div className="co-next">
-            <span className="lbl">下一步</span>
+            <span className="lbl">{d.company.nextStep}</span>
             <span className="val" dangerouslySetInnerHTML={{ __html: renderInline(row.next, "pipeline") }} />
           </div>
         )}
 
         {dates.length > 0 && (
           <div className="co-dates">
-            <span className="dlabel">关键日期</span>
-            {dates.map((d, i) => {
-              const dd = daysTo(d.date);
+            <span className="dlabel">{d.company.keyDates}</span>
+            {dates.map((evt, i) => {
+              const dd = daysTo(evt.date);
               const cls = dd < 0 ? "past" : dd <= 3 ? "soon" : "";
-              const rel = dd < 0 ? `${-dd} 天前` : dd === 0 ? "今天" : `${dd} 天后`;
+              const rel = dd < 0 ? d.company.daysAgo(-dd) : dd === 0 ? d.company.today : d.company.daysOut(dd);
               return (
                 <div className="co-date-row" key={i}>
-                  <span className={`d ${cls}`}>{d.date.slice(5)} <span className="muted" style={{ fontWeight: 500 }}>· {rel}</span></span>
-                  <span className="lab">{cleanEvt(d.label)}</span>
+                  <span className={`d ${cls}`}>{evt.date.slice(5)} <span className="muted" style={{ fontWeight: 500 }}>· {rel}</span></span>
+                  <span className="lab">{cleanEvt(evt.label)}</span>
                 </div>
               );
             })}
@@ -146,16 +148,16 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
           ))}
           {hasNote && (
             <Link className="co-link" href={`/docs/prep/company-notes/${slug}`}>
-              面经笔记
+              {d.company.notes}
             </Link>
           )}
           {row?.careers && (
             <a className="co-link" href={row.careers} target="_blank" rel="noopener noreferrer">
-              官方招聘页 ↗
+              {d.company.careersLink}
             </a>
           )}
-          <Link className="co-link" href="/practice">练习台 →</Link>
-          <Link className="co-link" href="/pipeline">看全部公司</Link>
+          <Link className="co-link" href="/practice">{d.company.practice}</Link>
+          <Link className="co-link" href="/pipeline">{d.company.allCompanies}</Link>
         </div>
       </section>
 

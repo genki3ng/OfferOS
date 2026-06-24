@@ -1,0 +1,73 @@
+const settings = {
+  // Page header
+  pageTitle: "⚙️ 设置",
+  pageSub: "配置写通道后，全站交互功能解锁（勾任务、改状态、练习自评、派活给 Claude）。",
+
+  // GitHub Token card
+  tokenCardTitle: "GitHub Token（写通道）",
+  tokenIntroPre: "所有写操作 = 浏览器直接 commit 到 ",
+  tokenIntroPost: " 的 main 分支 → Vercel 自动重建（约 1 分钟生效）。token 只存在",
+  tokenIntroDevice: "这台设备的浏览器",
+  tokenIntroEnd: "里。",
+  tokenTrustPre: "🔒 只存这台设备的浏览器 · 只授权 ",
+  tokenTrustPost: " 这一个仓库 · 只读写文件内容 · 随时可在 GitHub 撤销。配好后解锁：勾任务 / 改状态 / 练习自评 / 派活。",
+  tokenPlaceholder: "github_pat_…",
+  save: "保存",
+  testConnection: "测试连接",
+  clear: "清除",
+  savedToBrowser: "已保存到本浏览器 localStorage（不入库）",
+  cleared: "已清除",
+  testing: "测试中…",
+  failed: "失败",
+
+  // How to get token card
+  howToTitle: "怎么拿 token",
+  howToStep1Pre: "GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token → Repository access 只选 ",
+  howToStep1Post: " → Permissions → Contents：",
+  howToStep1Perm: "Read and write",
+  howToStep1End: "。",
+  howToStep2Pre: "把生成的 ",
+  howToStep2Mid: " 粘到上面，点",
+  howToStep2Save: "保存",
+  howToStep2Then: "，再点",
+  howToStep2Test: "测试连接",
+  howToStep2End: "确认。",
+  howToStep3: "手机/平板要用的话，在那台设备的浏览器里也存一次。",
+  howToNote: "（已装 1point3acres 收集扩展的话，那个 fine-grained PAT 权限相同，可直接复用。）",
+
+  // Wallpaper card
+  wallpaperTitle: "🖼 玻璃壁纸",
+  wallpaperIntroPre: "上传一张壁纸当背景，磨砂玻璃的模糊与折射在照片上最直观（仅",
+  wallpaperIntroTheme: "液玻主题",
+  wallpaperIntroPost: "生效，建议横向大图）。",
+  wallpaperHasToken: "已配 token：上传会自动 commit 到仓库，",
+  wallpaperHasTokenBold: "约 1 分钟后所有设备同步生效",
+  wallpaperHasTokenEnd: "。",
+  wallpaperNoToken: "未配 token：壁纸只存这台设备；配好上方 token 再上传即可全设备同步。",
+  wallpaperUrlPlaceholder: "或粘贴图片 URL（https://…，仅本设备）",
+  apply: "应用",
+  currentSourcePrefix: "当前来源：",
+  sourceDevice: "本设备",
+  sourceRepo: "仓库（全设备共享）",
+  clearWallpaper: "清除壁纸",
+  offWithRepoPrefix: "本设备已关闭壁纸（仓库壁纸仍在）。重新上传或",
+  restoreRepoWallpaper: "恢复仓库壁纸",
+
+  // Wallpaper status messages
+  compressing: "压缩中…",
+  syncingToRepo: "本设备已生效，正在同步到仓库…",
+  syncedToRepo: "✅ 已同步到仓库——约 1 分钟重建后，所有设备自动生效",
+  deviceOkRepoFailed: (err: string) => `✅ 本设备已生效；✗ 仓库同步失败：${err}`,
+  unknownError: "未知错误",
+  setDeviceOnly: "✅ 已设置（仅本设备）。在上方配好 token 后再上传一次，即可同步所有设备。",
+  readImageFailed: "读取图片失败",
+  errorPrefix: (msg: string) => "✗ " + msg,
+  setUrlWallpaper: "✅ 已设置 URL 壁纸（URL 壁纸仅存本设备，不同步）",
+  clearingRepoWallpaper: "正在清除仓库壁纸…",
+  clearedWithRepo: "✅ 已清除（含仓库壁纸，约 1 分钟后所有设备恢复默认光池）",
+  deviceClearedRepoFailed: (err: string) => `本设备已清除；✗ 仓库壁纸清除失败：${err}`,
+  deviceWallpaperOff: "已关闭本设备壁纸（仓库壁纸仍在，其它设备不受影响；配 token 后可一并清除）",
+  clearedToDefault: "已清除，恢复默认光池背景",
+};
+
+export default settings;

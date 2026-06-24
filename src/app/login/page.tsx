@@ -1,4 +1,5 @@
 import { getSiteConfig } from "@/lib/data";
+import { getDict } from "@/i18n/server";
 
 export default async function LoginPage({
   searchParams,
@@ -6,6 +7,7 @@ export default async function LoginPage({
   searchParams: Promise<{ err?: string }>;
 }) {
   const { err } = await searchParams;
+  const d = await getDict();
   return (
     <div className="login-wrap">
       <form className="login-card" method="POST" action="/api/login">
@@ -19,16 +21,16 @@ export default async function LoginPage({
           </svg>
         </div>
         <h1>{getSiteConfig().appName}</h1>
-        <p className="muted">这是私人求职指挥台，请输入访问口令。</p>
-        {err && <p className="login-err">口令不对，再试一次。</p>}
+        <p className="muted">{d.login.desc}</p>
+        {err && <p className="login-err">{d.login.errMsg}</p>}
         <input
           type="password"
           name="password"
-          placeholder="访问口令"
+          placeholder={d.login.passwordPlaceholder}
           autoFocus
           required
         />
-        <button type="submit">进入</button>
+        <button type="submit">{d.login.enter}</button>
       </form>
     </div>
   );

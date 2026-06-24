@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { AgendaItem } from "@/lib/data";
+import { useDict } from "@/i18n/client";
 
 /** 日程时间轴（客户端算"几天后"，避免静态页日期过期） */
 export default function AgendaList({
@@ -14,6 +15,7 @@ export default function AgendaList({
   limit?: number;
   compact?: boolean;
 }) {
+  const d = useDict();
   const [today, setToday] = useState("");
   useEffect(() => setToday(new Date().toISOString().slice(0, 10)), []);
   if (!today) return null;
@@ -27,12 +29,11 @@ export default function AgendaList({
   if (!items.length)
     return compact ? (
       <p className="muted small">
-        近期无带日期的事项（面试/截止日期录入后自动聚合到这里）。
+        {d.agendaList.emptyCompact}
       </p>
     ) : (
       <p className="muted">
-        暂无带日期的事项。约定：公司文件「关键日期」表填 <code>YYYY-MM-DD</code>，或
-        tracker「下一步」用 <code>⏰MM-DD</code> 开头，这里就会自动聚合。
+        {d.agendaList.emptyPre}<code>YYYY-MM-DD</code>{d.agendaList.emptyMid}<code>⏰MM-DD</code>{d.agendaList.emptyPost}
       </p>
     );
 
@@ -40,7 +41,7 @@ export default function AgendaList({
     <li key={i.date + i.label + i.company} className="agenda-row">
       <span className={`agenda-date ${od ? "overdue" : days(i.date) <= 3 ? "soon" : ""}`}>
         {i.date.slice(5)}
-        <em>{od ? `逾期 ${-days(i.date)} 天` : days(i.date) === 0 ? "今天" : `${days(i.date)} 天后`}</em>
+        <em>{od ? d.agendaList.overdue(-days(i.date)) : days(i.date) === 0 ? d.agendaList.today : d.agendaList.daysOut(days(i.date))}</em>
       </span>
       <span>
         {i.slug ? <Link href={`/companies/${i.slug}`}>{i.company}</Link> : i.company}{" "}

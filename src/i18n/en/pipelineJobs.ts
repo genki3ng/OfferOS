@@ -1,0 +1,25 @@
+const pipelineJobs = {
+  optTodo: "To apply",
+  optApplied: "📮 Applied",
+  optInterview: "🗣️ Interviewing",
+  optOffer: "🏆 Offer",
+  optRejected: "🛑 Rejected",
+  submitting: "Submitting…",
+  refAdvanced: (name: string) => ` · referral "${name}" → applied`,
+  loggedApplication: " · logged to application tracker",
+  updated: (extra: string) => `Updated (syncs site-wide in ~1 minute)${extra}`,
+  failed: "Failed",
+  error: (msg: string) => `✗ ${msg}`,
+  confirmRemove: (title: string) => `Remove "${title}" from the pipeline? (= clears the 📌 application-list mark)`,
+  removing: "Removing…",
+  removed: "Removed from pipeline",
+  toggle: (n: number) => `📋 ${n} roles to apply to`,
+  appliedCount: (n: number) => ` · ${n} applied`,
+  statusTitleOn: "Application progress",
+  statusTitleOff: "Set up a token in ⚙️ Settings to edit",
+  openJd: "Open JD",
+  removeTitleOn: "Remove from pipeline (clears 📌)",
+  removeTitleOff: "Token required",
+};
+
+export default pipelineJobs;

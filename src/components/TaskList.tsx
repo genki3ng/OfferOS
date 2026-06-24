@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getToken, saveTaskToggle } from "@/lib/githubClient";
+import { useDict } from "@/i18n/client";
 
 export interface TaskItem {
   idx: number; // 在源文件全部任务行中的序号（saveTaskToggle 定位用）
@@ -23,7 +24,7 @@ export default function TaskList({
   path,
   items,
   limit,
-  doneLabel = "已完成",
+  doneLabel,
   emptyText,
 }: {
   path: string;
@@ -32,6 +33,8 @@ export default function TaskList({
   doneLabel?: string;
   emptyText?: string;
 }) {
+  const dict = useDict().taskList;
+  const label = doneLabel ?? dict.doneLabelDefault;
   const [canWrite, setCanWrite] = useState(false);
   const [live, setLive] = useState<Record<number, boolean>>({});
   const [busy, setBusy] = useState(false);
@@ -46,17 +49,13 @@ export default function TaskList({
     const to = !isChecked(t);
     setBusy(true);
     setLive((d) => ({ ...d, [t.idx]: to }));
-    setMsg("提交中…");
+    setMsg(dict.submitting);
     try {
       await saveTaskToggle(path, t.idx, t.text, to);
-      setMsg(
-        to
-          ? "✓ 已完成（误勾再点一下即撤销），约 1 分钟后全站更新"
-          : "✓ 已撤销，约 1 分钟后全站更新"
-      );
+      setMsg(to ? dict.doneMsg : dict.undoMsg);
     } catch (e) {
       setLive((d) => ({ ...d, [t.idx]: !to }));
-      setMsg(`✗ ${e instanceof Error ? e.message : "提交失败"}`);
+      setMsg(dict.failMsg(e instanceof Error ? e.message : dict.failDefault));
     } finally {
       setBusy(false);
       setTimeout(() => setMsg(""), 6000);
@@ -70,11 +69,7 @@ export default function TaskList({
         checked={isChecked(t)}
         disabled={!canWrite || busy}
         onChange={() => toggle(t)}
-        title={
-          canWrite
-            ? "勾 / 取消 = 直接 commit 源文件"
-            : "在 ⚙️ 设置里配 token 后可直接打勾"
-        }
+        title={canWrite ? dict.titleCanWrite : dict.titleReadOnly}
       />
       {t.html ? (
         <span
@@ -101,12 +96,12 @@ export default function TaskList({
         emptyText && <p className="muted">{emptyText}</p>
       )}
       {limit && open.length > limit && (
-        <p className="muted small">…还有 {open.length - limit} 项未列出</p>
+        <p className="muted small">{dict.moreHidden(open.length - limit)}</p>
       )}
       {done.length > 0 && (
         <details className="fold">
           <summary>
-            ✅ {doneLabel} {done.length} 项（误勾的来这里取消）
+            {dict.doneSummary(label, done.length)}
           </summary>
           <ul className="task-list">{done.map(row)}</ul>
         </details>

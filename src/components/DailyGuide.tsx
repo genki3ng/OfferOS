@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useDict } from "@/i18n/client";
 
 export interface GuideWeek {
   start: string;
@@ -30,6 +31,7 @@ export default function DailyGuide({
   inboxCount: number;
   pinnedJobs: number; // 📌 投递清单岗位数
 }) {
+  const d = useDict().dailyGuide;
   const [today, setToday] = useState("");
   useEffect(() => setToday(new Date().toISOString().slice(0, 10)), []);
   if (!today) return null;
@@ -48,64 +50,64 @@ export default function DailyGuide({
   const steps = [
     {
       icon: "🧠",
-      title: "冲刺学习",
-      time: "60–90 分钟",
+      title: d.learn.title,
+      time: d.learn.time,
       done: !week || week.open === 0,
       detail:
         week && week.open > 0
-          ? `本周剩 ${week.open} 项 · 下一项：${week.first}`
-          : "本周任务已清空 🎉",
+          ? d.learn.detailOpen(week.open, week.first)
+          : d.learn.detailDone,
       href: "#today",
-      cta: "去今日聚焦",
+      cta: d.learn.cta,
     },
     {
       icon: "🎤",
-      title: "练习台 1 题",
-      time: "15 分钟",
+      title: d.practice.title,
+      time: d.practice.time,
       done: practicedToday > 0,
       detail:
         practicedToday > 0
-          ? `今天已练 ${practicedToday} 题 ✓`
-          : "抽 1 题 → 先口述 → 对要点自评",
+          ? d.practice.detailDone(practicedToday)
+          : d.practice.detailOpen,
       href: "/practice",
-      cta: "去抽题",
+      cta: d.practice.cta,
     },
     pinnedJobs === 0
       ? {
           icon: "🤝",
-          title: "定投递清单",
-          time: "15 分钟",
+          title: d.pinList.title,
+          time: d.pinList.time,
           done: false,
-          detail: "清单还是空的——把想投的岗 📌 起来，内推邮件才有的放矢",
+          detail: d.pinList.detail,
           href: "/jobs?pinned",
-          cta: "去岗位库选岗",
+          cta: d.pinList.cta,
         }
       : {
           icon: "🤝",
-          title: "内推推进",
-          time: "10 分钟",
+          title: d.referral.title,
+          time: d.referral.time,
           done: stale === 0,
           detail:
             stale > 0
-              ? `${stale} 条渠道超 3 天没动静 → 催 / 换`
-              : `清单 📌${pinnedJobs} 岗 · 没有要催的渠道，按渠道发邮件即可`,
+              ? d.referral.detailStale(stale)
+              : d.referral.detailOk(pinnedJobs),
           href: "/referrals",
-          cta: "去发内推邮件",
+          cta: d.referral.cta,
         },
     {
       icon: "📨",
-      title: "收尾巡检",
-      time: "5 分钟",
+      title: d.wrap.title,
+      time: d.wrap.time,
       done: pendingOpen === 0 && inboxCount === 0,
       detail:
         [
-          pendingOpen ? `${pendingOpen} 项待拍板` : "",
-          inboxCount ? `收件箱 ${inboxCount} 条` : "",
+          pendingOpen ? d.wrap.pending(pendingOpen) : "",
+          inboxCount ? d.wrap.inbox(inboxCount) : "",
         ]
           .filter(Boolean)
-          .join(" · ") || "没有挂起事项；有新面经/JD 用扩展收进 inbox",
+          .join(" · ") || d.wrap.detailEmpty,
       href: "#decide",
-      cta: "去拍板",
+      cta: d.wrap.cta,
     },
   ];
   const current = steps.findIndex((s) => !s.done);
@@ -113,9 +115,9 @@ export default function DailyGuide({
   return (
     <div className="card section">
       <div className="card-title">
-        🤖 今日 SOP · 照着做就行
+        {d.cardTitle}
         <Link className="more" href="/docs/prep/daily-routine">
-          规则与例外 →
+          {d.rulesLink}
         </Link>
       </div>
       <ol className="sop-steps">
@@ -131,7 +133,7 @@ export default function DailyGuide({
             <div className="sop-detail small">{s.detail}</div>
             {!s.done && (
               <Link className="sop-go small" href={s.href}>
-                {i === current ? "👉 " : ""}
+                {i === current ? d.goPrefix : ""}
                 {s.cta} →
               </Link>
             )}

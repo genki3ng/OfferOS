@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import type { OutreachTemplate } from "@/lib/data";
+import { useDict } from "@/i18n/client";
 
 export interface KitJob {
   title: string;
@@ -45,6 +46,7 @@ export default function ReferralKit({
   jobs: KitJob[];
   company?: string; // {{company}} 占位符用
 }) {
+  const d = useDict();
   const [open, setOpen] = useState(false);
   const ranked = useMemo(
     () =>
@@ -86,7 +88,7 @@ export default function ReferralKit({
       setCopied(what);
       setTimeout(() => setCopied(""), 2500);
     } catch {
-      setCopied("✗");
+      setCopied(d.referralKit.copyFail);
     }
   };
 
@@ -95,8 +97,8 @@ export default function ReferralKit({
   return (
     <>
       <div>
-        <button className="btn mini ghost" onClick={() => setOpen(true)} title="按该渠道格式生成内推邮件">
-          ✉️ 邮件
+        <button className="btn mini ghost" onClick={() => setOpen(true)} title={d.referralKit.emailBtnTitle}>
+          {d.referralKit.emailBtn}
         </button>
       </div>
       {/* portal 到 body：液玻主题卡片有 backdrop-filter，会让 fixed 相对卡片定位 */}
@@ -106,10 +108,10 @@ export default function ReferralKit({
         <div className="modal-mask" onClick={() => setOpen(false)}>
           <div className="modal" style={{ width: 640 }} onClick={(e) => e.stopPropagation()}>
             <div className="card-title">
-              ✉️ {cleanChannel} · 内推邮件
+              {d.referralKit.modalTitle(cleanChannel)}
               <span className="more">
                 <button className="btn mini ghost" onClick={() => setOpen(false)}>
-                  关闭
+                  {d.referralKit.close}
                 </button>
               </span>
             </div>
@@ -118,7 +120,7 @@ export default function ReferralKit({
             {ranked.length > 0 && (
               <>
                 <div className="small" style={{ fontWeight: 650, margin: "8px 0 2px" }}>
-                  从岗位库勾选（已按契合度排序）：
+                  {d.referralKit.pickHeading}
                 </div>
                 <ul className="task-list">
                   {ranked.map((j, i) => (
@@ -147,23 +149,23 @@ export default function ReferralKit({
               rows={2}
               placeholder={
                 ranked.length
-                  ? "岗位库没有的，贴链接（一行一个，可写「岗位名 — 链接」）"
-                  : "贴你想推的岗位链接（一行一个，可写「岗位名 — 链接」）"
+                  ? d.referralKit.customPlaceholderWithJobs
+                  : d.referralKit.customPlaceholderNoJobs
               }
               value={custom}
               onChange={(e) => setCustom(e.target.value)}
             />
 
             <div className="small" style={{ margin: "6px 0 2px" }}>
-              <b>收件人</b>：<code>{template.to}</code>{" "}
+              <b>{d.referralKit.toLabel}</b><code>{template.to}</code>{" "}
               <button className="btn mini ghost" onClick={() => copy("to", template.to)}>
-                {copied === "to" ? "✓ 已复制" : "复制"}
+                {copied === "to" ? d.referralKit.copied : d.referralKit.copy}
               </button>
             </div>
             <div className="small" style={{ margin: "6px 0 2px" }}>
-              <b>主题</b>：<code>{subject}</code>{" "}
+              <b>{d.referralKit.subjectLabel}</b><code>{subject}</code>{" "}
               <button className="btn mini ghost" onClick={() => copy("subject", subject)}>
-                {copied === "subject" ? "✓ 已复制" : "复制"}
+                {copied === "subject" ? d.referralKit.copied : d.referralKit.copy}
               </button>
             </div>
             <textarea
@@ -183,10 +185,10 @@ export default function ReferralKit({
                   copy("body", el?.value ?? body);
                 }}
               >
-                {copied === "body" ? "✓ 正文已复制" : "复制正文"}
+                {copied === "body" ? d.referralKit.copiedBody : d.referralKit.copyBody}
               </button>
               <span className="muted small">
-                📎 附件（PDF 简历等）记得手动挂 · 发完回这页点「→ 已联系」推进状态
+                {d.referralKit.attachHint}
               </span>
             </div>
           </div>

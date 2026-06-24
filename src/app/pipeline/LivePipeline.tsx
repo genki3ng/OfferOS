@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { getToken, ghGetFile } from "@/lib/githubClient";
 import { parseCompanyOpenings } from "@/lib/parse";
+import { useDict } from "@/i18n/client";
 import type { PipelineJob } from "./PipelineCompanyJobs";
 
 /**
@@ -84,16 +85,17 @@ export default function LivePipeline({
 
 /** 页脚实时角标（同 LiveInbox 文案风格） */
 export function LiveBadge() {
+  const d = useDict();
   const { live } = useLivePipeline();
   const [hasToken, setHasToken] = useState(false);
   useEffect(() => setHasToken(!!getToken()), []);
   return (
     <p className="muted small" style={{ margin: "6px 0 0" }}>
       {live
-        ? "↻ 实时（直接读仓库：状态与 📌 子条目为最新，刚在 /jobs 点的 📌 立即可见）"
+        ? d.livePipeline.badgeLive
         : hasToken
-        ? "↻ 实时读取中…（失败则显示构建快照）"
-        : "状态/📌 为构建时快照——你的修改已即时提交，约 1 分钟重建后同步；配 token 后此页变实时"}
+        ? d.livePipeline.badgeLoading
+        : d.livePipeline.badgeSnapshot}
     </p>
   );
 }
@@ -106,22 +108,23 @@ export function StatusHint({
   slug: string;
   initial: PipelineJob[];
 }) {
+  const d = useDict();
   const { jobs, live } = useLivePipeline();
   const cur = (live && jobs[slug]) || initial;
   const has = (s: string) => cur.some((j) => j.appStatus === s);
   const hint = has("offer")
-    ? "🏆 有 Offer"
+    ? d.livePipeline.hintOffer
     : has("interview")
-    ? "🗣️ 面试中"
+    ? d.livePipeline.hintInterview
     : has("applied")
-    ? "📮 已投岗"
+    ? d.livePipeline.hintApplied
     : "";
   if (!hint) return null;
   return (
     <div
       className="muted small"
       style={{ marginTop: 3 }}
-      title="据该公司 📌 岗的投递进度自动提示（不改你的状态选择）"
+      title={d.livePipeline.hintTitle}
     >
       💡 {hint}
     </div>

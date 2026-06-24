@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { appendPracticeLog, getToken } from "@/lib/githubClient";
+import { useDict } from "@/i18n/client";
 
 export interface PracticeQ {
   id: string;
@@ -16,12 +17,6 @@ export interface QStat {
   lastTime: string;
 }
 
-const GRADES = [
-  { v: "😣", label: "😣 不会" },
-  { v: "😐", label: "😐 磕绊" },
-  { v: "😎", label: "😎 流畅" },
-];
-
 export default function PracticeApp({
   questions,
   stats,
@@ -31,6 +26,12 @@ export default function PracticeApp({
   stats: Record<string, QStat>;
   prepBase?: string;
 }) {
+  const d = useDict();
+  const GRADES = [
+    { v: "😣", label: d.practice.gradeStuck },
+    { v: "😐", label: d.practice.gradeShaky },
+    { v: "😎", label: d.practice.gradeFluent },
+  ];
   const categories = useMemo(
     () => Array.from(new Set(questions.map((q) => q.category))),
     [questions]
@@ -106,15 +107,15 @@ export default function PracticeApp({
       localStorage.setItem(k, JSON.stringify(o));
     } catch {}
     if (!canWrite) {
-      setMsg("已记录这次自评（已存本机；配 token 后长期保存到练习日志）");
+      setMsg(d.practice.msgRecordedLocal);
       return;
     }
-    setMsg("提交中…");
+    setMsg(d.practice.msgSubmitting);
     try {
       await appendPracticeLog(cur.id, g, "", `${prepBase}/practice-log.md`);
-      setMsg("✓ 已写入 practice-log.md");
+      setMsg(d.practice.msgWritten);
     } catch (e) {
-      setMsg(`✗ ${e instanceof Error ? e.message : "失败"}`);
+      setMsg(`✗ ${e instanceof Error ? e.message : d.practice.msgFailed}`);
     }
   };
 
@@ -152,7 +153,7 @@ export default function PracticeApp({
     <>
       <div className="chips" style={{ marginBottom: 12 }}>
         <button className={`chip ${cat === "" ? "on" : ""}`} onClick={() => setCat("")}>
-          全部 {questions.length}
+          {d.practice.all(questions.length)}
         </button>
         {categories.map((c) => (
           <button
@@ -164,10 +165,10 @@ export default function PracticeApp({
           </button>
         ))}
         <button className="btn" onClick={random}>
-          🎲 抽一题（优先薄弱）
+          {d.practice.drawWeakFirst}
         </button>
         <button className="btn ghost" onClick={askMore}>
-          📨 要更多题
+          {d.practice.askMore}
         </button>
       </div>
 
@@ -175,24 +176,24 @@ export default function PracticeApp({
         <div className="card section practice-card">
           <div className="card-title">
             <span className="pill gray">{cur.id}</span> {cur.category}
-            {lastGrade(cur.id) && <span className="pill blue">上次 {lastGrade(cur.id)}</span>}
+            {lastGrade(cur.id) && <span className="pill blue">{d.practice.lastGradeLabel(lastGrade(cur.id))}</span>}
             <button className="more btn ghost mini" onClick={close}>
-              ✕ 关闭
+              {d.practice.close}
             </button>
           </div>
           <div className="prose" dangerouslySetInnerHTML={{ __html: cur.qHtml }} />
           {!revealed ? (
             <p>
-              <span className="muted small">先出声讲 2–5 分钟，再看要点 → </span>
+              <span className="muted small">{d.practice.speakHint}</span>
               <button className="btn" onClick={() => setRevealed(true)}>
-                显示要点
+                {d.practice.showKeyPoints}
               </button>
             </p>
           ) : (
             <>
               <div className="answer prose" dangerouslySetInnerHTML={{ __html: cur.aHtml }} />
               <div style={{ margin: "12px 0" }}>
-                <span className="muted small">自评：</span>
+                <span className="muted small">{d.practice.selfRate}</span>
                 <div className="grade-row rate">
                   {GRADES.map((g) => (
                     <button key={g.v} className="btn ghost" onClick={() => grade(g.v)}>
@@ -204,56 +205,56 @@ export default function PracticeApp({
               </div>
               <details>
                 <summary className="muted small" style={{ cursor: "pointer" }}>
-                  ✍️ 把口述答案交给 Claude 批改（6 维评分，次日出）
+                  {d.practice.reviewSummary}
                 </summary>
                 <textarea
                   className="field"
                   rows={6}
-                  placeholder="用手机语音听写/打字把你的口述贴进来…"
+                  placeholder={d.practice.answerPlaceholder}
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                 />
                 <button className="btn" onClick={askReview} disabled={!answer.trim()}>
-                  📨 提交批改
+                  {d.practice.submitReview}
                 </button>
               </details>
             </>
           )}
           {revealed && (
             <div className="grade-row" style={{ marginTop: 14 }}>
-              <button className="btn" onClick={random}>🎲 下一题（优先薄弱）</button>
+              <button className="btn" onClick={random}>{d.practice.nextWeakFirst}</button>
             </div>
           )}
         </div>
       ) : (
-        <p className="muted small">点一道题开始，或 🎲 随机抽。</p>
+        <p className="muted small">{d.practice.startHint}</p>
       )}
 
       <button className="btn ghost practice-browse-toggle" onClick={() => setBrowse((b) => !b)}>
-        📋 {browse ? "收起题库" : `浏览全部题（${pool.length}）`}
+        📋 {browse ? d.practice.collapseBank : d.practice.browseAll(pool.length)}
       </button>
       <div className={`card practice-browse${browse ? " show" : ""}`}>
         <div className="table-wrap">
           <table className="data">
             <thead>
               <tr>
-                <th>题</th>
-                <th>类别</th>
-                <th>题目</th>
-                <th>练过</th>
-                <th>最近自评</th>
+                <th>{d.practice.colId}</th>
+                <th>{d.practice.colCategory}</th>
+                <th>{d.practice.colQuestion}</th>
+                <th>{d.practice.colPracticed}</th>
+                <th>{d.practice.colLastRating}</th>
               </tr>
             </thead>
             <tbody>
               {pool.map((q) => (
                 <tr key={q.id} onClick={() => pick(q)} style={{ cursor: "pointer" }}>
-                  <td className="muted small" data-label="题">{q.id}</td>
-                  <td className="muted small" data-label="类别" style={{ whiteSpace: "nowrap" }}>
+                  <td className="muted small" data-label={d.practice.colId}>{q.id}</td>
+                  <td className="muted small" data-label={d.practice.colCategory} style={{ whiteSpace: "nowrap" }}>
                     {q.category}
                   </td>
-                  <td data-label="题目" dangerouslySetInnerHTML={{ __html: q.qHtml.replace(/<\/?p>/g, "") }} />
-                  <td data-label="练过">{(stats[q.id]?.count ?? 0) + (local[q.id] ? 1 : 0) || ""}</td>
-                  <td data-label="自评">{lastGrade(q.id)}</td>
+                  <td data-label={d.practice.colQuestion} dangerouslySetInnerHTML={{ __html: q.qHtml.replace(/<\/?p>/g, "") }} />
+                  <td data-label={d.practice.colPracticed}>{(stats[q.id]?.count ?? 0) + (local[q.id] ? 1 : 0) || ""}</td>
+                  <td data-label={d.practice.colLastRating}>{lastGrade(q.id)}</td>
                 </tr>
               ))}
             </tbody>

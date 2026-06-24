@@ -7,6 +7,7 @@ import {
   saveQuickNote,
 } from "@/lib/githubClient";
 import StatusCell from "@/app/pipeline/StatusCell";
+import { useDict } from "@/i18n/client";
 
 /** 公司详情页快改：状态 / 下一步（写 tracker.md 对应行）+ 快记（追加公司文件） */
 export default function QuickPanel({
@@ -22,6 +23,7 @@ export default function QuickPanel({
   status: string;
   next: string;
 }) {
+  const d = useDict();
   const [canWrite, setCanWrite] = useState(false);
   const [nextVal, setNextVal] = useState(next);
   const [note, setNote] = useState("");
@@ -41,9 +43,9 @@ export default function QuickPanel({
     setBusy(true);
     try {
       await saveTrackerNext(companyCell, companyName, nextVal.trim());
-      flash("✓ 下一步已 commit");
+      flash(d.quickPanel.nextSaved);
     } catch (e) {
-      flash(`✗ ${e instanceof Error ? e.message : "失败"}`);
+      flash(`✗ ${e instanceof Error ? e.message : d.quickPanel.fail}`);
     } finally {
       setBusy(false);
     }
@@ -55,9 +57,9 @@ export default function QuickPanel({
     try {
       await saveQuickNote(slug, note.trim());
       setNote("");
-      flash("✓ 快记已 commit（文件末尾「快记」段，Claude 会归位）");
+      flash(d.quickPanel.noteSaved);
     } catch (e) {
-      flash(`✗ ${e instanceof Error ? e.message : "失败"}`);
+      flash(`✗ ${e instanceof Error ? e.message : d.quickPanel.fail}`);
     } finally {
       setBusy(false);
     }
@@ -65,37 +67,37 @@ export default function QuickPanel({
 
   return (
     <div className="card section quick-panel">
-      <div className="card-title">⚡ 快改（直接 commit）</div>
+      <div className="card-title">{d.quickPanel.title}</div>
       <div className="quick-row">
-        <label>状态</label>
+        <label>{d.quickPanel.statusLabel}</label>
         <StatusCell companyCell={companyCell} companyName={companyName} status={status} />
       </div>
       <div className="quick-row">
-        <label>下一步</label>
+        <label>{d.quickPanel.nextLabel}</label>
         <input
           className="field"
           value={nextVal}
           onChange={(e) => setNextVal(e.target.value)}
-          placeholder="如：⏰06-20 follow up Shawn"
+          placeholder={d.quickPanel.nextPlaceholder}
         />
         <button className="btn mini" onClick={saveNext} disabled={busy}>
-          保存
+          {d.quickPanel.save}
         </button>
       </div>
       <div className="quick-row">
-        <label>快记</label>
+        <label>{d.quickPanel.noteLabel}</label>
         <input
           className="field"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="随手一句（带日期追加到本公司文件，Claude 定期归位）"
+          placeholder={d.quickPanel.notePlaceholder}
         />
         <button className="btn mini" onClick={saveNote} disabled={busy || !note.trim()}>
-          追加
+          {d.quickPanel.append}
         </button>
       </div>
       <p className="muted small" style={{ margin: "6px 0 0" }}>
-        提示：「下一步」用 <code>⏰MM-DD</code> 开头会自动进 <a href="/timeline">时间线</a>。
+        {d.quickPanel.hintPre}<code>⏰MM-DD</code>{d.quickPanel.hintMid}<a href="/timeline">{d.quickPanel.hintLink}</a>{d.quickPanel.hintPost}
       </p>
       {msg && <div className="save-msg">{msg}</div>}
     </div>

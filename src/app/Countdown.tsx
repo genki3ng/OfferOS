@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDict } from "@/i18n/client";
 
 const TARGET = new Date(2026, 8, 1); // 2026-09-01 offer 目标
 const START = new Date(2026, 5, 2); // 2026-06-02 冲刺起点
@@ -9,6 +10,7 @@ const C = 2 * Math.PI * R;
 
 /** 倒计时环 + on-track 判定。interviews = 当前在面试中的家数（用于 on-track 文案）。 */
 export default function Countdown({ interviews = 0 }: { interviews?: number }) {
+  const d = useDict().countdown;
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => setNow(new Date()), []);
 
@@ -48,22 +50,22 @@ export default function Countdown({ interviews = 0 }: { interviews?: number }) {
           </svg>
           <div className="ring-center">
             <span className="num">{ph ? "·" : daysLeft}</span>
-            <span className="unit">天</span>
+            <span className="unit">{d.unitDay}</span>
           </div>
         </div>
         <div className="meta">
           <h3>
-            距 9/1<br />offer 目标
+            {d.metaTitlePre}<br />{d.metaTitlePost}
           </h3>
           <p>
-            {weeks} 周冲刺
-            <br />已走 {Math.round(pct * 100)}%
+            {d.weeksSprint(weeks)}
+            <br />{d.elapsed(Math.round(pct * 100))}
           </p>
           <div className="goalrow">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 3v18M5 4h13l-3 4 3 4H5" />
             </svg>
-            {onTrack ? "准时可达" : "时间偏紧"}
+            {onTrack ? d.goalOnTrack : d.goalTight}
           </div>
         </div>
       </div>
@@ -75,8 +77,8 @@ export default function Countdown({ interviews = 0 }: { interviews?: number }) {
           </svg>
         </span>
         <div className="t">
-          <b>{onTrack ? "进度正常" : "抓紧节奏"}</b>
-          <span>{interviews > 0 ? `${interviews} 家在面试中` : "把下一步推进起来"}</span>
+          <b>{onTrack ? d.statusOnTrack : d.statusTight}</b>
+          <span>{interviews > 0 ? d.interviewing(interviews) : d.pushNext}</span>
         </div>
       </div>
     </section>

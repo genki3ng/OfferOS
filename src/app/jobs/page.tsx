@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { getOpenings } from "@/lib/data";
 import { renderInline } from "@/lib/markdown";
+import { getDict } from "@/i18n/server";
 import JobsTable, { JobItem } from "./JobsTable";
 
 export const metadata: Metadata = { title: "岗位库" };
 
-export default function JobsPage() {
+export default async function JobsPage() {
+  const d = await getDict();
   const jobs: JobItem[] = getOpenings().map((o) => ({
     company: o.company,
     slug: o.slug,
@@ -24,11 +26,8 @@ export default function JobsPage() {
 
   return (
     <>
-      <h1 className="page-title">📋 岗位库</h1>
-      <p className="page-sub">
-        15 家 pipeline 公司「当前 opening」段的聚合视图（来源 = pipeline/companies/*.md，扫岗 2–4
-        周会重抓，岗位会变动）。
-      </p>
+      <h1 className="page-title">{d.jobs.title}</h1>
+      <p className="page-sub">{d.jobs.sub}</p>
       <JobsTable jobs={jobs} />
     </>
   );

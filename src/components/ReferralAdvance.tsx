@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getToken, saveReferralStatus, nowStamp } from "@/lib/githubClient";
+import { useDict } from "@/i18n/client";
 
 const FLOW = ["找到", "已联系", "已发材料", "已提交内推", "已投递"];
 
@@ -13,6 +14,7 @@ export default function ReferralAdvance({
   firstCell: string;
   status: string;
 }) {
+  const d = useDict();
   const [cur, setCur] = useState(status);
   const [canWrite, setCanWrite] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -38,7 +40,7 @@ export default function ReferralAdvance({
       await saveReferralStatus(firstCell, stamped);
     } catch (e) {
       setCur(prev);
-      setErr(e instanceof Error ? e.message : "失败");
+      setErr(e instanceof Error ? e.message : d.referralAdvance.failed);
     } finally {
       setBusy(false);
     }
@@ -48,16 +50,16 @@ export default function ReferralAdvance({
     <span style={{ whiteSpace: "nowrap" }}>
       <span className={base === "已投递" ? "pill green" : "pill blue"}>{cur}</span>
       {daysSince !== null && daysSince >= 3 && base !== "已投递" && (
-        <span className="pill amber" title="超过 3 天，考虑催/换渠道">
-          {daysSince} 天
+        <span className="pill amber" title={d.referralAdvance.daysBadgeTitle}>
+          {d.referralAdvance.daysBadge(daysSince)}
         </span>
       )}
       {canWrite && next && (
-        <button className="btn mini" disabled={busy} onClick={advance} title={`推进到「${next}」并盖今天日期`}>
-          {busy ? "…" : `→ ${next}`}
+        <button className="btn mini" disabled={busy} onClick={advance} title={d.referralAdvance.advanceTitle(next)}>
+          {busy ? d.referralAdvance.busy : d.referralAdvance.advanceTo(next)}
         </button>
       )}
-      {err && <span className="small" style={{ color: "var(--red)" }} title={err}> ✗</span>}
+      {err && <span className="small" style={{ color: "var(--red)" }} title={err}> {d.referralAdvance.errMark}</span>}
     </span>
   );
 }

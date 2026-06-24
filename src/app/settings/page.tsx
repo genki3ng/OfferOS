@@ -18,8 +18,10 @@ import {
   saveWallpaper,
   fileToDataURL,
 } from "@/lib/wallpaper";
+import { useDict } from "@/i18n/client";
 
 function WallpaperCard() {
+  const d = useDict();
   const [wp, setWp] = useState<string | null>(null); // 本地副本/URL 壁纸
   const [repoWp, setRepoWp] = useState<string | null>(null); // 仓库壁纸（构建时烤入）
   const [off, setOff] = useState(false);
@@ -39,28 +41,28 @@ function WallpaperCard() {
   const onFile = async (f: File | undefined) => {
     if (!f || busy) return;
     setBusy(true);
-    setMsg("压缩中…");
+    setMsg(d.settings.compressing);
     try {
       const data = await fileToDataURL(f);
       saveWallpaper(data); // 本设备即时生效
       setWp(data);
       setOff(false);
       if (getToken()) {
-        setMsg("本设备已生效，正在同步到仓库…");
+        setMsg(d.settings.syncingToRepo);
         try {
           await syncWallpaperToRepo(data);
           markWallpaperSynced();
-          setMsg("✅ 已同步到仓库——约 1 分钟重建后，所有设备自动生效");
+          setMsg(d.settings.syncedToRepo);
         } catch (e) {
           setMsg(
-            `✅ 本设备已生效；✗ 仓库同步失败：${e instanceof Error ? e.message : "未知错误"}`
+            d.settings.deviceOkRepoFailed(e instanceof Error ? e.message : d.settings.unknownError)
           );
         }
       } else {
-        setMsg("✅ 已设置（仅本设备）。在上方配好 token 后再上传一次，即可同步所有设备。");
+        setMsg(d.settings.setDeviceOnly);
       }
     } catch (e) {
-      setMsg("✗ " + (e instanceof Error ? e.message : "读取图片失败"));
+      setMsg(d.settings.errorPrefix(e instanceof Error ? e.message : d.settings.readImageFailed));
     } finally {
       setBusy(false);
     }
@@ -72,9 +74,9 @@ function WallpaperCard() {
       saveWallpaper(url.trim());
       setWp(url.trim());
       setOff(false);
-      setMsg("✅ 已设置 URL 壁纸（URL 壁纸仅存本设备，不同步）");
+      setMsg(d.settings.setUrlWallpaper);
     } catch (e) {
-      setMsg("✗ " + (e instanceof Error ? e.message : "失败"));
+      setMsg(d.settings.errorPrefix(e instanceof Error ? e.message : d.settings.failed));
     }
   };
 
@@ -86,19 +88,19 @@ function WallpaperCard() {
       setWp(null);
       setOff(isWallpaperOff());
       if (getToken() && repoWp) {
-        setMsg("正在清除仓库壁纸…");
+        setMsg(d.settings.clearingRepoWallpaper);
         try {
           await removeWallpaperFromRepo();
-          setMsg("✅ 已清除（含仓库壁纸，约 1 分钟后所有设备恢复默认光池）");
+          setMsg(d.settings.clearedWithRepo);
         } catch (e) {
           setMsg(
-            `本设备已清除；✗ 仓库壁纸清除失败：${e instanceof Error ? e.message : "未知错误"}`
+            d.settings.deviceClearedRepoFailed(e instanceof Error ? e.message : d.settings.unknownError)
           );
         }
       } else if (repoWp) {
-        setMsg("已关闭本设备壁纸（仓库壁纸仍在，其它设备不受影响；配 token 后可一并清除）");
+        setMsg(d.settings.deviceWallpaperOff);
       } else {
-        setMsg("已清除，恢复默认光池背景");
+        setMsg(d.settings.clearedToDefault);
       }
     } finally {
       setBusy(false);
@@ -107,13 +109,13 @@ function WallpaperCard() {
 
   return (
     <div className="card section" style={{ maxWidth: 640 }}>
-      <div className="card-title">🖼 玻璃壁纸</div>
+      <div className="card-title">{d.settings.wallpaperTitle}</div>
       <p className="muted small">
-        上传一张壁纸当背景，磨砂玻璃的模糊与折射在照片上最直观（仅<b>液玻主题</b>生效，建议横向大图）。
+        {d.settings.wallpaperIntroPre}<b>{d.settings.wallpaperIntroTheme}</b>{d.settings.wallpaperIntroPost}
         {hasToken ? (
-          <>已配 token：上传会自动 commit 到仓库，<b>约 1 分钟后所有设备同步生效</b>。</>
+          <>{d.settings.wallpaperHasToken}<b>{d.settings.wallpaperHasTokenBold}</b>{d.settings.wallpaperHasTokenEnd}</>
         ) : (
-          <>未配 token：壁纸只存这台设备；配好上方 token 再上传即可全设备同步。</>
+          <>{d.settings.wallpaperNoToken}</>
         )}
       </p>
       <input
@@ -126,7 +128,7 @@ function WallpaperCard() {
         <input
           className="field"
           style={{ margin: 0, flex: 1 }}
-          placeholder="或粘贴图片 URL（https://…，仅本设备）"
+          placeholder={d.settings.wallpaperUrlPlaceholder}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
@@ -135,7 +137,7 @@ function WallpaperCard() {
           disabled={!/^https?:\/\//.test(url) || busy}
           onClick={applyUrl}
         >
-          应用
+          {d.settings.apply}
         </button>
       </div>
       {preview && (
@@ -151,16 +153,16 @@ function WallpaperCard() {
             }}
           />
           <p className="muted small" style={{ margin: "6px 0 0" }}>
-            当前来源：{wp ? "本设备" : "仓库（全设备共享）"}
+            {d.settings.currentSourcePrefix}{wp ? d.settings.sourceDevice : d.settings.sourceRepo}
           </p>
           <button className="btn ghost" style={{ marginTop: 8 }} disabled={busy} onClick={clear}>
-            清除壁纸
+            {d.settings.clearWallpaper}
           </button>
         </div>
       )}
       {!preview && off && repoWp && (
         <p className="muted small">
-          本设备已关闭壁纸（仓库壁纸仍在）。重新上传或
+          {d.settings.offWithRepoPrefix}
           <button
             className="btn mini ghost"
             onClick={() => {
@@ -168,7 +170,7 @@ function WallpaperCard() {
               location.reload();
             }}
           >
-            恢复仓库壁纸
+            {d.settings.restoreRepoWallpaper}
           </button>
         </p>
       )}
@@ -178,6 +180,7 @@ function WallpaperCard() {
 }
 
 export default function SettingsPage() {
+  const d = useDict();
   const [token, setTok] = useState("");
   const [saved, setSaved] = useState(false);
   const [msg, setMsg] = useState("");
@@ -190,47 +193,46 @@ export default function SettingsPage() {
   const save = () => {
     setToken(token);
     setSaved(!!token);
-    setMsg(token ? "已保存到本浏览器 localStorage（不入库）" : "已清除");
+    setMsg(token ? d.settings.savedToBrowser : d.settings.cleared);
   };
 
   const test = async () => {
-    setMsg("测试中…");
+    setMsg(d.settings.testing);
     try {
       setToken(token);
       setMsg("✅ " + (await ghTestToken()));
       setSaved(!!token);
     } catch (e) {
-      setMsg("✗ " + (e instanceof Error ? e.message : "失败"));
+      setMsg(d.settings.errorPrefix(e instanceof Error ? e.message : d.settings.failed));
     }
   };
 
   return (
     <>
-      <h1 className="page-title">⚙️ 设置</h1>
-      <p className="page-sub">配置写通道后，全站交互功能解锁（勾任务、改状态、练习自评、派活给 Claude）。</p>
+      <h1 className="page-title">{d.settings.pageTitle}</h1>
+      <p className="page-sub">{d.settings.pageSub}</p>
 
       <div className="card section" style={{ maxWidth: 640 }}>
-        <div className="card-title">GitHub Token（写通道）</div>
+        <div className="card-title">{d.settings.tokenCardTitle}</div>
         <p className="muted small">
-          所有写操作 = 浏览器直接 commit 到 <code>{REPO}</code> 的 main 分支 →
-          Vercel 自动重建（约 1 分钟生效）。token 只存在<b>这台设备的浏览器</b>里。
+          {d.settings.tokenIntroPre}<code>{REPO}</code>{d.settings.tokenIntroPost}<b>{d.settings.tokenIntroDevice}</b>{d.settings.tokenIntroEnd}
         </p>
         <p className="small" style={{ color: "var(--sage-deep)", marginTop: 0 }}>
-          🔒 只存这台设备的浏览器 · 只授权 <code>{REPO}</code> 这一个仓库 · 只读写文件内容 · 随时可在 GitHub 撤销。配好后解锁：勾任务 / 改状态 / 练习自评 / 派活。
+          {d.settings.tokenTrustPre}<code>{REPO}</code>{d.settings.tokenTrustPost}
         </p>
         <input
           className="field"
           type="password"
-          placeholder="github_pat_…"
+          placeholder={d.settings.tokenPlaceholder}
           value={token}
           onChange={(e) => setTok(e.target.value)}
         />
         <div style={{ marginTop: 10 }}>
           <button className="btn" onClick={save}>
-            保存
+            {d.settings.save}
           </button>{" "}
           <button className="btn ghost" onClick={test}>
-            测试连接
+            {d.settings.testConnection}
           </button>{" "}
           {saved && (
             <button
@@ -239,10 +241,10 @@ export default function SettingsPage() {
                 setTok("");
                 setToken("");
                 setSaved(false);
-                setMsg("已清除");
+                setMsg(d.settings.cleared);
               }}
             >
-              清除
+              {d.settings.clear}
             </button>
           )}
         </div>
@@ -252,20 +254,18 @@ export default function SettingsPage() {
       <WallpaperCard />
 
       <div className="card" style={{ maxWidth: 640 }}>
-        <div className="card-title">怎么拿 token</div>
+        <div className="card-title">{d.settings.howToTitle}</div>
         <ol className="small" style={{ paddingLeft: 18, margin: 0 }}>
           <li>
-            GitHub → Settings → Developer settings → Fine-grained tokens →
-            Generate new token → Repository access 只选 <code>{REPO}</code> →
-            Permissions → Contents：<b>Read and write</b>。
+            {d.settings.howToStep1Pre}<code>{REPO}</code>{d.settings.howToStep1Post}<b>{d.settings.howToStep1Perm}</b>{d.settings.howToStep1End}
           </li>
           <li>
-            把生成的 <code>github_pat_…</code> 粘到上面，点<b>保存</b>，再点<b>测试连接</b>确认。
+            {d.settings.howToStep2Pre}<code>github_pat_…</code>{d.settings.howToStep2Mid}<b>{d.settings.howToStep2Save}</b>{d.settings.howToStep2Then}<b>{d.settings.howToStep2Test}</b>{d.settings.howToStep2End}
           </li>
-          <li>手机/平板要用的话，在那台设备的浏览器里也存一次。</li>
+          <li>{d.settings.howToStep3}</li>
         </ol>
         <p className="muted small" style={{ marginTop: 8, marginBottom: 0 }}>
-          （已装 1point3acres 收集扩展的话，那个 fine-grained PAT 权限相同，可直接复用。）
+          {d.settings.howToNote}
         </p>
       </div>
     </>

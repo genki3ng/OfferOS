@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getToken, ghListDir, ghGetFile } from "@/lib/githubClient";
+import { useDict } from "@/i18n/client";
 
 export interface InboxLite {
   file: string;
@@ -18,6 +19,7 @@ export interface InboxLite {
 export default function LiveInbox({ initial }: { initial: InboxLite[] }) {
   const [items, setItems] = useState<InboxLite[]>(initial);
   const [live, setLive] = useState(false);
+  const d = useDict();
 
   useEffect(() => {
     if (!getToken()) return;
@@ -63,7 +65,7 @@ export default function LiveInbox({ initial }: { initial: InboxLite[] }) {
           {items.map((i) => (
             <li key={i.file}>
               <span className="who">
-                <span className="pill amber">{i.kind || i.type || "new"}</span>
+                <span className="pill amber">{i.kind || i.type || d.liveInbox.badgeNew}</span>
               </span>
               <span>
                 {i.title} <span className="muted small">{i.date}</span>
@@ -73,13 +75,11 @@ export default function LiveInbox({ initial }: { initial: InboxLite[] }) {
         </ul>
       ) : (
         <p className="muted small">
-          已清空 ✅（📨 派活 / 浏览器扩展收集都会进这里，下个 Claude session 开场自动处理）
+          {d.liveInbox.empty}
         </p>
       )}
       <p className="muted small" style={{ margin: "6px 0 0" }}>
-        {live
-          ? "↻ 实时（直接读仓库，刚派的活立即可见）"
-          : "构建时快照——刚派的活约 1 分钟重建后出现；配 token 后此卡变实时"}
+        {live ? d.liveInbox.live : d.liveInbox.snapshot}
       </p>
     </>
   );

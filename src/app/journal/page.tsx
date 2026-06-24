@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { getJournal } from "@/lib/data";
 import { renderInline, renderMarkdown } from "@/lib/markdown";
+import { getDict } from "@/i18n/server";
 
 export const metadata: Metadata = { title: "日志" };
 
-export default function JournalPage() {
+export default async function JournalPage() {
   const entries = getJournal();
+  const d = await getDict();
   return (
     <>
-      <h1 className="page-title">📰 日志</h1>
-      <p className="page-sub">历史流水（log/journal.md），倒序：发生过什么、拍板了什么。</p>
+      <h1 className="page-title">{d.journal.title}</h1>
+      <p className="page-sub">{d.journal.sub}</p>
       <div className="card">
         {entries.map((e, i) => (
           <div className="timeline-entry" key={i}>

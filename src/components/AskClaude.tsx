@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useDict } from "@/i18n/client";
 import { getToken, sendRequestToClaude } from "@/lib/githubClient";
 
 const KINDS = [
@@ -17,11 +18,26 @@ const KINDS = [
   "其他",
 ];
 
+// kind 值（数据，写回 inbox）→ i18n 显示标签 key
+const KIND_KEYS: Record<string, keyof ReturnType<typeof useDict>["ask"]["kinds"]> = {
+  "出题练习": "practice",
+  "准备材料": "material",
+  "Mock 面试": "mock",
+  "扫岗/调研": "scan",
+  "面试日程": "schedule",
+  "投递记录": "apply",
+  "面试复盘": "retro",
+  "拍板决策": "decide",
+  "改简历": "resume",
+  "其他": "other",
+};
+
 /**
  * 全局"派活给 Claude"：写一条 status:new 请求进 inbox/，
  * 下个 Claude session 开场扫 inbox 时自动处理（CLAUDE.md 仪式第 5 步）。
  */
 export default function AskClaude() {
+  const d = useDict();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [hasToken, setHasToken] = useState(false);
@@ -53,7 +69,7 @@ export default function AskClaude() {
 
   const submit = async () => {
     if (!topic.trim()) {
-      setMsg("先写一句标题");
+      setMsg(d.ask.needTopic);
       return;
     }
     setState("saving");
@@ -71,54 +87,53 @@ export default function AskClaude() {
       setDetail("");
     } catch (e) {
       setState("error");
-      setMsg(e instanceof Error ? e.message : "提交失败");
+      setMsg(e instanceof Error ? e.message : d.ask.submitFail);
     }
   };
 
   return (
     <>
-      <button className="ask-fab" onClick={() => setOpen(true)} title="派活给 Claude：写一件事，下次 Claude 上线就帮你做">
-        📨 派活
+      <button className="ask-fab" onClick={() => setOpen(true)} title={d.ask.fabTitle}>
+        {d.ask.fab}
       </button>
       {open && (
         <div className="modal-mask" onClick={() => setOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="card-title">📨 派活给 Claude</div>
+            <div className="card-title">{d.ask.modalTitle}</div>
             <p className="muted small" style={{ marginTop: 0 }}>
-              给 Claude 留一件事：写一句话，下次你在{" "}
-              <a href="https://claude.ai/code" target="_blank" rel="noreferrer">claude.ai/code</a>{" "}
-              接上本仓库跟 Claude 对话时，它会先把这些做掉，结果回到对应页面/文档。
+              {d.ask.introPre}
+              <a href="https://claude.ai/code" target="_blank" rel="noreferrer">{d.ask.introLink}</a>
+              {d.ask.introPost}
             </p>
             {!hasToken ? (
               <>
                 <p>
-                  需要先在 <a href="/settings">⚙️ 设置</a> 里配一个 GitHub token（约 2 分钟，用来把你的请求写回你的仓库）。
+                  {d.ask.needTokenPre}<a href="/settings">{d.ask.needTokenLink}</a>{d.ask.needTokenPost}
                 </p>
                 {(topic || detail) && (
                   <div className="answer" style={{ marginTop: 4 }}>
-                    <div className="small muted">你写的内容已保留，配好 token 后再来点「提交」即可：</div>
+                    <div className="small muted">{d.ask.keptHint}</div>
                     {topic && <p style={{ margin: "6px 0 0", fontWeight: 700 }}>{topic}</p>}
                     {detail && <p className="small" style={{ whiteSpace: "pre-wrap", marginTop: 4 }}>{detail}</p>}
                   </div>
                 )}
                 <p style={{ marginTop: 10 }}>
-                  <a className="btn" href="/settings">去设置 token →</a>
+                  <a className="btn" href="/settings">{d.ask.goSetToken}</a>
                 </p>
               </>
             ) : state === "done" ? (
               <div>
                 <p>
-                  ✅ 已入收件箱：<code className="small">{msg}</code>
+                  {d.ask.donePre}<code className="small">{msg}</code>
                 </p>
                 <p className="muted small">
-                  首页「📥 收件箱」卡（实时）立即可见；正在进行的 Claude session
-                  也会处理。急的话直接开个对话说"扫 inbox"。
+                  {d.ask.doneHint}
                 </p>
                 <button className="btn" onClick={() => setState("idle")}>
-                  再派一条
+                  {d.ask.askAgain}
                 </button>{" "}
                 <button className="btn ghost" onClick={() => setOpen(false)}>
-                  关闭
+                  {d.ask.close}
                 </button>
               </div>
             ) : (
@@ -130,30 +145,30 @@ export default function AskClaude() {
                       className={`chip ${k === kind ? "on" : ""}`}
                       onClick={() => setKind(k)}
                     >
-                      {k}
+                      {d.ask.kinds[KIND_KEYS[k]] ?? k}
                     </button>
                   ))}
                 </div>
                 <input
                   className="field"
-                  placeholder="一句话标题（如：按 Northwind 出 5 道实验设计题）"
+                  placeholder={d.ask.topicPlaceholder}
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                 />
                 <textarea
                   className="field"
                   rows={5}
-                  placeholder="补充说明（可选）：背景、想要的形式、参考链接…"
+                  placeholder={d.ask.detailPlaceholder}
                   value={detail}
                   onChange={(e) => setDetail(e.target.value)}
                 />
                 {msg && <p className="login-err small">{msg}</p>}
                 <div>
                   <button className="btn" onClick={submit} disabled={state === "saving"}>
-                    {state === "saving" ? "提交中…" : "提交"}
+                    {state === "saving" ? d.ask.submitting : d.ask.submit}
                   </button>{" "}
                   <button className="btn ghost" onClick={() => setOpen(false)}>
-                    取消
+                    {d.ask.cancel}
                   </button>
                 </div>
               </>

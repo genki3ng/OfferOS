@@ -1,0 +1,25 @@
+const pipelineJobs = {
+  optTodo: "待投",
+  optApplied: "📮 已投",
+  optInterview: "🗣️ 面试中",
+  optOffer: "🏆 Offer",
+  optRejected: "🛑 被拒",
+  submitting: "提交中…",
+  refAdvanced: (name: string) => ` · 内推「${name}」→已投递`,
+  loggedApplication: " · 已记投递台账",
+  updated: (extra: string) => `已更新（约 1 分钟后全站同步）${extra}`,
+  failed: "失败",
+  error: (msg: string) => `✗ ${msg}`,
+  confirmRemove: (title: string) => `从 pipeline 移除「${title}」？（= 取消 📌 投递清单标记）`,
+  removing: "移除中…",
+  removed: "已移出 pipeline",
+  toggle: (n: number) => `📋 ${n} 个会投的岗`,
+  appliedCount: (n: number) => ` · 已投 ${n}`,
+  statusTitleOn: "投递进度",
+  statusTitleOff: "在 ⚙️ 设置配 token 后可改",
+  openJd: "打开 JD",
+  removeTitleOn: "从 pipeline 移除（取消 📌）",
+  removeTitleOff: "需配 token",
+};
+
+export default pipelineJobs;

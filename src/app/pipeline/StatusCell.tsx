@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getToken, saveTrackerStatus } from "@/lib/githubClient";
+import { useDict } from "@/i18n/client";
 import { useLivePipeline } from "./LivePipeline";
 
 const STATUSES = [
@@ -29,6 +30,7 @@ export default function StatusCell({
   companyName: string;
   status: string;
 }) {
+  const d = useDict();
   const [cur, setCur] = useState(status);
   const [dirty, setDirty] = useState(false); // 本会话改过 → 不被实时数据覆盖
   const [editable, setEditable] = useState(false);
@@ -48,7 +50,7 @@ export default function StatusCell({
 
   if (!editable)
     return (
-      <select className="status-select" value="" disabled title="配 token 后可在此直接改状态（⚙️ 设置）" style={{ opacity: 0.9 }}>
+      <select className="status-select" value="" disabled title={d.statusCell.disabledTitle} style={{ opacity: 0.9 }}>
         <option value="">{cur}</option>
       </select>
     );
@@ -64,7 +66,7 @@ export default function StatusCell({
       setTimeout(() => setState("idle"), 4000);
     } catch (e) {
       setCur(prev);
-      setErr(e instanceof Error ? e.message : "失败");
+      setErr(e instanceof Error ? e.message : d.statusCell.failed);
       setState("error");
       setTimeout(() => setState("idle"), 6000);
     }

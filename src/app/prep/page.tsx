@@ -3,47 +3,50 @@ import Link from "next/link";
 import {
   getSprintProgress,
   getCompanyNotes,
-  getActiveRole,
   readDoc,
   countCheckboxes,
   getTaskLines,
 } from "@/lib/data";
 import { renderMarkdown } from "@/lib/markdown";
 import Prose from "@/components/Prose";
+import { getDict } from "@/i18n/server";
 
 export const metadata: Metadata = { title: "备战" };
 
-export default function PrepPage() {
-  const role = getActiveRole();
-  const base = `prep/${role.slug}`;
+const PREP_LINKS: { rel: string; key: keyof Awaited<ReturnType<typeof getDict>>["prepPage"]["links"] }[] = [
+  { rel: "prep/question-bank", key: "questionBank" },
+  { rel: "prep/README", key: "readme" },
+  { rel: "prep/sprint-plan", key: "sprintPlan" },
+  { rel: "prep/mock-interview-bank", key: "mockBank" },
+  { rel: "prep/company-specific-prep", key: "companySpecific" },
+  { rel: "prep/stats-experimentation/cheatsheet-power-variance", key: "powerVariance" },
+  { rel: "prep/stats-experimentation/cheatsheet-causal-inference", key: "causalInference" },
+  { rel: "prep/stats-experimentation/cheatsheet-abtest-pitfalls", key: "abtestPitfalls" },
+  { rel: "prep/stats-experimentation/model-explain-cheatsheet", key: "modelExplain" },
+  { rel: "prep/product-sense/practice-define-metrics", key: "defineMetrics" },
+  { rel: "prep/product-sense/diagnose-ratio-metric", key: "diagnoseRatio" },
+  { rel: "prep/product-sense/cheatsheet-marketplace-metrics", key: "marketplaceMetrics" },
+  { rel: "prep/sql-python/warmup-problems", key: "sqlWarmup" },
+];
+
+export default async function PrepPage() {
   const sprint = getSprintProgress();
   const notes = getCompanyNotes();
-  const sprintMd = readDoc(`${base}/sprint-plan.md`) ?? readDoc("prep/sprint-plan.md") ?? "";
+  const sprintMd = readDoc("prep/sprint-plan.md") ?? "";
   const pct = sprint.total ? Math.round((sprint.done / sprint.total) * 100) : 0;
-
-  const prepLinks: { rel: string; label: string }[] = [
-    { rel: `${base}/README`, label: "备战总览（含「用 AI 备战面试」四步法）" },
-    { rel: `${base}/question-bank`, label: "🏋️ 题库（去 /practice 练习台更顺手）" },
-    { rel: `${base}/sprint-plan`, label: "🏃 冲刺计划（周计划 + 勾选）" },
-    { rel: `${base}/mock-interview-bank`, label: "Mock 题库 + 自评" },
-    { rel: `${base}/company-specific-prep`, label: "各公司定制考点" },
-    ...role.prepCategories.map((c) => ({
-      rel: `${base}/${c.dir}/README`,
-      label: `${c.label} · 板块笔记`,
-    })),
-  ];
+  const d = await getDict();
 
   return (
     <>
-      <h1 className="page-title">📚 备战 · {role.shortLabel}</h1>
+      <h1 className="page-title">{d.prepPage.title}</h1>
       <p className="page-sub">
-        {role.label} 备战 —— 按轮次准备：{role.rounds.map((r) => r.label).join(" · ")} · 并行找内推。
+        {d.prepPage.sub}
       </p>
 
       <div className="grid grid-2 section">
         <div className="card">
           <div className="card-title">
-            🏃 冲刺进度（勾选框统计）
+            {d.prepPage.sprintTitle}
             <span className="more muted">
               {sprint.done}/{sprint.total} · {pct}%
             </span>
@@ -52,18 +55,18 @@ export default function PrepPage() {
             <i style={{ width: `${pct}%` }} />
           </div>
           <p className="muted small">
-            勾选在 <Link href={`/docs/${base}/sprint-plan`}>{base}/sprint-plan.md</Link>{" "}
-            里更新（让任意 session 改完 push 即可，这里自动刷新）。
+            {d.prepPage.sprintNotePre}<Link href="/docs/prep/sprint-plan">prep/sprint-plan.md</Link>{" "}
+            {d.prepPage.sprintNotePost}
           </p>
-          <div className="card-title" style={{ marginTop: 18 }}>📂 备战材料</div>
+          <div className="card-title" style={{ marginTop: 18 }}>{d.prepPage.materials}</div>
           <ul>
-            {prepLinks.map((l) => {
+            {PREP_LINKS.map((l) => {
               const md = readDoc(l.rel + ".md");
               if (md === null) return null;
               const p = countCheckboxes(md);
               return (
                 <li key={l.rel}>
-                  <Link href={`/docs/${l.rel}`}>{l.label}</Link>
+                  <Link href={`/docs/${l.rel}`}>{d.prepPage.links[l.key]}</Link>
                   {p.total > 0 && (
                     <span className="muted small">
                       {" "}
@@ -74,11 +77,11 @@ export default function PrepPage() {
               );
             })}
           </ul>
-          <div className="card-title" style={{ marginTop: 18 }}>🗒 公司面经笔记（{notes.length} 家）</div>
+          <div className="card-title" style={{ marginTop: 18 }}>{d.prepPage.companyNotes(notes.length)}</div>
           <ul>
-            {notes.map((rel) => (
-              <li key={rel}>
-                <Link href={`/docs/${rel}`}>{rel.split("/").pop()}</Link>
+            {notes.map((n) => (
+              <li key={n}>
+                <Link href={`/docs/prep/company-notes/${n}`}>{n}</Link>
               </li>
             ))}
           </ul>
@@ -86,12 +89,12 @@ export default function PrepPage() {
 
         <div className="card">
           <div className="card-title">
-            📋 sprint-plan.md 全文
-            <span className="more muted small">有 token 时勾选框可直接点</span>
+            {d.prepPage.sprintFullText}
+            <span className="more muted small">{d.prepPage.sprintFullHint}</span>
           </div>
           <Prose
-            html={renderMarkdown(sprintMd, base)}
-            path={`${base}/sprint-plan.md`}
+            html={renderMarkdown(sprintMd, "prep")}
+            path="prep/sprint-plan.md"
             tasks={getTaskLines(sprintMd).map((t) => ({ text: t.text, checked: t.checked }))}
           />
         </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Countdown from "./Countdown";
 import Greeting from "@/components/Greeting";
 import OnboardingBanner from "@/components/OnboardingBanner";
+import { getDict } from "@/i18n/server";
 import {
   getTracker,
   getOpenings,
@@ -14,7 +15,6 @@ import {
   isUnconfigured,
 } from "@/lib/data";
 
-const DOW = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 const stripMd = (s: string) =>
   s.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/[*`~]/g, "").trim();
 const cleanEvt = (s: string) =>
@@ -48,18 +48,17 @@ function initials(name: string) {
   const letters = name.replace(/[^A-Za-z]/g, "");
   return (letters.slice(0, 2) || name.slice(0, 2)).replace(/^./, (c) => c.toUpperCase());
 }
-function dateBlock(dateStr: string) {
+function dateBlock(dateStr: string, dow: string[], monthSuffix: (m: number) => string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   const dt = new Date(y, m - 1, d);
-  return { dow: DOW[dt.getDay()], dnum: String(d), mon: `${m}月` };
+  return { dow: dow[dt.getDay()], dnum: String(d), mon: monthSuffix(m) };
 }
-function whenLabel(dateStr: string) {
+function whenLabel(dateStr: string, dow: string[], fmt: (dow: string, m: number, d: number) => string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   const dt = new Date(y, m - 1, d);
-  return `${DOW[dt.getDay()]} · ${m}/${d}`;
+  return fmt(dow[dt.getDay()], m, d);
 }
 
-const PHASES = ["定位", "铺管道", "备战", "谈判", "收尾"];
 const ICON = {
   clock: "M12 7v5l3 2",
   check: "M9 11l3 3L22 4",
@@ -67,7 +66,8 @@ const ICON = {
   bolt: "m13 2-1 9h7l-8 11 1-9H5z",
 };
 
-export default function Today() {
+export default async function Today() {
+  const d = await getDict();
   const tracker = getTracker();
   const openings = getOpenings();
   const referrals = getReferrals();
@@ -90,11 +90,11 @@ export default function Today() {
   const ranks = tracker.map((r) => stage(r.status));
   const fc = (min: number) => ranks.filter((r) => r >= min).length;
   const funnel = [
-    { l: "投递", v: fc(1) },
-    { l: "招聘电话", v: fc(2) },
-    { l: "首轮", v: fc(3) },
-    { l: "onsite", v: fc(4) },
-    { l: "offer", v: fc(5) },
+    { l: d.today.funnelApply, v: fc(1) },
+    { l: d.today.funnelRecruiterCall, v: fc(2) },
+    { l: d.today.funnelFirstRound, v: fc(3) },
+    { l: d.today.funnelOnsite, v: fc(4) },
+    { l: d.today.funnelOffer, v: fc(5) },
   ];
   const interviewing = fc(3); // 真正进面试（首轮+），不含 recruiter screen
 
@@ -129,17 +129,17 @@ export default function Today() {
   const moves = active.slice(0, 5).map((r) => {
     const nx = r.next;
     const ball = /安排中|待发|待回|availability|待提供|该你|球在你|待用户|未发/.test(nx);
-    let tag = { cls: "wait", txt: "等回复" };
-    let label = r.status.toLowerCase().includes("referral") ? "等内推回复" : "等 recruiter";
+    let tag = { cls: "wait", txt: d.today.tagWait };
+    let label = r.status.toLowerCase().includes("referral") ? d.today.labelWaitReferral : d.today.labelWaitRecruiter;
     if (ball) {
-      tag = { cls: "yours", txt: "球在你这边" };
-      label = "该你回应";
+      tag = { cls: "yours", txt: d.today.tagYours };
+      label = d.today.labelYourMove;
     } else if (stage(r.status) >= 3) {
-      tag = { cls: "prep", txt: "备战中" };
-      label = "首轮面试";
+      tag = { cls: "prep", txt: d.today.tagPrep };
+      label = d.today.labelFirstRound;
     } else if (stage(r.status) === 2) {
-      tag = { cls: "week", txt: "进行中" };
-      label = "招聘电话";
+      tag = { cls: "week", txt: d.today.tagWeek };
+      label = d.today.labelRecruiterCall;
     }
     const dm = nx.match(/(\d{1,2})\/(\d{1,2})/);
     if (dm) label += ` · ${dm[1]}/${dm[2]}`;
@@ -150,27 +150,27 @@ export default function Today() {
   const refSent = referrals.rows.filter((row) => /已发|已联系|已提交|已投|已推|确认/.test(row.join(" "))).length;
   const pins = openings.filter((o) => !o.excluded && o.pinned);
   const wins = [
-    interviewing > 0 ? `${interviewing} 家进面试` : "",
-    "简历已定稿",
-    refSent > 0 ? `${refSent} 条内推已发` : "",
-    pins.length > 0 ? `${pins.length} 个岗已锁定` : "",
+    interviewing > 0 ? d.today.winInterviewing(interviewing) : "",
+    d.today.winResumeFinal,
+    refSent > 0 ? d.today.winReferralsSent(refSent) : "",
+    pins.length > 0 ? d.today.winRolesPinned(pins.length) : "",
   ].filter(Boolean).slice(0, 4);
 
   // —— 也在今天 ——
   const waits = active.filter((r) => /applied|referral/.test(r.status.toLowerCase()));
   const todayList: { t: string; href: string; tag?: string }[] = [
-    { t: "练 1 道题（15 分钟）", href: "/practice", tag: "SQL" },
+    { t: d.today.todoPractice, href: "/practice", tag: d.today.todoPracticeTag },
   ];
-  if (pending.open.length) todayList.push({ t: "拍板：" + stripMd(pending.open[0]).slice(0, 16) + "…", href: "/pipeline" });
-  if (waits[0]) todayList.push({ t: `跟进 ${waits[0].name} 的进展`, href: `/companies/${waits[0].slug}` });
+  if (pending.open.length) todayList.push({ t: d.today.todoDecide(stripMd(pending.open[0]).slice(0, 16)), href: "/pipeline" });
+  if (waits[0]) todayList.push({ t: d.today.todoFollowUp(waits[0].name), href: `/companies/${waits[0].slug}` });
 
   // —— 统计 ——
   const activeOpenings = openings.filter((o) => !o.excluded).length;
   const pct = sprint.total ? Math.round((sprint.done / sprint.total) * 100) : 0;
   const greetSub =
     interviewing > 0
-      ? `${interviewing} 家在面试中，势头正好 — 把下面那一件做掉，今天就赢了。`
-      : "把下面那一件做掉，今天就有进展。";
+      ? d.today.greetSubInterviewing(interviewing)
+      : d.today.greetSubDefault;
   const cfg = getSiteConfig();
 
   return (
@@ -182,7 +182,7 @@ export default function Today() {
             <rect x="3" y="4" width="18" height="18" rx="3" />
             <path d={ICON.cal} />
           </svg>
-          {`${t.getFullYear()}年${t.getMonth() + 1}月${t.getDate()}日`}
+          {d.today.fullDate(t.getFullYear(), t.getMonth() + 1, t.getDate())}
         </div>
       </header>
 
@@ -190,13 +190,13 @@ export default function Today() {
 
       {/* 阶段轨 */}
       <div className="rail">
-        <span className="rail-label">你在这里</span>
+        <span className="rail-label">{d.today.railLabel}</span>
         <div className="steps">
-          {PHASES.map((p, i) => {
+          {d.today.phases.map((p, i) => {
             const idx = i + 1;
             const cls =
               idx < current ? (idx === current - 1 ? "filled" : "done") : idx === current ? "active" : "";
-            const small = cls === "done" ? "已完成" : cls === "filled" ? "进行中" : cls === "active" ? "你在这" : "未开始";
+            const small = cls === "done" ? d.today.stageDone : cls === "filled" ? d.today.stageFilled : cls === "active" ? d.today.stageActive : d.today.stageTodo;
             return (
               <div className={`step ${cls}`} key={p}>
                 <span className="dot">
@@ -210,7 +210,7 @@ export default function Today() {
                   <b>{p}</b>
                   <small>{small}</small>
                 </span>
-                {idx < PHASES.length && <span className="sbar" />}
+                {idx < d.today.phases.length && <span className="sbar" />}
               </div>
             );
           })}
@@ -225,14 +225,14 @@ export default function Today() {
             <div className="toprow">
               <span className="hero-eyebrow">
                 <span className="pulse" />
-                {nextInDays === 0 ? "现在就做" : nextInDays === 1 ? "明天 · 准备好" : typeof nextInDays === "number" && nextInDays > 1 ? `${nextInDays} 天后 · 提前备` : "下一个"}
+                {nextInDays === 0 ? d.today.heroNow : nextInDays === 1 ? d.today.heroTomorrow : typeof nextInDays === "number" && nextInDays > 1 ? d.today.heroDaysOut(nextInDays) : d.today.heroNext}
               </span>
               <span className="when">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="9" />
                   <path d="M12 8v4l3 2" />
                 </svg>
-                {whenLabel(next.date)}
+                {whenLabel(next.date, d.today.dow, d.today.whenLabel)}
               </span>
             </div>
             <h2>{next.company ? `${next.company} · ${cleanEvt(next.label)}` : cleanEvt(next.label)}</h2>
@@ -251,41 +251,41 @@ export default function Today() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 7l4 4 5-7 5 7 4-4v11H3z" />
                   </svg>
-                  PERM day-1
+                  {d.today.permDay1}
                 </span>
               )}
             </div>
 
             {isInterview && (
               <div className="mustask">
-                <span className="lbl">三必问</span>
+                <span className="lbl">{d.today.mustAskLabel}</span>
                 <div className="qs">
-                  <span>sub-team / 方向</span>
-                  <span>sponsorship / 签证（如适用）</span>
-                  <span>级别 + comp</span>
+                  <span>{d.today.mustAskSubteam}</span>
+                  <span>{d.today.mustAskPerm}</span>
+                  <span>{d.today.mustAskLevel}</span>
                 </div>
               </div>
             )}
 
             <div className="actions">
               <Link className="btn-primary" href={next.slug ? `/companies/${next.slug}` : "/timeline"}>
-                {isInterview ? "打开速备包" : "查看详情"}
+                {isInterview ? d.today.openBrief : d.today.viewDetail}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
               </Link>
               <Link className="btn-ghost" href={nextJd ? `/intel` : "/pipeline"}>
-                {nextJd ? "看 JD" : "看 pipeline"}
+                {nextJd ? d.today.viewJd : d.today.viewPipeline}
               </Link>
             </div>
           </section>
         ) : (
           <section className="tile hero c8 empty">
-            <span className="hero-eyebrow">今日</span>
-            <h2 style={{ marginTop: 14 }}>今天没有硬日程 — 做一道练习题，保持手感。</h2>
+            <span className="hero-eyebrow">{d.today.heroEmptyEyebrow}</span>
+            <h2 style={{ marginTop: 14 }}>{d.today.heroEmptyTitle}</h2>
             <div className="actions">
               <Link className="btn-primary" href="/practice">
-                去练习台
+                {d.today.goPractice}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
@@ -307,7 +307,7 @@ export default function Today() {
                   <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                 </svg>
               </span>
-              也在今天
+              {d.today.todayTitle}
             </span>
           </div>
           <ul className="checklist">
@@ -332,14 +332,14 @@ export default function Today() {
                   <path d={ICON.cal} />
                 </svg>
               </span>
-              本周面试与截止
+              {d.today.weekEventsTitle}
             </span>
-            <span className="tile-count">{events.length} 项</span>
+            <span className="tile-count">{d.today.itemsCount(events.length)}</span>
           </div>
           {events.length ? (
             <ul className="events">
               {events.slice(0, 4).map((ev, i) => {
-                const b = dateBlock(ev.date);
+                const b = dateBlock(ev.date, d.today.dow, d.today.monthSuffix);
                 return (
                   <li key={i} className={i === 0 ? "soonest" : ""}>
                     <div className="date">
@@ -358,7 +358,7 @@ export default function Today() {
               })}
             </ul>
           ) : (
-            <p className="muted">本周暂无硬日程 — 多铺管道、多练题。</p>
+            <p className="muted">{d.today.weekEventsEmpty}</p>
           )}
         </section>
 
@@ -371,10 +371,10 @@ export default function Today() {
                   <path d={ICON.bolt} />
                 </svg>
               </span>
-              进行中
+              {d.today.inProgressTitle}
             </span>
             <Link className="more" href="/pipeline">
-              全部公司 →
+              {d.today.allCompanies}
             </Link>
           </div>
           <ul className="moves">
@@ -387,7 +387,7 @@ export default function Today() {
                   <b>{r.slug ? <Link href={`/companies/${r.slug}`}>{r.name}</Link> : r.name}</b>
                   <span>{label}</span>
                 </div>
-                {perm && <span className="perm">PERM day-1</span>}
+                {perm && <span className="perm">{d.today.permDay1}</span>}
                 <span className={`tag ${tag.cls}`}>
                   <span className="pip" />
                   {tag.txt}
@@ -404,7 +404,7 @@ export default function Today() {
               <path d="M7 4h10v4a5 5 0 0 1-10 0z" />
               <path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M9 17h6M10 17v-3M14 17v-3M8 21h8" />
             </svg>
-            本周战绩
+            {d.today.weekWinsTitle}
           </span>
           <ul className="win-list">
             {wins.map((w, i) => (
@@ -422,7 +422,7 @@ export default function Today() {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" />
             </svg>
-            这一周很扎实 — 保持住。
+            {d.today.weekCheer}
           </div>
         </section>
 
@@ -435,10 +435,10 @@ export default function Today() {
                   <path d="M3 4h18l-7 8v7l-4 2v-9z" />
                 </svg>
               </span>
-              管道漏斗
+              {d.today.funnelTitle}
             </span>
             <Link className="more" href="/pipeline">
-              进 pipeline →
+              {d.today.enterPipeline}
             </Link>
           </div>
           <div className="funnel">
@@ -462,7 +462,7 @@ export default function Today() {
               </span>
               <div>
                 <div className="num">{tracker.length}</div>
-                <div className="label">家在追</div>
+                <div className="label">{d.today.statTracking}</div>
               </div>
             </Link>
             <Link href="/jobs" className="stat row">
@@ -474,7 +474,7 @@ export default function Today() {
               </span>
               <div>
                 <div className="num">{activeOpenings}</div>
-                <div className="label">个在招岗</div>
+                <div className="label">{d.today.statOpenRoles}</div>
               </div>
             </Link>
             {pct > 0 && (
@@ -486,7 +486,7 @@ export default function Today() {
                 </span>
                 <div style={{ flex: 1 }}>
                   <div className="num">{pct}%</div>
-                  <div className="label">冲刺进度</div>
+                  <div className="label">{d.today.statSprint}</div>
                   <div className="bar slim" style={{ marginTop: 6 }}>
                     <i style={{ width: `${pct}%` }} />
                   </div>
@@ -502,7 +502,7 @@ export default function Today() {
               </span>
               <div>
                 <div className="num">{referrals.rows.length}</div>
-                <div className="label">条内推渠道</div>
+                <div className="label">{d.today.statReferralChannels}</div>
               </div>
             </Link>
           </div>
@@ -510,8 +510,8 @@ export default function Today() {
       </div>
 
       <p className="muted small" style={{ marginTop: 18 }}>
-        北极星：{cfg.northStar}。
-        <Link href="/docs/profile/target"> 详情 →</Link>
+        {d.today.northStarPrefix}{cfg.northStar}{d.today.northStarSuffix}
+        <Link href="/docs/profile/target">{d.today.northStarMore}</Link>
       </p>
     </>
   );

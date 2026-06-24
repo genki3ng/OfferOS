@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useDict } from "@/i18n/client";
 import type { OutreachTemplate } from "@/lib/data";
 import { getToken, saveTrackerReferral } from "@/lib/githubClient";
 import { fillTemplate, type KitJob } from "./ReferralKit";
@@ -15,10 +16,13 @@ export interface ColdTemplates {
 type Path = "" | "linkedin" | "friend" | "giveup";
 
 /** 解析 tracker Referral 列里的策略标记 → 展示 pill */
-function decisionLabel(cell: string): { text: string; cls: string } | null {
-  if (cell.includes("🔍")) return { text: "🔍 LinkedIn 找人中", cls: "pill blue" };
-  if (cell.includes("🤝")) return { text: "🤝 熟人引荐中", cls: "pill amber" };
-  if (cell.includes("✖")) return { text: "✖️ 已放弃 · 直接网申", cls: "pill gray" };
+function decisionLabel(
+  cell: string,
+  t: ReturnType<typeof useDict>["coldOutreach"]
+): { text: string; cls: string } | null {
+  if (cell.includes("🔍")) return { text: t.pillSearching, cls: "pill blue" };
+  if (cell.includes("🤝")) return { text: t.pillFriend, cls: "pill amber" };
+  if (cell.includes("✖")) return { text: t.pillGiveup, cls: "pill gray" };
   return null;
 }
 
@@ -39,6 +43,7 @@ export default function ColdOutreachKit({
   jobs: KitJob[];
   templates: ColdTemplates;
 }) {
+  const d = useDict();
   const [open, setOpen] = useState(false);
   const [path, setPath] = useState<Path>("");
   const [canWrite, setCanWrite] = useState(false);
@@ -66,13 +71,13 @@ export default function ColdOutreachKit({
   const mark = async (val: string, note: string) => {
     if (!canWrite || busy) return;
     setBusy(true);
-    setMsg("写入 tracker…");
+    setMsg(d.coldOutreach.writing);
     try {
       await saveTrackerReferral(companyCell, name, val);
       setDecision(val);
-      setMsg(`✓ ${note}（已写进 tracker，约 1 分钟后全站更新）`);
+      setMsg(d.coldOutreach.writeOk(note));
     } catch (e) {
-      setMsg(`✗ ${e instanceof Error ? e.message : "写入失败"}`);
+      setMsg(d.coldOutreach.writeFail(e instanceof Error ? e.message : d.coldOutreach.writeFailDefault));
     } finally {
       setBusy(false);
     }
@@ -91,12 +96,12 @@ export default function ColdOutreachKit({
   const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(
     name + " data scientist"
   )}`;
-  const pill = decisionLabel(decision);
+  const pill = decisionLabel(decision, d.coldOutreach);
 
   const jobPicker = ranked.length > 0 && (
     <>
       <div className="small" style={{ fontWeight: 650, margin: "8px 0 2px" }}>
-        提哪个岗（建议 1 个，📌 已预选）：
+        {d.coldOutreach.jobPickHeading}
       </div>
       <ul className="task-list">
         {ranked.map((j, i) => (
@@ -128,7 +133,7 @@ export default function ColdOutreachKit({
         <div className="small" style={{ fontWeight: 650 }}>
           {label} <span className="muted">{tpl.to}</span>{" "}
           <button className="btn mini ghost" onClick={() => copy(label, text)}>
-            {copied === label ? "✓ 已复制" : "复制"}
+            {copied === label ? d.coldOutreach.copied : d.coldOutreach.copy}
           </button>
         </div>
         <textarea className="field" key={text} rows={6} defaultValue={text} />
@@ -140,7 +145,7 @@ export default function ColdOutreachKit({
     <>
       {pill && <span className={pill.cls}>{pill.text}</span>}
       <button className="btn mini ghost" onClick={() => setOpen(true)}>
-        🧭 解决
+        {d.coldOutreach.solveBtn}
       </button>
       {open &&
         typeof document !== "undefined" &&
@@ -148,10 +153,10 @@ export default function ColdOutreachKit({
           <div className="modal-mask" onClick={() => setOpen(false)}>
             <div className="modal" style={{ width: 620 }} onClick={(e) => e.stopPropagation()}>
               <div className="card-title">
-                🧭 {name} · 内推怎么解决
+                {d.coldOutreach.modalTitle(name)}
                 <span className="more">
                   <button className="btn mini ghost" onClick={() => setOpen(false)}>
-                    关闭
+                    {d.coldOutreach.close}
                   </button>
                 </span>
               </div>
@@ -160,26 +165,25 @@ export default function ColdOutreachKit({
                   className={`chip ${path === "linkedin" ? "on" : ""}`}
                   onClick={() => setPath("linkedin")}
                 >
-                  🔍 LinkedIn 找陌生人
+                  {d.coldOutreach.chipLinkedin}
                 </button>
                 <button
                   className={`chip ${path === "friend" ? "on" : ""}`}
                   onClick={() => setPath("friend")}
                 >
-                  🤝 找认识的人
+                  {d.coldOutreach.chipFriend}
                 </button>
                 <button
                   className={`chip ${path === "giveup" ? "on" : ""}`}
                   onClick={() => setPath("giveup")}
                 >
-                  ✖️ 放弃 referral
+                  {d.coldOutreach.chipGiveup}
                 </button>
               </div>
 
               {path === "" && (
                 <p className="muted small">
-                  选一条路：LinkedIn 冷启动（找该公司 DS 发连接请求 + DM）、找认识的人（话术已备）、
-                  或者放弃内推直接网申。选完会把策略标记写进 tracker，缺口名单里就能看到进展。
+                  {d.coldOutreach.intro}
                 </p>
               )}
 
@@ -187,23 +191,23 @@ export default function ColdOutreachKit({
                 <>
                   <p className="small" style={{ margin: "4px 0" }}>
                     <a className="btn mini" href={searchUrl} target="_blank" rel="noreferrer">
-                      ① 在 LinkedIn 搜 {name} 的 DS →
+                      {d.coldOutreach.searchBtn(name)}
                     </a>{" "}
                     <span className="muted small">
-                      优先：同方向 DS &gt; 同校/同社区 &gt; 华人；挑 2–3 人，别群发
+                      {d.coldOutreach.searchHint}
                     </span>
                   </p>
                   {jobPicker}
-                  {textBlock("② 连接请求（≤300 字符）", templates.connect)}
-                  {textBlock("③ 通过后发 DM", templates.dm)}
+                  {textBlock(d.coldOutreach.connectLabel, templates.connect)}
+                  {textBlock(d.coldOutreach.dmLabel, templates.dm)}
                   <button
                     className="btn"
                     style={{ marginTop: 8 }}
                     disabled={!canWrite || busy}
-                    title={canWrite ? "" : "在 ⚙️ 设置配 token 后可写入"}
-                    onClick={() => mark(`🔍LinkedIn找人中(${today()})`, "已标记 LinkedIn 找人中")}
+                    title={canWrite ? "" : d.coldOutreach.needTokenTitle}
+                    onClick={() => mark(`🔍LinkedIn找人中(${today()})`, d.coldOutreach.noteSearching)}
                   >
-                    ④ 标记为 🔍 找人中
+                    {d.coldOutreach.markSearching}
                   </button>
                 </>
               )}
@@ -211,14 +215,14 @@ export default function ColdOutreachKit({
               {path === "friend" && (
                 <>
                   {jobPicker}
-                  {textBlock("话术（EN + 中，删掉不用的那段）", templates.friend)}
-                  <p className="muted small">发完记得补三件套：简历 PDF + JD 链接 + 三人称简介。</p>
+                  {textBlock(d.coldOutreach.friendLabel, templates.friend)}
+                  <p className="muted small">{d.coldOutreach.friendHint}</p>
                   <button
                     className="btn"
                     disabled={!canWrite || busy}
-                    onClick={() => mark(`🤝熟人引荐中(${today()})`, "已标记熟人引荐中")}
+                    onClick={() => mark(`🤝熟人引荐中(${today()})`, d.coldOutreach.noteFriend)}
                   >
-                    标记为 🤝 引荐中
+                    {d.coldOutreach.markFriend}
                   </button>
                 </>
               )}
@@ -226,17 +230,16 @@ export default function ColdOutreachKit({
               {path === "giveup" && (
                 <>
                   <p className="small">
-                    放弃 referral = 直接官网投递（内推过的回复率高 ~3–5 倍，确定吗？）。
-                    标记后该公司仍留在缺口名单里、显示 ✖️，想反悔随时换策略。
+                    {d.coldOutreach.giveupText}
                   </p>
                   <button
                     className="btn"
                     disabled={!canWrite || busy}
                     onClick={() =>
-                      mark(`✖️放弃内推·直接网申(${today()})`, "已标记放弃，直接网申")
+                      mark(`✖️放弃内推·直接网申(${today()})`, d.coldOutreach.noteGiveup)
                     }
                   >
-                    确认 ✖️ 放弃内推
+                    {d.coldOutreach.markGiveup}
                   </button>
                 </>
               )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDict } from "@/i18n/client";
 
 const SUN = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -16,6 +17,7 @@ const MOON = (
 
 /** 主题切换：暖光·浅 ⇄ 暖光·夜，存 localStorage（jh_theme） */
 export default function ThemeToggle() {
+  const d = useDict();
   const [theme, setTheme] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,11 +39,11 @@ export default function ThemeToggle() {
     <button
       className="theme-toggle"
       onClick={cycle}
-      title={`当前：${theme === "dark" ? "暖光·夜" : "暖光·浅"}，点击切换`}
-      aria-label="切换深浅主题"
+      title={d.theme.title(theme === "dark" ? d.theme.dark : d.theme.light)}
+      aria-label={d.theme.ariaLabel}
     >
       {theme === "dark" ? MOON : SUN}
-      {theme === "dark" ? "夜" : "浅"}
+      {theme === "dark" ? d.theme.darkShort : d.theme.lightShort}
     </button>
   );
 }

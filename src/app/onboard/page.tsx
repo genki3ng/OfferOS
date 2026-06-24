@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ROLES, ROLE_SLUGS, getRole, type RoleSlug } from "@/config/roles";
 import { getToken, ghGetFile, ghPutFile, sendRequestToClaude, REPO } from "@/lib/githubClient";
+import { useDict } from "@/i18n/client";
 
 /* ---------- 类型与工具 ---------- */
 
@@ -205,9 +206,19 @@ function Chip({ label, onClick }: { label: string; active?: boolean; onClick: ()
 
 /* ---------- 主向导 ---------- */
 
-const STEPS = ["身份", "目标角色", "级别", "地区", "签证", "目标公司", "北极星", "确认"];
-
 export default function OnboardPage() {
+  const d = useDict();
+  const STEPS = d.onboard.steps;
+  const MODE_DICT: Record<Mode, string> = {
+    remote: d.onboard.modeRemote,
+    hybrid: d.onboard.modeHybrid,
+    onsite: d.onboard.modeOnsite,
+  };
+  const VISA_DICT: Record<Visa, string> = {
+    needed: d.onboard.visaNeeded,
+    "not-needed": d.onboard.visaNotNeeded,
+    unsure: d.onboard.visaUnsure,
+  };
   const [w, setW] = useState<Wizard>(BLANK);
   const [step, setStep] = useState(0);
   const [hasToken, setHasToken] = useState(false);
@@ -264,7 +275,7 @@ export default function OnboardPage() {
       localStorage.removeItem(DRAFT_KEY);
       setDone(true);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "写入失败");
+      setErr(e instanceof Error ? e.message : d.onboard.writeFailed);
     } finally {
       setBusy(false);
     }
@@ -273,17 +284,20 @@ export default function OnboardPage() {
   if (done) {
     return (
       <>
-        <h1 className="page-title">✅ 设置完成</h1>
+        <h1 className="page-title">{d.onboard.doneTitle}</h1>
         <div className="card section">
           <p>
-            已把你的身份、角色（<b>{role.label}</b>）、目标公司写进仓库，并给 Claude 留了一条生成{" "}
-            <b>{role.shortLabel}</b> 备战 pack 的请求。
+            {d.onboard.donePackPre}
+            <b>{role.label}</b>
+            {d.onboard.donePackMid}
+            <b>{role.shortLabel}</b>
+            {d.onboard.donePackPost}
           </p>
           <p className="muted small">
-            Vercel 会在 ~1 分钟内重建上线，届时全站文案会变成你的。接下来：在 Claude Code 里说「读 CLAUDE.md 和 HANDOFF.md，处理 inbox」即可。
+            {d.onboard.doneNote}
           </p>
           <div style={{ marginTop: 12 }}>
-            <Link className="btn-primary" href="/">回到今日 →</Link>
+            <Link className="btn-primary" href="/">{d.onboard.doneBackHome}</Link>
           </div>
         </div>
       </>
@@ -294,25 +308,26 @@ export default function OnboardPage() {
 
   return (
     <>
-      <h1 className="page-title">🚀 设置 OfferOS</h1>
+      <h1 className="page-title">{d.onboard.title}</h1>
       <p className="page-sub">
-        回答几个问题，把这个模板变成<strong>你的</strong>求职指挥台，并选好对应角色的备战模板。
-        步骤 {step + 1}/{STEPS.length}：{STEPS[step]}
+        {d.onboard.subPre}<strong>{d.onboard.subStrong}</strong>{d.onboard.subMid}
+        {" "}
+        {d.onboard.stepLabel(step + 1, STEPS.length, STEPS[step])}
       </p>
 
       <div className="card section" style={{ maxWidth: 640 }}>
         {step === 0 && (
           <>
-            <Field label="你的名字" hint="首页问候语、页面文案里用。">
+            <Field label={d.onboard.nameLabel} hint={d.onboard.nameHint}>
               <input
                 style={inputStyle}
                 value={w.ownerName}
                 onChange={(e) => up({ ownerName: e.target.value })}
-                placeholder="如 Jane Doe / 张三"
+                placeholder={d.onboard.namePlaceholder}
                 autoFocus
               />
             </Field>
-            <Field label="头像缩写" hint="右上角头像，1–3 字符；留空自动从名字取。">
+            <Field label={d.onboard.initialsLabel} hint={d.onboard.initialsHint}>
               <input
                 style={{ ...inputStyle, maxWidth: 120 }}
                 value={w.ownerInitials}
@@ -324,7 +339,7 @@ export default function OnboardPage() {
         )}
 
         {step === 1 && (
-          <Field label="你的目标角色" hint="决定备战题库、面试轮次与北极星模板。">
+          <Field label={d.onboard.roleLabel} hint={d.onboard.roleHint}>
             <div>
               {ROLE_SLUGS.map((s) => {
                 const r = ROLES[s];
@@ -348,48 +363,48 @@ export default function OnboardPage() {
 
         {step === 2 && (
           <>
-            <Field label="当前级别" hint="点预设或自己填。">
+            <Field label={d.onboard.currentLevelLabel} hint={d.onboard.currentLevelHint}>
               <div style={{ marginBottom: 6 }}>
                 {role.levelPresets.map((lv) => (
                   <Chip key={lv} label={lv} onClick={() => up({ currentLevel: lv })} />
                 ))}
               </div>
-              <input style={inputStyle} value={w.currentLevel} onChange={(e) => up({ currentLevel: e.target.value })} placeholder="如 Senior (IC5)" />
+              <input style={inputStyle} value={w.currentLevel} onChange={(e) => up({ currentLevel: e.target.value })} placeholder={d.onboard.currentLevelPlaceholder} />
             </Field>
-            <Field label="目标级别">
+            <Field label={d.onboard.targetLevelLabel}>
               <div style={{ marginBottom: 6 }}>
                 {role.levelPresets.map((lv) => (
                   <Chip key={lv} label={lv} onClick={() => up({ targetLevel: lv })} />
                 ))}
               </div>
-              <input style={inputStyle} value={w.targetLevel} onChange={(e) => up({ targetLevel: e.target.value })} placeholder="如 Staff (IC6)" />
+              <input style={inputStyle} value={w.targetLevel} onChange={(e) => up({ targetLevel: e.target.value })} placeholder={d.onboard.targetLevelPlaceholder} />
             </Field>
           </>
         )}
 
         {step === 3 && (
           <>
-            <Field label="工作形态">
+            <Field label={d.onboard.workModeLabel}>
               <div>
-                {(Object.keys(MODE_LABEL) as Mode[]).map((m) => (
+                {(Object.keys(MODE_DICT) as Mode[]).map((m) => (
                   <button key={m} type="button" onClick={() => up({ locationMode: m })} className={w.locationMode === m ? "btn-primary" : "btn-ghost"} style={{ marginRight: 6 }}>
-                    {MODE_LABEL[m]}
+                    {MODE_DICT[m]}
                   </button>
                 ))}
               </div>
             </Field>
-            <Field label="地区 / 城市偏好" hint="逗号分隔，可留空。">
-              <input style={inputStyle} value={w.regions} onChange={(e) => up({ regions: e.target.value })} placeholder="如 美国主要城市、Remote、Bay Area" />
+            <Field label={d.onboard.regionsLabel} hint={d.onboard.regionsHint}>
+              <input style={inputStyle} value={w.regions} onChange={(e) => up({ regions: e.target.value })} placeholder={d.onboard.regionsPlaceholder} />
             </Field>
           </>
         )}
 
         {step === 4 && (
-          <Field label="是否需要签证 sponsorship？">
+          <Field label={d.onboard.visaLabel}>
             <div>
-              {(Object.keys(VISA_LABEL) as Visa[]).map((v) => (
+              {(Object.keys(VISA_DICT) as Visa[]).map((v) => (
                 <button key={v} type="button" onClick={() => up({ visa: v })} className={w.visa === v ? "btn-primary" : "btn-ghost"} style={{ marginRight: 6 }}>
-                  {VISA_LABEL[v]}
+                  {VISA_DICT[v]}
                 </button>
               ))}
             </div>
@@ -397,7 +412,7 @@ export default function OnboardPage() {
         )}
 
         {step === 5 && (
-          <Field label="目标公司" hint="回车或逗号添加；会写进 tracker（pipeline）。可留空稍后再加。">
+          <Field label={d.onboard.companiesLabel} hint={d.onboard.companiesHint}>
             <div style={{ display: "flex", gap: 8 }}>
               <input
                 style={inputStyle}
@@ -409,9 +424,9 @@ export default function OnboardPage() {
                     addCompany();
                   }
                 }}
-                placeholder="如 Northwind"
+                placeholder={d.onboard.companiesPlaceholder}
               />
-              <button type="button" className="btn-ghost" onClick={addCompany}>添加</button>
+              <button type="button" className="btn-ghost" onClick={addCompany}>{d.onboard.companiesAdd}</button>
             </div>
             <div style={{ marginTop: 8 }}>
               {w.companies.map((c) => (
@@ -423,38 +438,37 @@ export default function OnboardPage() {
 
         {step === 6 && (
           <>
-            <Field label="问候口头禅（motto）" hint="首页问候里的鼓励语。">
-              <input style={inputStyle} value={w.motto} onChange={(e) => up({ motto: e.target.value })} placeholder="稳住节奏，" />
+            <Field label={d.onboard.mottoLabel} hint={d.onboard.mottoHint}>
+              <input style={inputStyle} value={w.motto} onChange={(e) => up({ motto: e.target.value })} placeholder={d.onboard.mottoPlaceholder} />
             </Field>
-            <Field label="北极星（一句话目标）" hint="留空则按角色模板自动生成（见下方预览）。">
+            <Field label={d.onboard.northStarLabel} hint={d.onboard.northStarHint}>
               <input style={inputStyle} value={w.northStar} onChange={(e) => up({ northStar: e.target.value })} placeholder={getRole(w.role).northStarTemplate.replace("{level}", w.targetLevel || "Senior→Staff")} />
-              <div className="muted small" style={{ marginTop: 6 }}>预览：{northStarPreview(w)}</div>
+              <div className="muted small" style={{ marginTop: 6 }}>{d.onboard.northStarPreviewPrefix}{northStarPreview(w)}</div>
             </Field>
           </>
         )}
 
         {step === last && (
           <>
-            <div className="card-title">确认要写入的 profile</div>
+            <div className="card-title">{d.onboard.confirmTitle}</div>
             <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, background: "var(--code-bg, #f4f1ec)", padding: 12, borderRadius: 8, overflowX: "auto" }}>
               {JSON.stringify(buildProfile(w), null, 2)}
             </pre>
             {hasToken ? (
               <>
                 <p className="muted small">
-                  将提交到仓库 <code>{REPO}</code>：写 <code>data/profile.json</code>、重置 <code>data/tracker.json</code>、重写{" "}
-                  <code>profile/target.md</code>，并给 Claude 留一条生成 {role.shortLabel} 备战 pack 的请求。Vercel ~1 分钟后重建上线。
+                  {d.onboard.confirmHasTokenPre}<code>{REPO}</code>{d.onboard.confirmHasTokenMid1}<code>data/profile.json</code>{d.onboard.confirmHasTokenMid2}<code>data/tracker.json</code>{d.onboard.confirmHasTokenMid3}
+                  <code>profile/target.md</code>{d.onboard.confirmHasTokenPost(role.shortLabel)}
                 </p>
                 <button className="btn-primary" disabled={busy} onClick={doWrite}>
-                  {busy ? "写入中…" : "确认并写入仓库 →"}
+                  {busy ? d.onboard.confirmWriting : d.onboard.confirmWrite}
                 </button>
                 {err && <p className="small" style={{ color: "var(--danger, #d33)" }}>✗ {err}</p>}
               </>
             ) : (
               <>
                 <p className="muted small">
-                  还没连 GitHub（没配 PAT）。两个选择：① 去 <Link href="/settings">/settings</Link> 配一把细粒度 PAT 再回来，
-                  这页的答案已自动暂存；② 或者把下面这段交给 Claude / Codex，让它替你写进仓库。
+                  {d.onboard.confirmNoTokenPre}<Link href="/settings">/settings</Link>{d.onboard.confirmNoTokenMid}
                 </p>
                 <textarea readOnly style={{ ...inputStyle, height: 220, fontFamily: "monospace", fontSize: 12 }} value={handoffPrompt(buildProfile(w))} />
                 <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
@@ -466,9 +480,9 @@ export default function OnboardPage() {
                       setTimeout(() => setCopied(false), 2000);
                     }}
                   >
-                    {copied ? "已复制 ✓" : "复制给 Claude / Codex"}
+                    {copied ? d.onboard.confirmCopied : d.onboard.confirmCopy}
                   </button>
-                  <Link className="btn-ghost" href="/settings">去配 PAT →</Link>
+                  <Link className="btn-ghost" href="/settings">{d.onboard.confirmGoPat}</Link>
                 </div>
               </>
             )}
@@ -478,11 +492,11 @@ export default function OnboardPage() {
         {/* 导航 */}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18 }}>
           <button className="btn-ghost" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
-            ← 上一步
+            {d.onboard.navPrev}
           </button>
           {step < last && (
             <button className="btn-primary" disabled={step === 0 && !w.ownerName.trim()} onClick={() => setStep((s) => Math.min(last, s + 1))}>
-              下一步 →
+              {d.onboard.navNext}
             </button>
           )}
         </div>

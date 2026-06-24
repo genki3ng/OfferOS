@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getToken, saveTaskToggle } from "@/lib/githubClient";
+import { useDict } from "@/i18n/client";
 
 export interface TaskInfo {
   text: string;
@@ -26,6 +27,7 @@ export default function Prose({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [msg, setMsg] = useState<string>("");
+  const d = useDict();
 
   useEffect(() => {
     const root = ref.current;
@@ -41,14 +43,14 @@ export default function Prose({
       const onChange = async () => {
         const checked = box.checked;
         boxes.forEach((b) => (b.disabled = true));
-        setMsg("提交中…");
+        setMsg(d.prose.saving);
         try {
           await saveTaskToggle(path, taskOffset + i, tasks[i].text, checked);
           tasks[i].checked = checked;
-          setMsg("✓ 已 commit，约 1 分钟后全站更新");
+          setMsg(d.prose.saved);
         } catch (e) {
           box.checked = !checked;
-          setMsg(`✗ ${e instanceof Error ? e.message : "提交失败"}`);
+          setMsg(`✗ ${e instanceof Error ? e.message : d.prose.saveFailed}`);
         } finally {
           boxes.forEach((b) => (b.disabled = false));
           setTimeout(() => setMsg(""), 5000);
@@ -59,7 +61,7 @@ export default function Prose({
     });
     return () =>
       handlers.forEach(([box, fn]) => box.removeEventListener("change", fn));
-  }, [html, path, tasks, taskOffset]);
+  }, [html, path, tasks, taskOffset, d]);
 
   return (
     <div>

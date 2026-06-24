@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getToken, saveOpeningPin, saveOpeningAttitude } from "@/lib/githubClient";
+import { useDict } from "@/i18n/client";
 
 export interface JobItem {
   company: string;
@@ -30,6 +31,7 @@ const ATT_ICON: Record<string, string> = { "": "·", love: "💚", no: "🚫" };
 const attWeight = (a: string) => (a === "love" ? 2 : a === "no" ? 0 : 1);
 
 export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
+  const d = useDict();
   const [q, setQ] = useState("");
   const [tier, setTier] = useState("");
   const [company, setCompany] = useState("");
@@ -58,13 +60,13 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
     const key = keyOf(j);
     setBusyKey(key);
     setPinOverride((o) => ({ ...o, [key]: to }));
-    setMsg("提交中…");
+    setMsg(d.jobs.submitting);
     try {
       await saveOpeningPin(j.slug, j.anchor, to, j.title);
-      setMsg(to ? "📌 已加入投递清单（约 1 分钟后全站更新）" : "已移出投递清单");
+      setMsg(to ? d.jobs.pinAdded : d.jobs.pinRemoved);
     } catch (e) {
       setPinOverride((o) => ({ ...o, [key]: !to }));
-      setMsg(`✗ ${e instanceof Error ? e.message : "提交失败"}`);
+      setMsg(`✗ ${e instanceof Error ? e.message : d.jobs.submitFailed}`);
     } finally {
       setBusyKey("");
       setTimeout(() => setMsg(""), 6000);
@@ -78,19 +80,19 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
     const key = keyOf(j);
     setBusyKey(key);
     setAttOverride((o) => ({ ...o, [key]: to }));
-    setMsg("提交中…");
+    setMsg(d.jobs.submitting);
     try {
       await saveOpeningAttitude(j.slug, j.anchor, to, j.title);
       setMsg(
         to === "love"
-          ? "💚 标为心仪（约 1 分钟后全站更新）"
+          ? d.jobs.attLove
           : to === "no"
-          ? "🚫 标为不合适"
-          : "已清除态度"
+          ? d.jobs.attNo
+          : d.jobs.attCleared
       );
     } catch (e) {
       setAttOverride((o) => ({ ...o, [key]: cur }));
-      setMsg(`✗ ${e instanceof Error ? e.message : "提交失败"}`);
+      setMsg(`✗ ${e instanceof Error ? e.message : d.jobs.submitFailed}`);
     } finally {
       setBusyKey("");
       setTimeout(() => setMsg(""), 6000);
@@ -143,25 +145,25 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
     <>
       <div className="filters">
         <input
-          placeholder="搜索岗位 / 地点 / 关键词…"
+          placeholder={d.jobs.searchPlaceholder}
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} title="排序方式">
-          <option value="">排序：默认（📌→💚→梯队→契合）</option>
-          <option value="att">排序：态度（💚 心仪优先）</option>
-          <option value="fit">排序：契合度（⭐🎯）</option>
-          <option value="co">排序：按公司</option>
-          <option value="new">排序：最近抓取</option>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} title={d.jobs.sortTitle}>
+          <option value="">{d.jobs.sortDefault}</option>
+          <option value="att">{d.jobs.sortAtt}</option>
+          <option value="fit">{d.jobs.sortFit}</option>
+          <option value="co">{d.jobs.sortCo}</option>
+          <option value="new">{d.jobs.sortNew}</option>
         </select>
         <select value={tier} onChange={(e) => setTier(e.target.value)}>
-          <option value="">全部梯队</option>
-          <option value="1">🥇 第一梯队</option>
-          <option value="2">🥈 第二梯队</option>
-          <option value="3">🥉 第三梯队</option>
+          <option value="">{d.jobs.allTiers}</option>
+          <option value="1">{d.jobs.tier1}</option>
+          <option value="2">{d.jobs.tier2}</option>
+          <option value="3">{d.jobs.tier3}</option>
         </select>
         <select value={company} onChange={(e) => setCompany(e.target.value)}>
-          <option value="">全部公司</option>
+          <option value="">{d.jobs.allCompanies}</option>
           {companies.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -174,7 +176,7 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
             checked={onlyPinned}
             onChange={(e) => setOnlyPinned(e.target.checked)}
           />{" "}
-          📌 只看投递清单（{pinnedCount}）
+          {d.jobs.onlyPinned(pinnedCount)}
         </label>
         <label className="muted small" style={{ alignSelf: "center" }}>
           <input
@@ -182,7 +184,7 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
             checked={hideNo}
             onChange={(e) => setHideNo(e.target.checked)}
           />{" "}
-          🚫 隐藏不合适
+          {d.jobs.hideNo}
         </label>
         <label className="muted small" style={{ alignSelf: "center" }}>
           <input
@@ -190,14 +192,13 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
             checked={showExcluded}
             onChange={(e) => setShowExcluded(e.target.checked)}
           />{" "}
-          含已排除
+          {d.jobs.includeExcluded}
         </label>
       </div>
 
       <p className="muted small">
-        {filtered.length} 个岗位 · ⭐/🎯 = 各 session 扫岗判断 · 📌 = 投递清单（{pinnedCount}，**会显示在 pipeline 对应公司下、可标投递进度**）·
-        💚 = 心仪（{loveCount}）/ 🚫 = 不合适
-        {canWrite ? "，点行内按钮切换" : "——在 ⚙️ 设置配 token 后可直接点选"}
+        {d.jobs.summary(filtered.length, pinnedCount, loveCount)}
+        {canWrite ? d.jobs.summaryCanWrite : d.jobs.summaryReadOnly}
       </p>
       {msg && <p className="small">{msg}</p>}
 
@@ -207,18 +208,18 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
             <thead>
               <tr>
                 <th>📌</th>
-                <th title="态度：点击循环 未定→💚心仪→🚫不合适">态度</th>
-                <th>公司</th>
-                <th>契合</th>
-                <th>岗位与说明（原文）</th>
-                <th>地点</th>
-                <th>抓取</th>
+                <th title={d.jobs.thAttTitle}>{d.jobs.thAtt}</th>
+                <th>{d.jobs.thCompany}</th>
+                <th>{d.jobs.thFit}</th>
+                <th>{d.jobs.thRole}</th>
+                <th>{d.jobs.thLocation}</th>
+                <th>{d.jobs.thFetched}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((j) => (
                 <tr key={keyOf(j)} style={j.excluded ? { opacity: 0.55 } : undefined}>
-                  <td data-label="清单">
+                  <td data-label={d.jobs.dlList}>
                     {!j.excluded && (
                       <button
                         className={`pin-btn ${isPinned(j) ? "on" : ""}`}
@@ -227,16 +228,16 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
                         title={
                           canWrite
                             ? isPinned(j)
-                              ? "移出投递清单（也会从 pipeline 公司下移除）"
-                              : "📌 加入投递清单 → 会显示在 pipeline 对应公司下（可在那标投递进度）；内推弹窗也自动预选"
-                            : "在 ⚙️ 设置配 token 后可点选"
+                              ? d.jobs.pinUnpinTitle
+                              : d.jobs.pinAddTitle
+                            : d.jobs.pinDisabledTitle
                         }
                       >
                         {isPinned(j) ? "📌" : "＋"}
                       </button>
                     )}
                   </td>
-                  <td data-label="态度">
+                  <td data-label={d.jobs.dlAtt}>
                     {!j.excluded && (
                       <button
                         className={`pin-btn att-${attOf(j) || "none"}`}
@@ -244,27 +245,27 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
                         onClick={() => cycleAttitude(j)}
                         title={
                           canWrite
-                            ? "点击循环：未定 → 💚 心仪 → 🚫 不合适"
-                            : "在 ⚙️ 设置配 token 后可点选"
+                            ? d.jobs.attCycleTitle
+                            : d.jobs.attDisabledTitle
                         }
                       >
                         {ATT_ICON[attOf(j)]}
                       </button>
                     )}
                   </td>
-                  <td data-label="公司" style={{ whiteSpace: "nowrap" }}>
+                  <td data-label={d.jobs.dlCompany} style={{ whiteSpace: "nowrap" }}>
                     <Link href={`/companies/${j.slug}`}>{j.company}</Link>{" "}
                     <span className={`tier-badge tier-${j.tier}`}>
                       {["", "一", "二", "三"][j.tier]}
                     </span>
                   </td>
-                  <td data-label="契合" style={{ whiteSpace: "nowrap" }}>
+                  <td data-label={d.jobs.dlFit} style={{ whiteSpace: "nowrap" }}>
                     {j.hot ? "🎯" : ""}
                     {"⭐".repeat(j.stars)}
                   </td>
-                  <td data-label="岗位" dangerouslySetInnerHTML={{ __html: j.html }} />
-                  <td className="muted" data-label="地点">{j.location}</td>
-                  <td className="muted small" data-label="抓取" style={{ whiteSpace: "nowrap" }}>
+                  <td data-label={d.jobs.dlRole} dangerouslySetInnerHTML={{ __html: j.html }} />
+                  <td className="muted" data-label={d.jobs.dlLocation}>{j.location}</td>
+                  <td className="muted small" data-label={d.jobs.dlFetched} style={{ whiteSpace: "nowrap" }}>
                     {j.sectionDate}
                   </td>
                 </tr>
