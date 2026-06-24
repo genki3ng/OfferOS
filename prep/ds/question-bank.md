@@ -11,33 +11,120 @@
 
 ### [sql-01] events(user_id, event_date, event_type)：求 D1/D7 留存曲线
 **要点**
+```sql
+WITH first_day AS (
+  SELECT user_id, MIN(event_date) AS d0 FROM events GROUP BY user_id
+)
+SELECT f.d0,
+       COUNT(DISTINCT f.user_id) AS cohort,
+       COUNT(DISTINCT CASE WHEN e.event_date = f.d0 + INTERVAL '1 day' THEN e.user_id END)::numeric
+         / COUNT(DISTINCT f.user_id) AS d1_retention,
+       COUNT(DISTINCT CASE WHEN e.event_date = f.d0 + INTERVAL '7 day' THEN e.user_id END)::numeric
+         / COUNT(DISTINCT f.user_id) AS d7_retention
+FROM first_day f
+LEFT JOIN events e ON e.user_id = f.user_id
+GROUP BY f.d0 ORDER BY f.d0;
+```
 - 模式：首访 cohort（`MIN(event_date)` per user）→ self-join/EXISTS 看 D+1、D+7 是否活跃 → 除以 cohort 规模。
 - 口述时先讲思路再写；注意去重（DISTINCT user）、留存定义（当天 vs 窗口内）。
 - 参考：[warmup-problems](sql-python/warmup-problems.md)
 
 ### [sql-02] 每个 category 收入 top 3 产品 + 占类目收入百分比
 **要点**
+```sql
+WITH agg AS (
+  SELECT category, product, SUM(revenue) AS rev FROM sales GROUP BY category, product
+), ranked AS (
+  SELECT *,
+         ROW_NUMBER() OVER (PARTITION BY category ORDER BY rev DESC) AS rn,
+         rev / SUM(rev) OVER (PARTITION BY category) AS pct_of_cat   -- 占比窗口在过滤 top3 前算
+  FROM agg
+)
+SELECT category, product, rev, pct_of_cat
+FROM ranked WHERE rn <= 3 ORDER BY category, rev DESC;
+```
 - `SUM(revenue) GROUP BY category, product` → `ROW_NUMBER() OVER (PARTITION BY category ORDER BY rev DESC)` ≤3 + `rev / SUM(rev) OVER (PARTITION BY category)`。
 - 细节：tie 处理（RANK vs ROW_NUMBER 说一句）、percent 在过滤 top3 前算。
 
 ### [sql-03] 连续登录 ≥3 天的用户（gaps-and-islands）
 **要点**
+```sql
+WITH d AS (SELECT DISTINCT user_id, event_date FROM events),
+g AS (
+  SELECT user_id, event_date,
+         event_date - CAST(ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY event_date) AS int) AS grp
+  FROM d
+)
+SELECT DISTINCT user_id
+FROM (SELECT user_id, grp FROM g GROUP BY user_id, grp HAVING COUNT(*) >= 3) s;
+```
 - 经典：`event_date - ROW_NUMBER() OVER (PARTITION BY user ORDER BY event_date)` 同组常数 → GROUP BY 组长度 ≥3。
 - 先 DISTINCT user+date；讲清为什么差值在连续段内不变。
 
 ### [sql-04] 漏斗 view→add_to_cart→purchase 各步转化，按渠道拆
 **要点**
+```sql
+WITH u AS (   -- 用户级打 flag（是否到过各步）
+  SELECT user_id, channel,
+         MAX(CASE WHEN event_type='view'        THEN 1 ELSE 0 END) AS viewed,
+         MAX(CASE WHEN event_type='add_to_cart' THEN 1 ELSE 0 END) AS carted,
+         MAX(CASE WHEN event_type='purchase'    THEN 1 ELSE 0 END) AS bought
+  FROM events GROUP BY user_id, channel
+)
+SELECT channel,
+       SUM(viewed) AS views,
+       SUM(carted)::numeric / NULLIF(SUM(viewed),0) AS view_to_cart,
+       SUM(bought)::numeric / NULLIF(SUM(carted),0) AS cart_to_buy
+FROM u GROUP BY channel;
+```
 - 用户级打 flag（MAX(CASE WHEN…)）→ 按渠道聚合 `SUM(purchase)/SUM(add_to_cart)` 等。
 - 提一句口径：时间窗约束（view 后 7 天内购买）、严格顺序漏斗 vs 宽松口径。
 
 ### [sql-05] Python：DataFrame 算各组 CUPED 校正后均值
 **要点**
+```python
+import pandas as pd
+def cuped_means(df, y='y', x_pre='x_pre', group='variant'):
+    theta = df[[y, x_pre]].cov().iloc[0, 1] / df[x_pre].var()   # cov(Y,Xpre)/var(Xpre)
+    df = df.assign(y_cuped=df[y] - theta * (df[x_pre] - df[x_pre].mean()))
+    return df.groupby(group)['y_cuped'].mean()                  # 各实验组校正后均值
+```
 - `theta = cov(Y, X_pre) / var(X_pre)`；`Y_cuped = Y − theta·(X_pre − mean(X_pre))`；再 groupby 实验组均值。
 - 讲原理一句话：用前期协变量解释掉一部分方差，无偏且方差更小。
 
 ### [sql-06] 配送 marketplace SQL：orders(order_id, consumer_id, merchant_id, courier_id, created_at, delivered_at, gov, is_subscriber)
 ① 各 merchant 月 GOV + 环比%；② 订阅会员 vs 非订阅的 30 天复购率；③ 各 region 配送时长 p90
 **要点**
+```sql
+-- ① 各 merchant 月 GOV + 环比%
+WITH m AS (
+  SELECT merchant_id, DATE_TRUNC('month', created_at) AS mon, SUM(gov) AS gov
+  FROM orders GROUP BY merchant_id, DATE_TRUNC('month', created_at)
+)
+SELECT merchant_id, mon, gov,
+       (gov - LAG(gov) OVER (PARTITION BY merchant_id ORDER BY mon))
+         / NULLIF(LAG(gov) OVER (PARTITION BY merchant_id ORDER BY mon), 0) AS mom_pct
+FROM m;
+
+-- ② 订阅会员 vs 非订阅 30 天复购率（分子分母分开 distinct）
+WITH nxt AS (
+  SELECT consumer_id, is_subscriber, created_at,
+         LEAD(created_at) OVER (PARTITION BY consumer_id ORDER BY created_at) AS next_at
+  FROM orders
+)
+SELECT is_subscriber,
+       COUNT(DISTINCT CASE WHEN next_at <= created_at + INTERVAL '30 day' THEN consumer_id END)::numeric
+         / COUNT(DISTINCT consumer_id) AS repurchase_30d
+FROM nxt GROUP BY is_subscriber;
+
+-- ③ 各 region 配送时长 p90
+SELECT c.region,
+       PERCENTILE_CONT(0.9) WITHIN GROUP (
+         ORDER BY EXTRACT(EPOCH FROM (o.delivered_at - o.created_at))/60) AS p90_minutes
+FROM orders o JOIN couriers c ON c.courier_id = o.courier_id
+WHERE o.delivered_at IS NOT NULL
+GROUP BY c.region;
+```
 - **① 月 GOV 环比**：`DATE_TRUNC('month', created_at)` 分组 `SUM(gov)`；环比 `LAG(SUM(gov)) OVER (PARTITION BY merchant_id ORDER BY month)`，`(cur−prev)/prev`。
 - **② 复购率**：标每单"30 天内是否有下一单"（`LEAD(created_at) OVER (PARTITION BY consumer_id ORDER BY created_at)` 比 `created_at + 30d`）；按 `is_subscriber` 分组 = 复购用户数 / 用户数（**分子分母分开 `COUNT(DISTINCT)` 再除**，别行级平均）。
 - **③ p90 配送时长**：`PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY delivered_at − created_at)`，按 region（join courier→region 维表）。
@@ -607,6 +694,127 @@ def bootstrap_mean_ci(data, n_boot=10000, alpha=0.05, rng=np.random.default_rng(
 - *"bootstrap CI vs t 检验 CI 何时用？"* → 分布偏态/统计量复杂（中位数、比率、AUC）用 bootstrap；近正态均值用解析 t-CI 更快。
 - *"无放回加权抽样 k 很大时慢？"* → reservoir / Gumbel-top-k trick；先问数据规模。
 - *(staff)* 接到实验：bootstrap 比率指标 CI、cluster bootstrap 处理用户内相关——贴近实验/measurement 场景。
+
+### [py-13] [LeetCode 200] 岛屿数量（grid DFS/BFS 连通分量）
+**要点**
+```python
+def num_islands(grid):
+    if not grid: return 0
+    R, C = len(grid), len(grid[0])
+    def sink(r, c):
+        if 0 <= r < R and 0 <= c < C and grid[r][c] == '1':
+            grid[r][c] = '0'                       # 标记已访问（淹掉）
+            for dr, dc in ((1,0),(-1,0),(0,1),(0,-1)):
+                sink(r+dr, c+dc)
+    count = 0
+    for r in range(R):
+        for c in range(C):
+            if grid[r][c] == '1':
+                count += 1; sink(r, c)             # 每个新陆地块 = 一个岛
+    return count
+```
+- 遍历网格，遇未访问陆地就 +1 并 DFS 淹掉整块（连通分量计数）。O(R·C)。
+
+**深挖追问**
+- *"大网格递归栈溢出？"* → 改迭代 BFS（队列）或显式栈。
+- *"不能改输入 grid？"* → 用 visited 集合替代原地标记。
+- *"求最大岛面积 / 周长？"* → DFS 返回计数；周长在水边/边界 +1。
+- *(staff)* 连通分量是图/聚类基础（联系用户-设备图连通、社区发现）。
+
+### [py-14] [LeetCode 102] 二叉树层序遍历（BFS）
+**要点**
+```python
+from collections import deque
+def level_order(root):
+    if not root: return []
+    out, q = [], deque([root])
+    while q:
+        level = []
+        for _ in range(len(q)):           # 锁定本层大小，逐层出队
+            node = q.popleft()
+            level.append(node.val)
+            if node.left:  q.append(node.left)
+            if node.right: q.append(node.right)
+        out.append(level)
+    return out
+```
+- 队列 BFS，每轮固定 `len(q)` 出完一整层。O(n)。
+
+**深挖追问**
+- *"为什么先存 `len(q)`？"* → 锁定当前层节点数，避免把下一层混进来。
+- *"DFS 能层序吗？"* → 能，带 depth 参数往对应层 append。
+- *"zigzag / 右视图？"* → 偶数层 reverse；右视图取每层最后一个。
+- *(staff)* BFS 模板可迁移到无权图最短路、层级展开。
+
+### [py-15] [LeetCode 72] 编辑距离（2D DP）
+**要点**
+```python
+def edit_distance(a, b):
+    m, n = len(a), len(b)
+    dp = [[0]*(n+1) for _ in range(m+1)]
+    for i in range(m+1): dp[i][0] = i        # 删 i 个
+    for j in range(n+1): dp[0][j] = j        # 插 j 个
+    for i in range(1, m+1):
+        for j in range(1, n+1):
+            if a[i-1] == b[j-1]:
+                dp[i][j] = dp[i-1][j-1]
+            else:
+                dp[i][j] = 1 + min(dp[i-1][j],     # 删
+                                   dp[i][j-1],     # 插
+                                   dp[i-1][j-1])   # 替
+    return dp[m][n]
+```
+- `dp[i][j]` = a 前 i 与 b 前 j 的最小编辑距离。O(mn) 时间/空间（可滚动到 O(n)）。
+
+**深挖追问**
+- *"三个转移对应什么操作？"* → 删 a[i] / 插 b[j] / 替换；相等则继承对角。
+- *"空间优化？"* → 只依赖上一行 → 滚动两行 O(n)。
+- *"要还原编辑路径？"* → 回溯 dp 表记录每步选择。
+- *(staff)* 2D DP 母题（联系 LCS、序列比对、模糊去重）。
+
+### [py-16] [LeetCode 322] 零钱兑换（完全背包 DP）
+**要点**
+```python
+def coin_change(coins, amount):
+    INF = amount + 1
+    dp = [0] + [INF]*amount              # dp[x] = 凑 x 的最少硬币数
+    for x in range(1, amount+1):
+        for c in coins:
+            if c <= x:
+                dp[x] = min(dp[x], dp[x-c] + 1)
+    return dp[amount] if dp[amount] != INF else -1
+```
+- `dp[x]` = 凑出金额 x 的最少硬币数，硬币可重复（完全背包）。O(amount·#coins)。
+
+**深挖追问**
+- *"求'组合数'而非'最少个数'两层顺序？"* → 组合数要外层 coins、内层金额（避免重复计组合）；最少个数两序皆可。
+- *"凑不出返回？"* → INF 哨兵判 -1。
+- *"硬币有限（01 背包）？"* → 金额维度逆序遍历防重复取。
+- *(staff)* 背包 DP 母题（联系预算分配、resource packing）。
+
+### [py-17] [pandas] 时间序列对齐：merge_asof 最近匹配 + 重采样 + 滚动相关
+> 共享技巧：**merge_asof**（按时间最近 join、不等值）+ `resample` + `rolling.corr`。
+**要点**
+```python
+import pandas as pd
+# 把曝光事件 join 到"之前最近一次"出价快照（不等值时间 join）
+imp = imp.sort_values('ts'); bid = bid.sort_values('ts')
+joined = pd.merge_asof(imp, bid, on='ts', by='campaign_id', direction='backward')
+
+# 按天重采样 + 7 日滚动两序列相关（spend vs conversions）
+daily = (df.set_index('ts').groupby('campaign_id')
+           .resample('D')[['spend','conversions']].sum().reset_index())
+daily['roll_corr'] = (daily.groupby('campaign_id')
+    .apply(lambda g: g['spend'].rolling(7).corr(g['conversions']))
+    .reset_index(level=0, drop=True))
+```
+- `merge_asof` = 按排序时间的"最近匹配"join（日志对齐快照利器）；`resample('D')` 规整日频；`rolling.corr` 看滚动相关。
+
+**深挖追问**
+- *"merge_asof 的 direction / tolerance？"* → backward/forward/nearest + `tolerance=pd.Timedelta('1h')` 限制最大匹配间隔。
+- *"为什么不用普通 merge？"* → 时间戳几乎不精确相等；asof 取"之前最近一条"。
+- *"resample 有空洞？"* → 缺失日补 0 / ffill，按指标语义选。
+- *(staff)* 日志-快照对齐 + 滚动统计是归因/异常检测常见前处理。
 
 ## 统计与实验
 
