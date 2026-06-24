@@ -154,6 +154,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
               官方招聘页 ↗
             </a>
           )}
+          <Link className="co-link" href="/practice">练习台 →</Link>
           <Link className="co-link" href="/pipeline">看全部公司</Link>
         </div>
       </section>

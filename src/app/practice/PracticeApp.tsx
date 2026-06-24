@@ -44,7 +44,7 @@ export default function PracticeApp({
   const [local, setLocal] = useState<Record<string, string>>({}); // 本次会话新自评
   const [browse, setBrowse] = useState(false); // 手机端：是否展开底部全题表
 
-  // 挂载时：读 token；并按 URL ?q=<题号> 直接打开对应题（速备包题号链接进来即定位）。
+  // 挂载时：读 token；按 URL ?q=<题号> 直接打开对应题（速备包题号链接进来即定位）；并读本机暂存自评（无 token 也持久、并入「优先薄弱」权重）。
   useEffect(() => {
     setCanWrite(!!getToken());
     const qid =
@@ -58,6 +58,10 @@ export default function PracticeApp({
         setRevealed(false);
       }
     }
+    try {
+      const o = JSON.parse(localStorage.getItem("jh_practice_grades") || "{}");
+      if (o && typeof o === "object") setLocal((m) => ({ ...o, ...m }));
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -95,8 +99,14 @@ export default function PracticeApp({
   const grade = async (g: string) => {
     if (!cur) return;
     setLocal((m) => ({ ...m, [cur.id]: g }));
+    try {
+      const k = "jh_practice_grades";
+      const o = JSON.parse(localStorage.getItem(k) || "{}");
+      o[cur.id] = g;
+      localStorage.setItem(k, JSON.stringify(o));
+    } catch {}
     if (!canWrite) {
-      setMsg("已记在本页（配 token 后才会写入 practice-log）");
+      setMsg("已记录这次自评（已存本机；配 token 后长期保存到练习日志）");
       return;
     }
     setMsg("提交中…");
@@ -183,7 +193,7 @@ export default function PracticeApp({
               <div className="answer prose" dangerouslySetInnerHTML={{ __html: cur.aHtml }} />
               <div style={{ margin: "12px 0" }}>
                 <span className="muted small">自评：</span>
-                <div className="grade-row">
+                <div className="grade-row rate">
                   {GRADES.map((g) => (
                     <button key={g.v} className="btn ghost" onClick={() => grade(g.v)}>
                       {g.label}
@@ -209,9 +219,11 @@ export default function PracticeApp({
               </details>
             </>
           )}
-          <div className="grade-row" style={{ marginTop: 14 }}>
-            <button className="btn" onClick={random}>🎲 下一题（优先薄弱）</button>
-          </div>
+          {revealed && (
+            <div className="grade-row" style={{ marginTop: 14 }}>
+              <button className="btn" onClick={random}>🎲 下一题（优先薄弱）</button>
+            </div>
+          )}
         </div>
       ) : (
         <p className="muted small">点一道题开始，或 🎲 随机抽。</p>

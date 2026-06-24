@@ -46,7 +46,12 @@ export default function StatusCell({
     if (live && liveVal && !dirty) setCur(liveVal);
   }, [live, liveVal, dirty]);
 
-  if (!editable) return <span className="pill blue">{cur}</span>;
+  if (!editable)
+    return (
+      <select className="status-select" value="" disabled title="配 token 后可在此直接改状态（⚙️ 设置）" style={{ opacity: 0.9 }}>
+        <option value="">{cur}</option>
+      </select>
+    );
 
   const onChange = async (v: string) => {
     const prev = cur;

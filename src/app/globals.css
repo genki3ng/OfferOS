@@ -659,6 +659,14 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
   .greeting h1 { font-size: var(--t-2xl); }
   .hero { padding: 22px 18px; }
   .hero h2 { font-size: var(--t-xl); }
+  /* 阶段轨：手机端竖排（dot 在上、标签在下），避免标签被相邻圆点裁切/重叠 */
+  .rail { padding: 13px 14px; gap: 6px; }
+  .rail-label { display: none; }
+  .rail .steps { gap: 4px; }
+  .step { flex-direction: column; align-items: center; text-align: center; gap: 4px; flex: 1 1 0; min-width: 0; }
+  .step .sbar { display: none; }
+  .step .txt { align-items: center; }
+  .step .txt b { font-size: 11px; line-height: 1.2; white-space: normal; }
   .step .txt small { display: none; }
 
   /* 顶栏：手机端只留品牌 + 主题 + 设置；主导航交给底部 Tab 栏 */
@@ -673,7 +681,8 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
   .btn { padding: 11px 18px; }
   .btn.mini { padding: 7px 13px; font-size: var(--t-sm); }
   .chip { padding: 9px 15px; }
-  .pin-btn { width: 40px; height: 40px; font-size: 16px; }
+  .pin-btn { width: 44px; height: 44px; font-size: 16px; }
+  .pin-btn:disabled { cursor: not-allowed; }
   .status-select { padding: 7px 14px; font-size: var(--t-sm); }
   .theme-toggle { padding: 9px 13px; }
 
@@ -726,10 +735,13 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
   table.data, table.data tbody, table.data tr, table.data td { display: block; width: 100%; }
   table.data tr { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--tile); padding: 9px 13px; margin-bottom: 11px; }
   table.data tr:hover td { background: transparent; }
-  table.data td { border: none !important; padding: 5px 0; display: flex; gap: 12px; align-items: baseline; white-space: normal !important; min-width: 0; }
+  /* 用 block + 行内标签，文本/长链接稳定换行（flex 的匿名项会拒绝收缩 → 溢出） */
+  table.data td { border: none !important; padding: 4px 0; display: block; white-space: normal !important; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+  table.data td * { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+  table.data td :is(pre, code) { white-space: pre-wrap; }
   table.data td:empty { display: none; }
-  table.data td::before { content: attr(data-label); flex: 0 0 74px; color: var(--ink-faint); font-size: var(--t-xs); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
-  table.data td[data-label=""]::before { content: ""; flex: 0 0 0; }
+  table.data td::before { content: attr(data-label); margin-right: 7px; color: var(--ink-faint); font-size: var(--t-xs); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+  table.data td[data-label=""]::before { content: ""; margin: 0; }
 
   /* 公司卡 / 阶段看板：单列 */
   .cmd-grid { grid-template-columns: 1fr; }
@@ -743,6 +755,8 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
   /* —— 练习台闪卡：全宽大键 —— */
   .grade-row { display: flex; gap: 9px; margin: 12px 0; }
   .grade-row .btn { flex: 1; justify-content: center; padding: 14px 6px; font-size: var(--t-md); }
+  /* 自评行贴底：长答案也能不滚到底就评分（停在 Tab 栏之上） */
+  .grade-row.rate { position: sticky; bottom: calc(66px + env(safe-area-inset-bottom)); z-index: 5; background: var(--card); margin: 10px 0 4px; padding: 10px; border-radius: 14px; box-shadow: 0 -10px 18px -10px rgba(42, 38, 34, 0.2); }
   .practice-browse { display: none; }
   .practice-browse.show { display: block; }
   .practice-browse-toggle { display: inline-flex; margin-bottom: 12px; }

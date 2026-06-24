@@ -39,3 +39,6 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 public/exports/
+
+# UX QA harness 输出
+.ux-shots/

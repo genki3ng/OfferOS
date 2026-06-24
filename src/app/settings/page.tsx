@@ -215,6 +215,9 @@ export default function SettingsPage() {
           所有写操作 = 浏览器直接 commit 到 <code>{REPO}</code> 的 main 分支 →
           Vercel 自动重建（约 1 分钟生效）。token 只存在<b>这台设备的浏览器</b>里。
         </p>
+        <p className="small" style={{ color: "var(--sage-deep)", marginTop: 0 }}>
+          🔒 只存这台设备的浏览器 · 只授权 <code>{REPO}</code> 这一个仓库 · 只读写文件内容 · 随时可在 GitHub 撤销。配好后解锁：勾任务 / 改状态 / 练习自评 / 派活。
+        </p>
         <input
           className="field"
           type="password"
@@ -252,16 +255,18 @@ export default function SettingsPage() {
         <div className="card-title">怎么拿 token</div>
         <ol className="small" style={{ paddingLeft: 18, margin: 0 }}>
           <li>
-            <b>给 1p3a 浏览器扩展配过的那个 fine-grained PAT 直接复用即可</b>
-            （同样的权限需求）。
+            GitHub → Settings → Developer settings → Fine-grained tokens →
+            Generate new token → Repository access 只选 <code>{REPO}</code> →
+            Permissions → Contents：<b>Read and write</b>。
           </li>
           <li>
-            没有的话：GitHub → Settings → Developer settings → Fine-grained
-            tokens → Generate new token → Repository access 只选{" "}
-            <code>{REPO}</code> → Permissions → Contents：<b>Read and write</b>。
+            把生成的 <code>github_pat_…</code> 粘到上面，点<b>保存</b>，再点<b>测试连接</b>确认。
           </li>
           <li>手机/平板要用的话，在那台设备的浏览器里也存一次。</li>
         </ol>
+        <p className="muted small" style={{ marginTop: 8, marginBottom: 0 }}>
+          （已装 1point3acres 收集扩展的话，那个 fine-grained PAT 权限相同，可直接复用。）
+        </p>
       </div>
     </>
   );

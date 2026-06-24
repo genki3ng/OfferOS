@@ -1,3 +1,5 @@
+import { getSiteConfig } from "@/lib/data";
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -16,7 +18,7 @@ export default async function LoginPage({
             </g>
           </svg>
         </div>
-        <h1>Jobhunt 2026</h1>
+        <h1>{getSiteConfig().appName}</h1>
         <p className="muted">这是私人求职指挥台，请输入访问口令。</p>
         {err && <p className="login-err">口令不对，再试一次。</p>}
         <input

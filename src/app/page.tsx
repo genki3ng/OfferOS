@@ -96,7 +96,7 @@ export default function Today() {
     { l: "onsite", v: fc(4) },
     { l: "offer", v: fc(5) },
   ];
-  const interviewing = fc(2);
+  const interviewing = fc(3); // 真正进面试（首轮+），不含 recruiter screen
 
   // —— 真正的「事件」（面试 / 截止），过滤掉已完成的动作日志 ——
   const EVENT_RE =
@@ -106,6 +106,12 @@ export default function Today() {
 
   // —— 唯一下一步 ——
   const next = events[0];
+  const daysUntil = (s?: string) => {
+    if (!s) return null;
+    const [y, m, d] = s.split("-").map(Number);
+    return Math.round((new Date(y, m - 1, d).getTime() - new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime()) / 86400000);
+  };
+  const nextInDays = daysUntil(next?.date);
   const nextCo = next ? tracker.find((r) => r.slug === next.slug) : undefined;
   const isInterview = !!next;
   const nextJd = nextCo ? jds.find((j) => j.title.toLowerCase().includes(nextCo.name.toLowerCase())) : undefined;
@@ -144,7 +150,7 @@ export default function Today() {
   const refSent = referrals.rows.filter((row) => /已发|已联系|已提交|已投|已推|确认/.test(row.join(" "))).length;
   const pins = openings.filter((o) => !o.excluded && o.pinned);
   const wins = [
-    interviewing > 0 ? `${interviewing} 家进面试 / 电话` : "",
+    interviewing > 0 ? `${interviewing} 家进面试` : "",
     "简历已定稿",
     refSent > 0 ? `${refSent} 条内推已发` : "",
     pins.length > 0 ? `${pins.length} 个岗已锁定` : "",
@@ -219,7 +225,7 @@ export default function Today() {
             <div className="toprow">
               <span className="hero-eyebrow">
                 <span className="pulse" />
-                现在就做
+                {nextInDays === 0 ? "现在就做" : nextInDays === 1 ? "明天 · 准备好" : typeof nextInDays === "number" && nextInDays > 1 ? `${nextInDays} 天后 · 提前备` : "下一个"}
               </span>
               <span className="when">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -365,7 +371,7 @@ export default function Today() {
                   <path d={ICON.bolt} />
                 </svg>
               </span>
-              该你出手了
+              进行中
             </span>
             <Link className="more" href="/pipeline">
               全部公司 →
@@ -471,20 +477,22 @@ export default function Today() {
                 <div className="label">个在招岗</div>
               </div>
             </Link>
-            <Link href="/prep" className="stat row">
-              <span className="si sage">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 17l6-6 4 4 8-8M21 7v6h-6" />
-                </svg>
-              </span>
-              <div style={{ flex: 1 }}>
-                <div className="num">{pct}%</div>
-                <div className="label">冲刺进度</div>
-                <div className="bar slim" style={{ marginTop: 6 }}>
-                  <i style={{ width: `${pct}%` }} />
+            {pct > 0 && (
+              <Link href="/prep" className="stat row">
+                <span className="si sage">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 17l6-6 4 4 8-8M21 7v6h-6" />
+                  </svg>
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div className="num">{pct}%</div>
+                  <div className="label">冲刺进度</div>
+                  <div className="bar slim" style={{ marginTop: 6 }}>
+                    <i style={{ width: `${pct}%` }} />
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            )}
             <Link href="/referrals" className="stat row">
               <span className="si plum">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

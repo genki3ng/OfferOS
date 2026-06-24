@@ -77,7 +77,7 @@ export default function AskClaude() {
 
   return (
     <>
-      <button className="ask-fab" onClick={() => setOpen(true)} title="派活给 Claude">
+      <button className="ask-fab" onClick={() => setOpen(true)} title="派活给 Claude：写一件事，下次 Claude 上线就帮你做">
         📨 派活
       </button>
       {open && (
@@ -85,14 +85,26 @@ export default function AskClaude() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="card-title">📨 派活给 Claude</div>
             <p className="muted small" style={{ marginTop: 0 }}>
-              写进仓库 <code>inbox/</code>（status: new）——下个 Claude session
-              开场自动认领处理，结果会出现在对应页面/文档里。
+              给 Claude 留一件事：写一句话，下次你在{" "}
+              <a href="https://claude.ai/code" target="_blank" rel="noreferrer">claude.ai/code</a>{" "}
+              接上本仓库跟 Claude 对话时，它会先把这些做掉，结果回到对应页面/文档。
             </p>
             {!hasToken ? (
-              <p>
-                需要先在 <a href="/settings">⚙️ 设置</a> 里配 GitHub token（与
-                1p3a 扩展同一个即可）。
-              </p>
+              <>
+                <p>
+                  需要先在 <a href="/settings">⚙️ 设置</a> 里配一个 GitHub token（约 2 分钟，用来把你的请求写回你的仓库）。
+                </p>
+                {(topic || detail) && (
+                  <div className="answer" style={{ marginTop: 4 }}>
+                    <div className="small muted">你写的内容已保留，配好 token 后再来点「提交」即可：</div>
+                    {topic && <p style={{ margin: "6px 0 0", fontWeight: 700 }}>{topic}</p>}
+                    {detail && <p className="small" style={{ whiteSpace: "pre-wrap", marginTop: 4 }}>{detail}</p>}
+                  </div>
+                )}
+                <p style={{ marginTop: 10 }}>
+                  <a className="btn" href="/settings">去设置 token →</a>
+                </p>
+              </>
             ) : state === "done" ? (
               <div>
                 <p>
