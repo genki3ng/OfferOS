@@ -39,6 +39,7 @@ const NAV: NavItem[] = [
   { href: "/", label: "今日", icon: I("M12 7v5l3 2", <circle cx="12" cy="12" r="9" />) },
   { href: "/pipeline", label: "公司", icon: I("M3 21V8l6-4 6 4v13M15 21V11l6 4v6M3 21h18M7 9v.01M7 13v.01M7 17v.01") },
   { href: "/prep", label: "备战", icon: I("M12 2 9 9l-7 .5 5.5 4.5L5.5 21 12 17l6.5 4-2-7L22 9.5 15 9z") },
+  { href: "/practice", label: "练习台", icon: I("M6.5 12h11M4 9.5v5M7.5 8v8M16.5 8v8M20 9.5v5") },
   { href: "/offers", label: "Offers", icon: I("M3 7l3-4h12l3 4M9 12h6", <rect x="3" y="7" width="18" height="12" rx="1.5" />) },
   { href: "/timeline", label: "时间线", icon: I("M4 6h16M4 12h16M4 18h10", <circle cx="18" cy="18" r="1.6" fill="currentColor" stroke="none" />) },
 ];

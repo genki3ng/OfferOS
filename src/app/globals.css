@@ -647,4 +647,8 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
   .greeting h1 { font-size: var(--t-2xl); }
   .hero h2 { font-size: var(--t-xl); }
   .step .txt small { display: none; }
+  /* 顶栏：手机上把导航换到整宽第二行并自动折行，保证 备战/练习台/Offers/时间线 都不被挤出屏幕 */
+  .topbar-inner { flex-wrap: wrap; padding: 11px 16px; row-gap: 8px; }
+  .nav { order: 10; flex-basis: 100%; flex-wrap: wrap; margin-left: 0; overflow-x: visible; gap: 5px; }
+  .nav a { padding: 7px 12px; font-size: 14px; }
 }
