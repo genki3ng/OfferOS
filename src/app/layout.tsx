@@ -6,6 +6,7 @@ import crypto from "crypto";
 import AskClaude from "@/components/AskClaude";
 import ThemeToggle from "@/components/ThemeToggle";
 import TabBar from "@/components/TabBar";
+import TopNav from "@/components/TopNav";
 import { getSiteConfig } from "@/lib/data";
 import "./globals.css";
 
@@ -40,22 +41,6 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-type NavItem = { href: string; label: string; icon: React.ReactNode };
-const I = (d: string, extra?: React.ReactNode) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d={d} />
-    {extra}
-  </svg>
-);
-const NAV: NavItem[] = [
-  { href: "/", label: "今日", icon: I("M12 7v5l3 2", <circle cx="12" cy="12" r="9" />) },
-  { href: "/pipeline", label: "公司", icon: I("M3 21V8l6-4 6 4v13M15 21V11l6 4v6M3 21h18M7 9v.01M7 13v.01M7 17v.01") },
-  { href: "/prep", label: "备战", icon: I("M12 2 9 9l-7 .5 5.5 4.5L5.5 21 12 17l6.5 4-2-7L22 9.5 15 9z") },
-  { href: "/practice", label: "练习", icon: I("M6.5 12h11M4 9.5v5M7.5 8v8M16.5 8v8M20 9.5v5") },
-  { href: "/offers", label: "Offers", icon: I("M3 7l3-4h12l3 4M9 12h6", <rect x="3" y="7" width="18" height="12" rx="1.5" />) },
-  { href: "/timeline", label: "时间线", icon: I("M4 6h16M4 12h16M4 18h10", <circle cx="18" cy="18" r="1.6" fill="currentColor" stroke="none" />) },
-];
-
 // 预绘制时定主题与壁纸，避免闪烁：jh_theme = light|dark（旧 glass/classic 值视为无效，回落到系统深浅）。
 const THEME_INIT = `(function(){var d=document.documentElement;try{var t=localStorage.getItem("jh_theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}d.dataset.theme=t;var repo=d.dataset.repoWallpaper||"";var w=localStorage.getItem("jh_wallpaper");if(w&&repo&&localStorage.getItem("jh_wallpaper_synced")==="1"){localStorage.removeItem("jh_wallpaper");localStorage.removeItem("jh_wallpaper_synced");w=null;}var u=w||(localStorage.getItem("jh_wallpaper_off")==="1"?"":repo);if(u){d.style.setProperty("--wallpaper",'url("'+u.replace(/"/g,'\\\\"')+'")');d.dataset.wallpaper="1";}}catch(e){d.dataset.theme="light";}})();`;
 
@@ -81,14 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </span>
               {cfg.appName}
             </Link>
-            <nav className="nav">
-              {NAV.map((n) => (
-                <Link key={n.href} href={n.href}>
-                  {n.icon}
-                  {n.label}
-                </Link>
-              ))}
-            </nav>
+            <TopNav />
             <div className="nav-spacer" />
             <ThemeToggle />
             <Link href="/settings" className="avatar" aria-label="设置" title="设置">

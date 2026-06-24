@@ -95,7 +95,7 @@ export default function QuickPanel({
         </button>
       </div>
       <p className="muted small" style={{ margin: "6px 0 0" }}>
-        提示：「下一步」用 <code>⏰MM-DD</code> 开头会自动进 <a href="/agenda">日程</a>。
+        提示：「下一步」用 <code>⏰MM-DD</code> 开头会自动进 <a href="/timeline">时间线</a>。
       </p>
       {msg && <div className="save-msg">{msg}</div>}
     </div>

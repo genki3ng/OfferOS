@@ -195,8 +195,35 @@ html[data-wallpaper="1"] .wallpaper-layer {
 }
 .nav a:hover { color: var(--ink); background: color-mix(in srgb, var(--coral) 8%, transparent); text-decoration: none; }
 .nav a.active { color: var(--coral-deep); background: var(--coral-soft); }
-.nav a svg { opacity: 0.85; flex: none; }
+.nav a svg, .nav-more-btn svg { width: 16px; height: 16px; opacity: 0.85; flex: none; }
 .nav-spacer { flex: 1; }
+
+/* 桌面顶栏「更多」下拉：放二级去处（内推/岗位库/情报/文档），与手机「更多」sheet 对齐同一组 */
+.nav-more { position: relative; display: flex; }
+.nav-more-btn {
+  display: flex; align-items: center; gap: 7px;
+  color: var(--ink-soft); font-size: 14.5px; font-weight: 600; font-family: inherit;
+  padding: 8px 14px; border-radius: 11px; white-space: nowrap;
+  background: none; border: none; cursor: pointer; transition: 0.16s ease;
+}
+.nav-more-btn:hover { color: var(--ink); background: color-mix(in srgb, var(--coral) 8%, transparent); }
+.nav-more-btn.active { color: var(--coral-deep); background: var(--coral-soft); }
+.nav-more-mask { position: fixed; inset: 0; z-index: 54; }
+.nav-more-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 55; min-width: 168px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 6px; box-shadow: 0 14px 40px rgba(42, 38, 34, 0.18);
+  display: flex; flex-direction: column; gap: 2px;
+  animation: sheetfade 0.14s ease;
+}
+.nav-more-menu a {
+  display: flex; align-items: center; gap: 9px;
+  color: var(--ink-soft); font-size: 14px; font-weight: 600;
+  padding: 9px 12px; border-radius: 9px; white-space: nowrap;
+}
+.nav-more-menu a:hover { color: var(--ink); background: color-mix(in srgb, var(--coral) 8%, transparent); text-decoration: none; }
+.nav-more-menu a.active { color: var(--coral-deep); background: var(--coral-soft); }
+.nav-more-menu a svg { width: 16px; height: 16px; opacity: 0.85; flex: none; }
 .avatar {
   width: 36px; height: 36px; border-radius: 50%; flex: none;
   background: linear-gradient(150deg, var(--sage), #7cb893);
