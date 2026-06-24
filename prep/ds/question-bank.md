@@ -5,7 +5,9 @@
 > 自评记录自动落 [practice-log.md](practice-log.md)；要加题/换方向 → 站点「📨 派活」或对 Claude 直说。
 > 下面是一套通用 DS 题（SQL/Python · 统计实验 · 产品 sense · 行为面），可直接练；想换成更贴你目标公司的题 → 对 Claude 说，或走站点「📨 派活」。
 
-## SQL & Python
+## SQL
+
+> sql-07 起为 **LeetCode 经典 + 业务壳**，每题在「要点」给**完整可对照 query**（先自己写、再对解）；底层技巧可跨公司复用，业务壳偏广告 / marketplace。
 
 ### [sql-01] events(user_id, event_date, event_type)：求 D1/D7 留存曲线
 **要点**
@@ -41,6 +43,570 @@
 - **③ p90 配送时长**：`PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY delivered_at − created_at)`，按 region（join courier→region 维表）。
 - **坑**：维表 join **fan-out**（一单别翻倍）；`delivered_at` 为 NULL（未送达）要排除；除零（merchant 首月无 prev）；时区。
 - 答题：先问 schema/粒度/去重键 → 写骨架再填 → 主动报边界 → 自查 fan-out & 分母。
+
+### [sql-07] [LeetCode 176/177] 第 N 高薪资（second / Nth highest，无则返回 NULL）
+> 共享技巧：**DENSE_RANK 去重排名** + 「无则 NULL」。schema：`employee(id, salary)`
+**要点**
+```sql
+-- 第二高（无则 NULL）：找比"最大值"小的最大值
+SELECT MAX(salary) AS second_highest
+FROM employee
+WHERE salary < (SELECT MAX(salary) FROM employee);
+
+-- 通用第 N 高（N=2 即第二高）
+WITH ranked AS (
+  SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rk
+  FROM employee
+)
+SELECT MAX(salary) AS nth_highest   -- 外层 MAX 把"无此名次"安全折成 NULL
+FROM ranked
+WHERE rk = 2;
+```
+- 关键：外层 `MAX()` —— 当不存在第 N 高（如只有 1 个不同值），`WHERE rk=2` 无行，`MAX(...)` 返回 NULL，正好满足题目"无则 NULL"（直接 SELECT 会返回空集而非 NULL 行）。
+
+**深挖追问**
+- *"为什么用 DENSE_RANK 不用 ROW_NUMBER / RANK？"* → 要"第二个**不同**薪资"：ROW_NUMBER 给并列编不同号会误判；RANK 并列后跳号（1,1,3）会漏名次；DENSE_RANK 正确。
+- *"并列拿第二高的人都要列吗？"* → 若输出是"人"而非"值"，则 `WHERE rk=2` 取全部行、不再 MAX。先问输出口径。
+- *(staff)* "第 N / top-per-group"是窗口母题，能即兴改 per-department（加 `PARTITION BY dept`）。
+
+### [sql-08] [LeetCode 180] 连续出现 ≥3 次的数字
+> 共享技巧：**LAG 比较相邻行**。schema：`logs(id 自增, num)`
+**要点**
+```sql
+WITH t AS (
+  SELECT num,
+         LAG(num,1) OVER (ORDER BY id) AS p1,
+         LAG(num,2) OVER (ORDER BY id) AS p2
+  FROM logs
+)
+SELECT DISTINCT num AS consecutive_num
+FROM t
+WHERE num = p1 AND num = p2;   -- 当前 = 前1 = 前2 → 连续3次
+```
+- 思路：按 id 排序取前 1、前 2 行的值，三者相等即连续 3 次出现；`DISTINCT` 去重多段。
+
+**深挖追问**
+- *"连续 ≥K 次怎么推广？"* → LAG 1..K-1 全相等；或 gaps-and-islands（`id - ROW_NUMBER() OVER(PARTITION BY num ORDER BY id)` 同组常数 → 组内 `COUNT≥K`）。
+- *"id 有空洞影响吗？"* → LAG 按行序、不依赖 id 连续；gaps-islands 版才依赖。先确认 id 语义。
+- *(staff)* 套到"连续 N 期告警/未达标"监控，K 可配置。
+
+### [sql-09] [LeetCode 197] 气温比"前一天"高的日期
+> 共享技巧：**按真实日期对齐**（坑：不能用 id-1 / 无条件 LAG）。schema：`weather(id, recordDate, temperature)`
+**要点**
+```sql
+-- 自连接版：按 recordDate-1 天对齐
+SELECT w.id
+FROM weather w
+JOIN weather y ON y.recordDate = w.recordDate - INTERVAL '1 day'
+WHERE w.temperature > y.temperature;
+
+-- LAG 版：必须校验"上一行确实是昨天"
+WITH t AS (
+  SELECT id, temperature,
+         LAG(temperature) OVER (ORDER BY recordDate) AS prev_t,
+         LAG(recordDate)  OVER (ORDER BY recordDate) AS prev_d
+  FROM weather
+)
+SELECT id FROM t
+WHERE temperature > prev_t AND recordDate = prev_d + INTERVAL '1 day';
+```
+- 坑：日期可能缺天，"前一天"要按 `recordDate - 1 day`，**不是** `id-1` 也不是无条件 LAG（LAG 取的是上一**行**而非上一**日**）。
+
+**深挖追问**
+- *"日期有缺口时 LAG 会取错前一天吗？"* → 会 → 必须加 `recordDate = prev_d + 1` 校验。经典坑。
+- *"MySQL 怎么写？"* → `DATEDIFF(w.recordDate, y.recordDate)=1` 或 `DATE_SUB(w.recordDate, INTERVAL 1 DAY)`。
+- *(staff)* 同模式 = "环比上一期"，注意期粒度 + 缺口补齐。
+
+### [sql-10] [LeetCode 183] 从不下单的客户（anti-join 反连接）
+> 共享技巧：**反连接** 三写法 + NOT IN 的 NULL 陷阱。schema：`customers(id, name)`、`orders(id, customerId)`
+**要点**
+```sql
+-- 推荐 NOT EXISTS（NULL 安全、可走半连接优化）
+SELECT c.name AS customers
+FROM customers c
+WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customerId = c.id);
+
+-- 等价 LEFT JOIN 反连接
+SELECT c.name AS customers
+FROM customers c
+LEFT JOIN orders o ON o.customerId = c.id
+WHERE o.id IS NULL;
+```
+- 坑：`NOT IN (SELECT customerId FROM orders)` 在子查询含 NULL 时**整体返回空**（NULL 比较）——别用，除非先过滤 NULL。
+
+**深挖追问**
+- *"NOT IN / NOT EXISTS / LEFT-JOIN-NULL 三者差别？"* → NOT EXISTS 最稳（半连接、NULL 安全）；NOT IN 有 NULL 陷阱；LEFT-JOIN-NULL 等价但大表可能物化更多行。
+- *"要'下单 < K 次'而非'从不'？"* → LEFT JOIN + `GROUP BY HAVING COUNT(o.id) < K`。
+- *(staff)* 反连接 = "流失/未激活"分群母题，接到 reactivation 实验。
+
+### [sql-11] [LeetCode 182/196] 重复邮箱（查 + 删除只留最小 id）
+> 共享技巧：**GROUP BY HAVING 找重复** + 自连接删除。schema：`person(id, email)`
+**要点**
+```sql
+-- 查重复
+SELECT email FROM person GROUP BY email HAVING COUNT(*) > 1;
+
+-- 删除重复、每个 email 只留最小 id
+DELETE p FROM person p
+JOIN person q ON p.email = q.email AND p.id > q.id;        -- MySQL
+-- 标准 SQL：DELETE FROM person WHERE id NOT IN (SELECT MIN(id) FROM person GROUP BY email);
+```
+- 思路：存在更小 id 的同邮箱行就删 p（`p.id > q.id`），等价"只留最小 id"。
+
+**深挖追问**
+- *"标准 SQL 不支持 DELETE...JOIN 怎么办？"* → `WHERE id NOT IN (SELECT MIN(id) ... GROUP BY email)`（某些引擎对"删除同表子查询"要再包一层 `SELECT * FROM (...) x`）。
+- *"重复判定的业务键？"* → email 要不要先 `LOWER(TRIM())` 归一；落库前 dedupe 比事后删更稳。
+- *(staff)* 数据质量门：先定唯一键 + 约束，避免反复清洗。
+
+### [sql-12] [LeetCode 181] 工资高于其经理的员工（自连接）
+> schema：`employee(id, name, salary, managerId)`
+**要点**
+```sql
+SELECT e.name AS employee
+FROM employee e
+JOIN employee m ON e.managerId = m.id
+WHERE e.salary > m.salary;
+```
+- 思路：同表自连接，把员工与其经理拼到一行再比薪资。
+
+**深挖追问**
+- *"managerId 为 NULL（CEO）会怎样？"* → INNER JOIN 自动排除；要列出无经理者需另行处理。
+- *"要比'经理的经理'多级？"* → 递归 CTE（`WITH RECURSIVE`）向上爬层级。
+- *(staff)* 层级数据坑：环引用、深度不定 → 递归 + 深度上限保护。
+
+### [sql-13] [行转列 pivot] 各产品按月销量透视成「产品 × 月份」宽表
+> 共享技巧：**条件聚合做 pivot**（`SUM(CASE WHEN…)`）。schema：`sales(product, sale_date, qty)`
+**要点**
+```sql
+SELECT product,
+       SUM(CASE WHEN EXTRACT(MONTH FROM sale_date)=1 THEN qty ELSE 0 END) AS jan,
+       SUM(CASE WHEN EXTRACT(MONTH FROM sale_date)=2 THEN qty ELSE 0 END) AS feb,
+       SUM(CASE WHEN EXTRACT(MONTH FROM sale_date)=3 THEN qty ELSE 0 END) AS mar
+FROM sales
+WHERE sale_date >= DATE '2024-01-01' AND sale_date < DATE '2024-04-01'
+GROUP BY product;
+```
+- 思路：每个目标列 = 一个 `SUM(CASE WHEN 列条件 THEN 值)`；行（product）GROUP BY，列（月份）用 CASE 摊开。
+
+**深挖追问**
+- *"列是动态的（月份不固定）怎么办？"* → 纯 SQL 无法动态列 → 引擎 `PIVOT` 语法 / 动态拼 SQL / 在 pandas·BI 层 pivot。
+- *"反向列转行（unpivot）？"* → `UNION ALL` 各列，或 `UNPIVOT` / `CROSS JOIN LATERAL (VALUES …)`。
+- *(staff)* 报表别在 SQL 写死过多列；SQL 出长表、pandas/BI 做宽表更灵活。
+
+### [sql-14] [窗口帧] 每用户按时间的累计消费 + 7 行滚动均值
+> 共享技巧：**window frame**（累计 vs 滚动的边界写法）。schema：`txn(user_id, ts, amount)`
+**要点**
+```sql
+SELECT user_id, ts, amount,
+       SUM(amount) OVER (PARTITION BY user_id ORDER BY ts
+                         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cum_spend,
+       AVG(amount) OVER (PARTITION BY user_id ORDER BY ts
+                         ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)        AS roll7_avg
+FROM txn;
+```
+- 累计 = `UNBOUNDED PRECEDING → CURRENT ROW`；近 7 行滚动 = `6 PRECEDING → CURRENT ROW`；`PARTITION BY user_id` 保证每用户重置。
+
+**深挖追问**
+- *"ROWS vs RANGE？"* → ROWS 按物理行数；RANGE 按 ORDER BY 值范围（同值并列一起纳入）。真·滚动 7 **天**（有缺口）要 `RANGE BETWEEN INTERVAL '6 days' PRECEDING`，否则"7 行"≠"7 天"。
+- *"要排除当前行（只看过去）？"* → 帧改 `… AND 1 PRECEDING`。
+- *(staff)* 这是留存/LTV 累计 + 异常检测（滚动均值±kσ）的底座。
+
+### [sql-15] [LeetCode 569 风格] 各部门工资中位数
+> 共享技巧：**无内建中位数时用双向 ROW_NUMBER 夹中**。schema：`employee(id, dept, salary)`
+**要点**
+```sql
+-- 引擎支持时最简：
+SELECT dept, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) AS median_salary
+FROM employee GROUP BY dept;
+
+-- 通用（无 PERCENTILE）：升降序名次夹出中间 1~2 行求平均
+WITH r AS (
+  SELECT dept, salary,
+         ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary)      AS rn_asc,
+         ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) AS rn_desc
+  FROM employee
+)
+SELECT dept, AVG(salary) AS median_salary
+FROM r
+WHERE rn_asc IN (rn_desc, rn_desc - 1, rn_desc + 1)   -- 奇数取中1行、偶数取中2行
+GROUP BY dept;
+```
+- 思路：升序/降序名次"夹"出中位位置——`|rn_asc - rn_desc| ≤ 1` 的行即中间 1（奇）或 2（偶）个，平均即中位数。
+
+**深挖追问**
+- *"为什么 `rn_asc IN (rn_desc, rn_desc±1)` 能同时处理奇偶？"* → 奇数中位行 rn_asc=rn_desc；偶数两中间行差 1 → 取平均。
+- *"重复薪资影响吗？"* → ROW_NUMBER 强制唯一名次仍正确夹中；PERCENTILE_CONT 会插值，二者口径略不同先说明。
+- *(staff)* 大表中位数贵 → 近似分位（t-digest）/预聚合；报指标多用 p50/p90（抗偏态）而非均值。
+
+### [sql-16] [LeetCode 601] 体育馆连续 ≥3 天人数 ≥100（hard）
+> 共享技巧：**gaps-and-islands 变体**——先按阈值过滤，再 `id - ROW_NUMBER` 分组、组长 ≥3。schema：`stadium(id, visit_date, people)`
+**要点**
+```sql
+WITH ok AS (                       -- 先留人数 >=100 的日子
+  SELECT id, visit_date, people FROM stadium WHERE people >= 100
+),
+grp AS (                           -- 连续 id 的差值在同段里恒定
+  SELECT *, id - ROW_NUMBER() OVER (ORDER BY id) AS g FROM ok
+)
+SELECT id, visit_date, people
+FROM grp
+WHERE g IN (SELECT g FROM grp GROUP BY g HAVING COUNT(*) >= 3)
+ORDER BY visit_date;
+```
+- 思路：过滤达标行后，连续 id 段里 `id - row_number` 恒定 → 作分组键；组内行数 ≥3 即"连续 ≥3 天"。
+
+**深挖追问**
+- *"过滤后还能用 id 连续判断的前提？"* → 这里"连续"按 id（题设 id 随日递增）；若按真实日历连续，要用 `visit_date - (row_number 天)` 做岛。先确认"连续"是 id 还是日历日。
+- *"≥K 天通用？"* → `HAVING COUNT(*) >= K`。
+- *(staff)* 是 sql-03 连续登录的"带阈值过滤"升级版；脏数据（重复日期）先规整再做岛。
+
+### [sql-17] [LeetCode 262] Trips 取消率（指定日期、排除被封禁用户）
+> 共享技巧：**条件聚合算比率** + 多次 join 过滤角色/状态。schema：`trips(id, client_id, driver_id, status, request_date)`、`users(users_id, banned, role)`
+**要点**
+```sql
+SELECT t.request_date,
+       ROUND(
+         SUM(CASE WHEN t.status LIKE 'cancelled%' THEN 1 ELSE 0 END)::numeric
+         / COUNT(*), 2) AS cancellation_rate
+FROM trips t
+JOIN users c ON c.users_id = t.client_id AND c.banned = 'No'
+JOIN users d ON d.users_id = t.driver_id AND d.banned = 'No'
+WHERE t.request_date BETWEEN DATE '2013-10-01' AND DATE '2013-10-03'
+GROUP BY t.request_date;
+```
+- 思路：join 两次 users 把"双方都未封禁"过滤掉；取消率 = 取消单 / 总单（条件 SUM / COUNT），按天 GROUP BY。两种取消都算 → `LIKE 'cancelled%'`。
+
+**深挖追问**
+- *"为什么 join 两次 users？"* → client 和 driver 各要校验 banned，一次只能验一方。
+- *"比率为什么先转 numeric/float？"* → 整数除法截断成 0；显式转浮点再 ROUND。
+- *(staff)* 取消率是 marketplace 健康核心；要分用户侧/供给侧归因 + 控制混杂（地区/时段）再比，别看总体率下结论。
+
+### [sql-18] [ads/feed 业务] DAU / WAU / MAU 粘性（滚动窗口去重活跃）
+> 共享技巧：**滚动窗口内 DISTINCT 计数**（多数引擎不支持 distinct 窗口 → 相关子查询）。schema：`activity(user_id, activity_date)`
+**要点**
+```sql
+WITH d AS (SELECT DISTINCT user_id, activity_date FROM activity)
+SELECT a.activity_date,
+       COUNT(DISTINCT a.user_id) AS dau,
+       (SELECT COUNT(DISTINCT b.user_id) FROM d b
+        WHERE b.activity_date BETWEEN a.activity_date - INTERVAL '6 days'  AND a.activity_date) AS wau,
+       (SELECT COUNT(DISTINCT b.user_id) FROM d b
+        WHERE b.activity_date BETWEEN a.activity_date - INTERVAL '27 days' AND a.activity_date) AS mau
+FROM d a
+GROUP BY a.activity_date
+ORDER BY a.activity_date;
+-- 粘性 stickiness = DAU / MAU
+```
+- 坑：WAU/MAU 是"窗口内**去重**活跃用户"而非"7×DAU"；普通 `COUNT(DISTINCT) OVER` 多数引擎不支持 → 用相关子查询按日期范围数 distinct。
+
+**深挖追问**
+- *"几亿行这样跑爆怎么办？"* → 预聚合到 user-day，再用 HLL 近似 distinct（`APPROX_COUNT_DISTINCT`）或增量维护窗口。
+- *"WAU 要自然周还是滚动 7 天？"* → 口径不同（calendar vs rolling）；监控多用 rolling，先和业务确认。
+- *(staff)* feed/ads engagement 北极星底座；进一步拆 new/retained/resurrected DAU（见 sql-19）讲增长。
+
+### [sql-19] [增长会计] 月活的 新增 / 流失 / 留存（MoM new vs churned vs retained）
+> 共享技巧：**跨期集合差**（相邻月自连接 + NULL 判方向）。schema：`monthly_active(user_id, month)`（已去重到 user-月）
+**要点**
+```sql
+WITH cur AS (SELECT user_id, month FROM monthly_active)
+-- retained（连续两月）/ new_or_resurrected（本月有、上月无）
+SELECT c.month,
+       CASE WHEN p.user_id IS NULL THEN 'new_or_resurrected' ELSE 'retained' END AS state,
+       COUNT(*) AS users
+FROM cur c
+LEFT JOIN cur p
+  ON p.user_id = c.user_id AND p.month = c.month - INTERVAL '1 month'
+GROUP BY c.month, state;
+
+-- churned（上月有、本月无）= 反方向 LEFT JOIN
+SELECT p.month + INTERVAL '1 month' AS churn_month, COUNT(*) AS churned
+FROM cur p
+LEFT JOIN cur c ON c.user_id = p.user_id AND c.month = p.month + INTERVAL '1 month'
+WHERE c.user_id IS NULL
+GROUP BY p.month;
+```
+- 思路：本月∩上月 = retained；本月−上月 = new/resurrected；上月−本月 = churned。用相邻月自连接 + `IS NULL` 判方向。
+
+**深挖追问**
+- *"new 和 resurrected 怎么分？"* → resurrected = 本月有、上月无但**更早曾活跃** → 再 join 历史首活月，区分史上首次（new）vs 回流。
+- *"为什么不用 LAG？"* → 活跃是"集合存在性"不是每行一值；自连接相邻月更直接（LAG 适合连续时间序列指标）。
+- *(staff)* new/churned/resurrected/retained 分解 = 增长会计核心，把"MAU 涨了"拆成可行动的驱动。
+
+### [sql-20] [ads measurement 业务] campaign 的 CTR / ROAS / 当日花费占比 / 排名
+> 共享技巧：**比率必须分子分母分开 SUM 再除（防 Simpson）** + 窗口套聚合。schema：`ad_perf(campaign_id, day, impressions, clicks, spend, revenue)`
+**要点**
+```sql
+SELECT
+  campaign_id, day,
+  SUM(clicks)::numeric  / NULLIF(SUM(impressions),0)          AS ctr,
+  SUM(revenue)::numeric / NULLIF(SUM(spend),0)                AS roas,
+  SUM(spend) / SUM(SUM(spend)) OVER (PARTITION BY day)        AS spend_share_of_day,
+  RANK() OVER (PARTITION BY day ORDER BY SUM(spend) DESC)     AS spend_rank_in_day
+FROM ad_perf
+GROUP BY campaign_id, day;
+```
+- 关键：CTR/ROAS 是比率 → **先各自 SUM 再相除**（绝不行级算比率再平均 → Simpson）；`NULLIF(…,0)` 防除零；`SUM(SUM(spend)) OVER(PARTITION BY day)` = 聚合后再开窗（GROUP BY 后合法），算当日总花费做分母。
+
+**深挖追问**
+- *"为什么不能 `AVG(行级 CTR)`？"* → 各行曝光不同，等权平均被小曝光行带偏（Simpson）→ 必须曝光加权 `SUM(clicks)/SUM(impr)`。
+- *"ROAS 绝对值能说明 campaign 增量价值吗？"* → 不能，含自然转化被归因到广告 → 要 incrementality / geo holdout 才是因果 ROAS（measurement 场景核心）。
+- *"`SUM(SUM())` 窗口套聚合为什么合法？"* → GROUP BY 后每组一行，外层窗口在这些聚合行上再算；很多人不知能这么写。
+- *(staff)* 把它讲成"日常监控 campaign 健康 + 抓异常花费"，并主动提因果口径 = 和因果/measurement 面试官同频。
+
+## Python（LeetCode 算法 + pandas）
+
+> 为 DS coding / 算法轮 + 通用准备：每题给**完整可对照代码 + 复杂度**。先自己写、再对解。前 9 题 = LeetCode 高频算法模板（哈希/双指针/滑窗/DP/栈/二分/堆/区间）；py-10~12 = pandas + DS 模拟（更贴日常）。
+
+### [py-01] [LeetCode 1] Two Sum：数组里找两数之和 = target，返回下标
+> 共享技巧：**哈希表换空间省时间**，O(n)。
+**要点**
+```python
+def two_sum(nums, target):
+    seen = {}                          # value -> index
+    for i, x in enumerate(nums):
+        if target - x in seen:         # 边走边查"还差的补数"
+            return [seen[target - x], i]
+        seen[x] = i
+    return []
+```
+- O(n) 时间 / O(n) 空间，胜过暴力两重循环 O(n²)。
+
+**深挖追问**
+- *"有重复值 / 要返回所有组合？"* → 哈希存 `value → [indices]`；要去重组合则排序 + 两指针。
+- *"数组已排序？"* → 改两指针 O(1) 空间（左右夹逼）。
+- *(staff)* 讲清时间/空间权衡，能口述哈希查均摊 O(1)。
+
+### [py-02] [LeetCode 242/49] 有效字母异位词 & 异位词分组
+> 共享技巧：**Counter / 排序当 key**。
+**要点**
+```python
+from collections import Counter, defaultdict
+
+def is_anagram(s, t):
+    return Counter(s) == Counter(t)            # O(n)
+
+def group_anagrams(words):
+    groups = defaultdict(list)
+    for w in words:
+        key = tuple(sorted(w))                 # 或用 26 长度的字符计数元组
+        groups[key].append(w)
+    return list(groups.values())
+```
+- 异位词 ⇔ 字符多重集相同 → Counter 比较；分组用"排序后的串"或"字符计数"当 dict key。
+
+**深挖追问**
+- *"sorted key O(k log k) vs 计数 key O(k)？"* → 大量长词用 26 维计数元组当 key 更快。
+- *"大小写 / Unicode / 空格怎么规整？"* → 先 `casefold()` + 去空白再比。
+- *(staff)* defaultdict/Counter 是数据清洗高频工具，能讲 hash key 设计。
+
+### [py-03] [LeetCode 3] 无重复字符的最长子串
+> 共享技巧：**可变滑动窗口 + 哈希记录最近位置**。
+**要点**
+```python
+def length_of_longest_substring(s):
+    last = {}              # char -> 最近出现下标
+    start = 0              # 当前窗口左端
+    best = 0
+    for i, c in enumerate(s):
+        if c in last and last[c] >= start:
+            start = last[c] + 1        # 重复且仍在窗口内 → 左端跳到其下一位
+        last[c] = i
+        best = max(best, i - start + 1)
+    return best
+```
+- 右指针扩窗、遇窗口内重复就收缩左端；O(n)。
+
+**深挖追问**
+- *"为什么判 `last[c] >= start`？"* → 只有重复字符**仍在当前窗口内**才需收缩，否则是窗口外的旧记录。
+- *"最多含 K 个不同字符 / 要返回子串本身？"* → 窗口内维护 Counter，超 K 收缩；记录 start/end 切片返回。
+- *(staff)* 可变窗口模板可迁移到"最长满足条件子数组"一类。
+
+### [py-04] [LeetCode 53] 最大子数组和（Kadane）
+> 共享技巧：**一维 DP/贪心**：要么接上前缀、要么从我重开。
+**要点**
+```python
+def max_subarray(nums):
+    best = cur = nums[0]
+    for x in nums[1:]:
+        cur = max(x, cur + x)     # 接上前面 or 从 x 重新开始
+        best = max(best, cur)
+    return best
+```
+- `cur` = 以当前元素结尾的最大和；负前缀就丢弃重开。O(n) 时间 / O(1) 空间。
+
+**深挖追问**
+- *"要返回子数组起止下标？"* → 在 `cur=x`（重开）时记 start，更新 best 时记 end。
+- *"全是负数？"* → 初始化 `best=cur=nums[0]`（**别**初始化为 0）才能返回最大单元素。
+- *"最大乘积子数组怎么变？"* → 同时维护当前 min（负负得正）。
+- *(staff)* 能口述"贪心=DP"（最优子结构）。
+
+### [py-05] [LeetCode 56] 合并区间
+> 共享技巧：**排序后线性扫描合并重叠**——与 SQL sessionization 同源。
+**要点**
+```python
+def merge(intervals):
+    intervals.sort(key=lambda x: x[0])       # 按起点排序
+    out = []
+    for s, e in intervals:
+        if out and s <= out[-1][1]:          # 与上一区间重叠
+            out[-1][1] = max(out[-1][1], e)  # 合并，终点取较大
+        else:
+            out.append([s, e])
+    return out
+```
+- O(n log n)（排序主导）。
+
+**深挖追问**
+- *"端点相接（s == prev_e）算重叠吗？"* → 业务定义；相接合并用 `≤`，严格重叠用 `<`。先确认。
+- *"和会话切分什么关系？"* → 同构：把用户活动区间合并成 session（对应 sql-03 / py-11）。
+- *(staff)* 区间问题先排序是通法；联系"合并重叠时段防重复计时"。
+
+### [py-06] [LeetCode 347] 前 K 个高频元素
+> 共享技巧：**Counter + 堆**（或桶排序 O(n)）。
+**要点**
+```python
+from collections import Counter
+import heapq
+
+def top_k_frequent(nums, k):
+    cnt = Counter(nums)
+    return [x for x, _ in heapq.nlargest(k, cnt.items(), key=lambda kv: kv[1])]
+    # O(n log k)；要 O(n) 用桶排序：按频次放进 len(nums)+1 个桶，从高频桶往回取
+```
+
+**深挖追问**
+- *"k 接近 n 时堆还划算吗？"* → 不一定；桶排序 O(n) 更稳（频次范围有限）。
+- *"频次并列怎么 tie-break？"* → 自定义 key（再按值），先问想要的顺序。
+- *(staff)* top-k 是推荐/热榜高频；流式场景用 count-min sketch + 堆近似。
+
+### [py-07] [LeetCode 704/278] 二分查找 & 第一个错误版本
+> 共享技巧：**二分边界**——闭区间精确查找 vs 边界二分。
+**要点**
+```python
+def binary_search(nums, target):           # 找具体值：闭区间 lo<=hi
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = lo + (hi - lo) // 2           # 防溢出取中
+        if nums[mid] == target: return mid
+        elif nums[mid] < target: lo = mid + 1
+        else: hi = mid - 1
+    return -1
+
+def first_bad_version(n, is_bad):          # 找"第一个 True"：边界二分 lo<hi
+    lo, hi = 1, n
+    while lo < hi:
+        mid = lo + (hi - lo) // 2
+        if is_bad(mid): hi = mid           # mid 可能是答案 → 收右界但保留 mid
+        else: lo = mid + 1
+    return lo
+```
+
+**深挖追问**
+- *"`lo<=hi` 和 `lo<hi` 何时用哪个？"* → 找具体值用前者；找边界/插入位用后者，关键在 hi 是否可能是答案。
+- *"`(lo+hi)//2` 有何坑？"* → 大数溢出（别的语言）；写 `lo+(hi-lo)//2` 更稳。
+- *(staff)* 二分能套"找满足阈值的最小参数"（最小样本量、容量规划）。
+
+### [py-08] [LeetCode 70] 爬楼梯 / 斐波那契（DP 入门 + 空间优化）
+**要点**
+```python
+def climb_stairs(n):
+    a, b = 1, 1               # f(0)=1, f(1)=1
+    for _ in range(n):
+        a, b = b, a + b       # 滚动，只存最近两项
+    return a                  # f(n)
+```
+- `f(n)=f(n-1)+f(n-2)`；两个变量滚动把 O(n) 空间降到 O(1)。
+
+**深挖追问**
+- *"和斐波那契一样吗？"* → 同一递推，区别只在初值。
+- *"每次可走 1/2/3 步？"* → 三项滚动 `f(n)=f(n-1)+f(n-2)+f(n-3)`。
+- *(staff)* 讲清 DP 三要素（状态/转移/初值）+ 何时能空间优化（只依赖最近常数项）。
+
+### [py-09] [LeetCode 20] 有效的括号（栈）
+**要点**
+```python
+def is_valid(s):
+    pairs = {')': '(', ']': '[', '}': '{'}
+    stack = []
+    for c in s:
+        if c in pairs:                                  # 右括号
+            if not stack or stack.pop() != pairs[c]:
+                return False
+        else:                                           # 左括号入栈
+            stack.append(c)
+    return not stack                                    # 栈空才完全匹配
+```
+- O(n)。
+
+**深挖追问**
+- *"右括号时栈空为什么 False？"* → 没有可匹配的左括号（如 `")("`）。
+- *"含其它字符 / 求最长有效括号？"* → 跳过非括号；最长有效是 DP/栈进阶。
+- *(staff)* 栈是嵌套结构解析通法（联系 SQL/JSON 解析）。
+
+### [py-10] [pandas] 两表聚合算指标：各 campaign 的 ROAS + 当日花费占比 + 排名
+> 共享技巧：**groupby agg + transform 占比 + rank**；与 sql-20 同题不同工具。
+**要点**
+```python
+import pandas as pd
+# perf: campaign_id, day, impressions, clicks, spend, revenue
+g = (perf.groupby(['day', 'campaign_id'], as_index=False)
+          .agg(spend=('spend','sum'), revenue=('revenue','sum'),
+               clicks=('clicks','sum'), impr=('impressions','sum')))
+g['ctr']  = g['clicks']  / g['impr'].replace(0, pd.NA)     # 比率分子分母分开 sum 再除
+g['roas'] = g['revenue'] / g['spend'].replace(0, pd.NA)
+g['spend_share'] = g['spend'] / g.groupby('day')['spend'].transform('sum')  # 组内总和广播回行级
+g['spend_rank']  = g.groupby('day')['spend'].rank(ascending=False, method='min')
+```
+
+**深挖追问**
+- *"为什么用 `transform('sum')` 而不是 agg 再 merge？"* → transform 保持原行数、自动对齐回去，省一次 merge；agg 会塌缩成每组一行。
+- *"除零 / 缺失怎么处理？"* → `.replace(0, NA)` 或 `np.where`，别让 inf 污染下游。
+- *(staff)* 讲 pandas vs SQL 取舍：探索/可视化用 pandas，生产管线落 SQL/仓库。
+
+### [py-11] [pandas] 每用户首单 cohort 的 D1 留存 + 7 日滚动均值
+> 共享技巧：**`transform('min')` 定 cohort + nunique 去重 + rolling**；sql-01 留存的 pandas 版。
+**要点**
+```python
+import pandas as pd
+# events: user_id, date(datetime)
+ev = events.sort_values(['user_id', 'date'])
+ev['d0'] = ev.groupby('user_id')['date'].transform('min')       # 每用户首活日 = cohort
+ev['offset'] = (ev['date'] - ev['d0']).dt.days
+cohort_size = ev.groupby('d0')['user_id'].nunique()
+d1_users    = ev[ev['offset'] == 1].groupby('d0')['user_id'].nunique()
+retention_d1 = (d1_users / cohort_size).fillna(0)
+
+daily = events.groupby('date').size().rename('cnt').to_frame()  # 时间序列滚动
+daily['roll7'] = daily['cnt'].rolling(7, min_periods=1).mean()
+```
+
+**深挖追问**
+- *"rolling 按'行'还是按'天'？有缺失日期怎么办？"* → `rolling(7)` 是 7 行；真 7 天先 `reindex`/`asfreq('D')` 补齐日期，或用 `rolling('7D', on='date')`。
+- *"cohort 留存为什么用 `nunique` 不是 `count`？"* → 同用户一天可能多行，留存看"是否有该用户"必须去重。
+- *(staff)* 能讲 cohort 三角矩阵（`pivot_table(index=d0, columns=offset)`）。
+
+### [py-12] [DS coding] 加权随机抽样 + bootstrap 置信区间（numpy）
+> 共享技巧：DS 岗常考"用代码实现统计"——抽样、模拟、CI。
+**要点**
+```python
+import numpy as np
+
+def weighted_sample(items, weights, k, rng=np.random.default_rng(0)):
+    p = np.asarray(weights, float); p /= p.sum()         # 归一化权重
+    return rng.choice(items, size=k, replace=False, p=p)
+
+def bootstrap_mean_ci(data, n_boot=10000, alpha=0.05, rng=np.random.default_rng(0)):
+    data = np.asarray(data, float)
+    # 有放回重采样 n_boot 次、每次算均值
+    means = rng.choice(data, size=(n_boot, len(data)), replace=True).mean(axis=1)
+    lo, hi = np.percentile(means, [100*alpha/2, 100*(1-alpha/2)])
+    return data.mean(), (lo, hi)
+```
+
+**深挖追问**
+- *"bootstrap CI vs t 检验 CI 何时用？"* → 分布偏态/统计量复杂（中位数、比率、AUC）用 bootstrap；近正态均值用解析 t-CI 更快。
+- *"无放回加权抽样 k 很大时慢？"* → reservoir / Gumbel-top-k trick；先问数据规模。
+- *(staff)* 接到实验：bootstrap 比率指标 CI、cluster bootstrap 处理用户内相关——贴近实验/measurement 场景。
 
 ## 统计与实验
 
