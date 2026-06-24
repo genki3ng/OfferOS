@@ -10,6 +10,12 @@
 
 > 🧪 当前仓库装的是**虚构样例**（候选人 Alex Rivera；公司 Northwind / Vertex Cloud / Helios Media），让你一眼看到它长什么样。部署后用站内 **/onboard 向导**（或把仓库交给 Claude/Codex 按 **[SETUP.md](SETUP.md)**）一键变成你自己的；人读版见 **[GETTING-STARTED.md](GETTING-STARTED.md)**。
 
+<p align="center">
+  <img src="docs/screenshots/today.png" alt="OfferOS · 今日 bento 首页" width="92%">
+  <br>
+  <sub><b>「今日」bento 首页</b>：阶段轨 · 唯一下一步 · offer 倒计时 · 本周面试 · 该你出手了 · 漏斗 —— 图中数据均为<b>虚构样例</b></sub>
+</p>
+
 ---
 
 ## 🚀 快速开始
@@ -45,6 +51,48 @@
 - **🌐 中英双语**：整套界面**一键切中 / 英**、cookie 记住你的偏好（默认中文）——中英混合的求职场景顺手，也方便把站点分享给英文搭子 / mentor 看。
 
 Claude 在每一步帮你：打磨/按公司 tailor 简历、出题找薄弱点、设计/解读 A/B 实验、模拟产品评审、把经历整理成 STAR、整理面经反推考点、维护进度、comp 调研与谈判话术、阶段复盘。
+
+---
+
+## 📸 界面一览
+
+> 下面全部用仓库自带的**虚构样例**（候选人 Alex Rivera；公司 Northwind / Vertex Cloud / Helios Media）渲染——部署后用站内 **/onboard** 一键换成你自己的。
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/pipeline.png" alt="公司 / pipeline"><br><sub><b>公司 · pipeline</b> — 各家进度一屏看全，状态 / 内推站上直接改</sub></td>
+    <td width="50%"><img src="docs/screenshots/practice.png" alt="练习台"><br><sub><b>练习台</b> — 自带 5 角色约 150 题（图为 DS 61 题），抽题口述 + 自评</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/jobs.png" alt="岗位库"><br><sub><b>岗位库</b> — 在招岗聚合 + 匹配度 + 优先级星标</sub></td>
+    <td><img src="docs/screenshots/timeline.png" alt="时间线"><br><sub><b>时间线</b> — 待办 + 即将发生（关键日期自动聚合）+ 一路走来</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/offers.png" alt="Offers · 谈判"><br><sub><b>Offers · 谈判</b> — offer 对比 + 谈判主场（offer 前是预案）</sub></td>
+    <td><img src="docs/screenshots/company.png" alt="公司详情"><br><sub><b>公司详情</b> — 关键日期 / 内推 / 一眼面板 / 面经笔记一页归档</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/intel.png" alt="情报 · JD 深度档案"><br><sub><b>情报 · JD 档案</b> — 重点岗位 JD 全文 + 契合度 + 薪酬带</sub></td>
+    <td><img src="docs/screenshots/referrals.png" alt="内推渠道"><br><sub><b>内推渠道</b> — 内推人 / 联系方式 / 状态，邮件一键生成</sub></td>
+  </tr>
+</table>
+
+### 🌙 暗色主题 · 🌐 中英双语 · 📱 手机可装 (PWA)
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/today-dark.png" alt="暗色主题"><br><sub><b>🌙 暗色主题</b> — 同一页，一键切「暖光·浅 / 暖光·夜」</sub></td>
+    <td width="50%"><img src="docs/screenshots/pipeline-en.png" alt="English UI"><br><sub><b>🌐 English</b> — 整套界面一键切中 / 英，cookie 记住偏好</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/screenshots/mobile-today.png" alt="手机 · 今日" width="240">
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/mobile-practice.png" alt="手机 · 练习台" width="240">
+  <br>
+  <sub><b>📱 手机友好 · 可装成 App</b>：底部 Tab 栏单手操作，「加到主屏」即全屏启动（左：今日 · 右：练习台）</sub>
+</p>
 
 ---
 
