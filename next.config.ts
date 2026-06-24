@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 公开模板默认英文（私有版 jobhunt 默认中文）；顶栏 LangToggle 可切换、cookie 记忆。
-  env: { NEXT_PUBLIC_DEFAULT_LOCALE: "en" },
+  // 默认中文；顶栏 LangToggle 可 zh⇄en 切换、cookie 记忆。
+  // 想让某个部署默认英文：设环境变量 NEXT_PUBLIC_DEFAULT_LOCALE=en（见 src/i18n/locales.ts）。
   // /agenda 已并入 /timeline（合并日程 + 时间线为一页）；308 永久跳转，旧链接/书签不失效。
   async redirects() {
     return [{ source: "/agenda", destination: "/timeline", permanent: true }];

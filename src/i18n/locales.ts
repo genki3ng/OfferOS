@@ -1,6 +1,6 @@
 /** i18n 唯一真源的"骨架"：locale 列表、默认 locale、cookie 名。
- *  默认 locale 走 env（各仓不同）：jobhunt 不设 → "zh"；OfferOS 设 NEXT_PUBLIC_DEFAULT_LOCALE=en。
- *  组件代码两仓完全一致（靠字典切换语言），不会因语言而分叉。 */
+ *  默认 locale = "zh"；设环境变量 NEXT_PUBLIC_DEFAULT_LOCALE=en 可让该部署默认英文（当前两仓都不设 → 都默认中文）。
+ *  顶栏 LangToggle 可 zh⇄en 切换、cookie 记忆；组件代码靠字典切换语言，不因语言而分叉。 */
 export type Locale = "zh" | "en";
 export const LOCALES: Locale[] = ["zh", "en"];
 export const LOCALE_COOKIE = "jh_locale";
