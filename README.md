@@ -44,6 +44,7 @@
 - **公司 / pipeline**：目标公司库 + 各家进度，状态/内推可直接在站上改。
 - **备战 · 自带题库**：**5 套角色题库（DS / DE / SWE / PM / ML），合计约 150 道，每题都配可对照的解法**——光 DS 就有 61 道（SQL 20 · Python 17 含 LeetCode/pandas · 统计与实验 · 产品 sense · 行为面 STAR），不是只给个空壳。配 /practice 练习台抽题口述 + 自评；文档/速备包里写到的题号（如 `sql-11`）会自动链到练习台对应题，点一下即开。
 - **Offers**：offer 到来时的对比 + 谈判主场（offer 前是预案）。
+- **薪资 · Comp**：**levels.fyi 风格**的总包可视化——按级别的 base / 股票 / 奖金堆叠条、各公司样本、你的期望区间，给谈判一个数据锚（数据源 `negotiation/comp-research.md`，站上自动重画）。
 - **时间线**：一页看「什么时候该干什么」——待办 + 即将发生（关键日期/截止自动聚合）+ 一路走来（日志），日程与时间线已合并为一页。
 - **派活**：在站上 📨 给 Claude 派活 → 写进 `inbox/`，下个 session 自动处理。
 - **联网情报**：自带 **Agent‑Reach** + 实测抓取手册——Claude 能直接读 LinkedIn JD、扫各家 ATS 在招岗、用 Exa 全网语义搜公司/人脉情报、拉视频字幕（详见 [tools/web-reach.md](tools/web-reach.md)）。
@@ -57,6 +58,12 @@ Claude 在每一步帮你：打磨/按公司 tailor 简历、出题找薄弱点�
 ## 📸 界面一览
 
 > 下面全部用仓库自带的**虚构样例**（候选人 Alex Rivera；公司 Northwind / Vertex Cloud / Helios Media）渲染——部署后用站内 **/onboard** 一键换成你自己的。
+
+<p align="center">
+  <img src="docs/screenshots/comp.png" alt="薪资 · Comp（levels.fyi 风格）" width="92%">
+  <br>
+  <sub><b>💰 薪资 · Comp（levels.fyi 风格）</b>：按级别的总包堆叠条（Base / 股票 / 奖金，条长随总包等比）+ 各公司样本 + 你的期望区间，给谈判一个数据锚 —— 数据源 <code>negotiation/comp-research.md</code></sub>
+</p>
 
 <table>
   <tr>

@@ -6,6 +6,7 @@ import ask from "./zh/ask";
 import askButton from "./zh/askButton";
 import coldOutreach from "./zh/coldOutreach";
 import company from "./zh/company";
+import comp from "./zh/comp";
 import countdown from "./zh/countdown";
 import dailyGuide from "./zh/dailyGuide";
 import docs from "./zh/docs";
@@ -45,6 +46,7 @@ const zh = {
     prep: "备战",
     practice: "练习",
     offers: "Offers",
+    comp: "薪资",
     timeline: "时间线",
     referrals: "内推",
     jobs: "岗位库",
@@ -72,6 +74,7 @@ const zh = {
   askButton,
   coldOutreach,
   company,
+  comp,
   countdown,
   dailyGuide,
   docs,

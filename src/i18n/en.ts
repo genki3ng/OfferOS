@@ -5,6 +5,7 @@ import ask from "./en/ask";
 import askButton from "./en/askButton";
 import coldOutreach from "./en/coldOutreach";
 import company from "./en/company";
+import comp from "./en/comp";
 import countdown from "./en/countdown";
 import dailyGuide from "./en/dailyGuide";
 import docs from "./en/docs";
@@ -44,6 +45,7 @@ const en: Dict = {
     prep: "Prep",
     practice: "Practice",
     offers: "Offers",
+    comp: "Comp",
     timeline: "Timeline",
     referrals: "Referrals",
     jobs: "Jobs",
@@ -71,6 +73,7 @@ const en: Dict = {
   askButton,
   coldOutreach,
   company,
+  comp,
   countdown,
   dailyGuide,
   docs,

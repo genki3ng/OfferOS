@@ -37,7 +37,7 @@ export default async function OffersPage() {
               </svg>
             </Link>
             {comp !== null && (
-              <Link className="btn-ghost" href="/docs/negotiation/comp-research">
+              <Link className="btn-ghost" href="/comp">
                 {d.offers.btnComp}
               </Link>
             )}
