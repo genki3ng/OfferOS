@@ -88,17 +88,18 @@ export default function ReferralsPage() {
                   <tr key={i}>
                     {r.map((c, j) =>
                       j === statusCol ? (
-                        <td key={j}>
+                        <td key={j} data-label={(header[j] ?? "").replace(/\*\*/g, "")}>
                           <ReferralAdvance firstCell={r[0]} status={c} />
                         </td>
                       ) : j === 0 ? (
-                        <td key={j} style={{ minWidth: 110, fontWeight: 650 }}>
+                        <td key={j} data-label={(header[j] ?? "").replace(/\*\*/g, "")} style={{ minWidth: 110, fontWeight: 650 }}>
                           <span dangerouslySetInnerHTML={{ __html: renderInline(c, "pipeline") }} />
                           <ReferralKit channel={c} template={templateFor(c)} jobs={jobsFor(c)} />
                         </td>
                       ) : (
                         <td
                           key={j}
+                          data-label={(header[j] ?? "").replace(/\*\*/g, "")}
                           dangerouslySetInnerHTML={{ __html: renderInline(c, "pipeline") }}
                         />
                       )

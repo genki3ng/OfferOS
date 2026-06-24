@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import AskClaude from "@/components/AskClaude";
 import ThemeToggle from "@/components/ThemeToggle";
+import TabBar from "@/components/TabBar";
 import { getSiteConfig } from "@/lib/data";
 import "./globals.css";
 
@@ -25,8 +26,19 @@ export function generateMetadata(): Metadata {
     title: { default: `${cfg.appName} · 求职指挥台`, template: `%s · ${cfg.appName}` },
     description: `${cfg.ownerName} 的求职 end-to-end 指挥台：今日、公司、备战、Offers、时间线`,
     robots: { index: false, follow: false },
+    manifest: "/manifest.webmanifest",
+    appleWebApp: { capable: true, title: cfg.appName, statusBarStyle: "default" },
   };
 }
+
+// themeColor / viewport-fit 必须放在 viewport 导出里（Next 15）；viewport-fit=cover 启用安全区。
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbf7f2" },
+    { media: "(prefers-color-scheme: dark)", color: "#1f1b17" },
+  ],
+  viewportFit: "cover",
+};
 
 type NavItem = { href: string; label: string; icon: React.ReactNode };
 const I = (d: string, extra?: React.ReactNode) => (
@@ -59,9 +71,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="topbar-inner">
             <Link href="/" className="brand">
               <span className="mark" aria-hidden>
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6l-8-4z" />
-                  <path d="m9 12 2 2 4-4" />
+                <svg width="20" height="20" viewBox="0 0 64 64" fill="currentColor">
+                  <g transform="translate(32 32) scale(0.92) translate(-33 -27.8)">
+                    <path d="M30 47 L45 29 L60 47 Z" opacity=".5" />
+                    <path d="M6 47 L25 23 L41 47 Z" />
+                    <path d="M25 8.6 Q26.2 11.8 29.4 13 Q26.2 14.2 25 17.4 Q23.8 14.2 20.6 13 Q23.8 11.8 25 8.6 Z" />
+                  </g>
                 </svg>
               </span>
               {cfg.appName}
@@ -83,6 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
         <main className="container">{children}</main>
         <AskClaude />
+        <TabBar />
         <footer className="footer">
           数据源 = 本仓库 markdown · push 到 main 后自动重建 ·{" "}
           <Link href="/start">上手指南</Link> ·{" "}

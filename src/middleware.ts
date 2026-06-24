@@ -26,7 +26,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // 放行登录页、登录接口、静态资源
-    "/((?!login|api/login|_next/static|_next/image|favicon.ico|icon.svg).*)",
+    // 放行登录页、登录接口、静态资源、PWA 资源（manifest / 图标），否则配了密码门时 PWA 无法安装
+    "/((?!login|api/login|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|manifest.webmanifest|icons/).*)",
   ],
 };

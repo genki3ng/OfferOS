@@ -42,6 +42,7 @@ export default function PracticeApp({
   const [canWrite, setCanWrite] = useState(false);
   const [msg, setMsg] = useState("");
   const [local, setLocal] = useState<Record<string, string>>({}); // 本次会话新自评
+  const [browse, setBrowse] = useState(false); // 手机端：是否展开底部全题表
 
   useEffect(() => setCanWrite(!!getToken()), []);
 
@@ -131,7 +132,7 @@ export default function PracticeApp({
       </div>
 
       {cur ? (
-        <div className="card section">
+        <div className="card section practice-card">
           <div className="card-title">
             <span className="pill gray">{cur.id}</span> {cur.category}
             {lastGrade(cur.id) && <span className="pill blue">上次 {lastGrade(cur.id)}</span>}
@@ -151,13 +152,15 @@ export default function PracticeApp({
             <>
               <div className="answer prose" dangerouslySetInnerHTML={{ __html: cur.aHtml }} />
               <div style={{ margin: "12px 0" }}>
-                <span className="muted small">自评：</span>{" "}
-                {GRADES.map((g) => (
-                  <button key={g.v} className="btn ghost" onClick={() => grade(g.v)}>
-                    {g.label}
-                  </button>
-                ))}
-                {msg && <span className="small" style={{ marginLeft: 8 }}>{msg}</span>}
+                <span className="muted small">自评：</span>
+                <div className="grade-row">
+                  {GRADES.map((g) => (
+                    <button key={g.v} className="btn ghost" onClick={() => grade(g.v)}>
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+                {msg && <p className="small" style={{ marginTop: 6 }}>{msg}</p>}
               </div>
               <details>
                 <summary className="muted small" style={{ cursor: "pointer" }}>
@@ -176,12 +179,18 @@ export default function PracticeApp({
               </details>
             </>
           )}
+          <div className="grade-row" style={{ marginTop: 14 }}>
+            <button className="btn" onClick={random}>🎲 下一题（优先薄弱）</button>
+          </div>
         </div>
       ) : (
         <p className="muted small">点一道题开始，或 🎲 随机抽。</p>
       )}
 
-      <div className="card">
+      <button className="btn ghost practice-browse-toggle" onClick={() => setBrowse((b) => !b)}>
+        📋 {browse ? "收起题库" : `浏览全部题（${pool.length}）`}
+      </button>
+      <div className={`card practice-browse${browse ? " show" : ""}`}>
         <div className="table-wrap">
           <table className="data">
             <thead>
@@ -196,13 +205,13 @@ export default function PracticeApp({
             <tbody>
               {pool.map((q) => (
                 <tr key={q.id} onClick={() => pick(q)} style={{ cursor: "pointer" }}>
-                  <td className="muted small">{q.id}</td>
-                  <td className="muted small" style={{ whiteSpace: "nowrap" }}>
+                  <td className="muted small" data-label="题">{q.id}</td>
+                  <td className="muted small" data-label="类别" style={{ whiteSpace: "nowrap" }}>
                     {q.category}
                   </td>
-                  <td dangerouslySetInnerHTML={{ __html: q.qHtml.replace(/<\/?p>/g, "") }} />
-                  <td>{(stats[q.id]?.count ?? 0) + (local[q.id] ? 1 : 0) || ""}</td>
-                  <td>{lastGrade(q.id)}</td>
+                  <td data-label="题目" dangerouslySetInnerHTML={{ __html: q.qHtml.replace(/<\/?p>/g, "") }} />
+                  <td data-label="练过">{(stats[q.id]?.count ?? 0) + (local[q.id] ? 1 : 0) || ""}</td>
+                  <td data-label="自评">{lastGrade(q.id)}</td>
                 </tr>
               ))}
             </tbody>

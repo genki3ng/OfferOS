@@ -28,13 +28,13 @@ export default function IntelPage() {
             <tbody>
               {jds.map((j) => (
                 <tr key={j.file} style={j.flagged ? { opacity: 0.6 } : undefined}>
-                  <td style={{ minWidth: 220 }}>
+                  <td style={{ minWidth: 220 }} data-label="JD">
                     <Link href={`/docs/intel/jd/${j.file}`}>{j.title}</Link>
                   </td>
-                  <td style={{ minWidth: 90 }}>{j.level}</td>
-                  <td style={{ minWidth: 90 }}>{j.location}</td>
-                  <td style={{ minWidth: 110 }}>{j.comp}</td>
-                  <td>
+                  <td style={{ minWidth: 90 }} data-label="级别">{j.level}</td>
+                  <td style={{ minWidth: 90 }} data-label="地点">{j.location}</td>
+                  <td style={{ minWidth: 110 }} data-label="薪酬">{j.comp}</td>
+                  <td data-label="标记">
                     {j.flagged === "CONTRACT" && <span className="pill red">合同工·已排除</span>}
                     {j.flagged === "ARCHIVED" && <span className="pill gray">留档</span>}
                   </td>

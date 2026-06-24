@@ -218,7 +218,7 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
             <tbody>
               {filtered.map((j) => (
                 <tr key={keyOf(j)} style={j.excluded ? { opacity: 0.55 } : undefined}>
-                  <td>
+                  <td data-label="清单">
                     {!j.excluded && (
                       <button
                         className={`pin-btn ${isPinned(j) ? "on" : ""}`}
@@ -236,7 +236,7 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
                       </button>
                     )}
                   </td>
-                  <td>
+                  <td data-label="态度">
                     {!j.excluded && (
                       <button
                         className={`pin-btn att-${attOf(j) || "none"}`}
@@ -252,19 +252,19 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
                       </button>
                     )}
                   </td>
-                  <td style={{ whiteSpace: "nowrap" }}>
+                  <td data-label="公司" style={{ whiteSpace: "nowrap" }}>
                     <Link href={`/companies/${j.slug}`}>{j.company}</Link>{" "}
                     <span className={`tier-badge tier-${j.tier}`}>
                       {["", "一", "二", "三"][j.tier]}
                     </span>
                   </td>
-                  <td style={{ whiteSpace: "nowrap" }}>
+                  <td data-label="契合" style={{ whiteSpace: "nowrap" }}>
                     {j.hot ? "🎯" : ""}
                     {"⭐".repeat(j.stars)}
                   </td>
-                  <td dangerouslySetInnerHTML={{ __html: j.html }} />
-                  <td className="muted">{j.location}</td>
-                  <td className="muted small" style={{ whiteSpace: "nowrap" }}>
+                  <td data-label="岗位" dangerouslySetInnerHTML={{ __html: j.html }} />
+                  <td className="muted" data-label="地点">{j.location}</td>
+                  <td className="muted small" data-label="抓取" style={{ whiteSpace: "nowrap" }}>
                     {j.sectionDate}
                   </td>
                 </tr>
