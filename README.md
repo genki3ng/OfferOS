@@ -11,7 +11,10 @@
 ## 🚀 快速开始
 
 1. 点 GitHub **「Use this template」** 生成你自己的私有仓库（或用下方一键部署）。
-2. 连 **Vercel** 部署，配 `SITE_PASSWORD` 加锁、`NEXT_PUBLIC_GITHUB_REPO` 指向你的仓库。
+2. 连 **Vercel** 部署，在 **项目 Settings → Environment Variables** 配环境变量：
+   - `NEXT_PUBLIC_GITHUB_REPO = <owner>/<repo>`（必配，指向你的仓库；站内编辑 / 派活要用）。
+   - `SITE_PASSWORD = <一个密码>`（强烈建议，给全站加**密码门**；不配则全站公开）。
+   - 🔒 **密码只在 Vercel 这里设**——它是服务端环境变量，**不走 `/onboard` 向导、也不写进仓库**；以后改密码回 Vercel 改这个变量即可（机制见 [`src/middleware.ts`](src/middleware.ts)）。
 3. 打开站点 → **`/onboard` 向导**回答几个问题（**目标角色 DS/DE/SWE/PM/ML** + 名字 + 目标公司），它把模板变成你的、并选好对应角色的备战题库。
    - 或者**把仓库交给 Claude / Codex**，按 **[SETUP.md](SETUP.md)** 引导你装依赖、部署、采访配置（一条龙）。
 4. 在 **claude.ai/code** 接上仓库，对 Claude 说「读 CLAUDE.md 和 HANDOFF.md，开始帮我找工作」。
