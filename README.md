@@ -17,7 +17,7 @@
 4. 在 **claude.ai/code** 接上仓库，对 Claude 说「读 CLAUDE.md 和 HANDOFF.md，开始帮我找工作」。
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/your-repo)
-> ☝️ 把按钮链接里的 `your-username/your-repo` 换成你 template 出来的仓库。
+> ☝️ 用 GitHub **「Use this template」** 生成你自己的仓库后，**首次 push** 时仓库内的一个 GitHub Action 会自动把这个按钮指向**你的**仓库（见 [`.github/workflows/personalize-deploy-button.yml`](.github/workflows/personalize-deploy-button.yml)），无需手动改。
 
 详细步骤 + 之后每天怎么交互 → **[GETTING-STARTED.md](GETTING-STARTED.md)**。
 
