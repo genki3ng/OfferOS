@@ -44,7 +44,31 @@ export default function PracticeApp({
   const [local, setLocal] = useState<Record<string, string>>({}); // 本次会话新自评
   const [browse, setBrowse] = useState(false); // 手机端：是否展开底部全题表
 
-  useEffect(() => setCanWrite(!!getToken()), []);
+  // 挂载时：读 token；并按 URL ?q=<题号> 直接打开对应题（速备包题号链接进来即定位）。
+  useEffect(() => {
+    setCanWrite(!!getToken());
+    const qid =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("q")
+        : null;
+    if (qid) {
+      const q = questions.find((x) => x.id === qid);
+      if (q) {
+        setCur(q);
+        setRevealed(false);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 把当前题写进 URL（?q=），便于分享/返回，也让速备包深链与地址栏一致。
+  const syncUrl = (id: string | null) => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (id) url.searchParams.set("q", id);
+    else url.searchParams.delete("q");
+    window.history.replaceState(null, "", url);
+  };
 
   const pool = cat ? questions.filter((q) => q.category === cat) : questions;
   const lastGrade = (id: string) => local[id] ?? stats[id]?.last ?? "";
@@ -54,6 +78,12 @@ export default function PracticeApp({
     setRevealed(false);
     setAnswer("");
     setMsg("");
+    syncUrl(q.id);
+  };
+
+  const close = () => {
+    setCur(null);
+    syncUrl(null);
   };
 
   const random = () => {
@@ -136,7 +166,7 @@ export default function PracticeApp({
           <div className="card-title">
             <span className="pill gray">{cur.id}</span> {cur.category}
             {lastGrade(cur.id) && <span className="pill blue">上次 {lastGrade(cur.id)}</span>}
-            <button className="more btn ghost mini" onClick={() => setCur(null)}>
+            <button className="more btn ghost mini" onClick={close}>
               ✕ 关闭
             </button>
           </div>

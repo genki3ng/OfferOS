@@ -1,4 +1,5 @@
 import { Marked } from "marked";
+import fs from "fs";
 import path from "path";
 import { siteConfig } from "@/site.config";
 
@@ -48,13 +49,71 @@ const m = new Marked({ gfm: true });
 /** 整篇 markdown → HTML，并把仓库内链接改写为站内路由 */
 export function renderMarkdown(md: string, baseDir: string): string {
   const html = m.parse(md) as string;
-  return rewriteLinks(html, baseDir);
+  return linkifyQuestionIds(rewriteLinks(html, baseDir));
 }
 
 /** 单行/单元格 markdown → 行内 HTML */
 export function renderInline(md: string, baseDir = ""): string {
   const html = m.parseInline(md) as string;
-  return rewriteLinks(html, baseDir);
+  return linkifyQuestionIds(rewriteLinks(html, baseDir));
+}
+
+// 候选题号 token（宽松形状）；是否真链接由"题库里是否存在该 id"决定 → 零误报。
+const QID_CANDIDATE = /\b[a-z]{2,6}-\d+\b/g;
+// 受保护块：<pre>/<code>/既有 <a> 内部 + 任意标签本体（属性里）都不改写。
+const PROTECTED_RE =
+  /(<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>|<a\b[\s\S]*?<\/a>|<[^>]+>)/gi;
+
+// 题库里真实存在的题号集合（构建时解析，记忆化）。数据驱动：不写死前缀，只链接真实题号。
+// 同时扫扁平 prep/question-bank.md 与各角色 prep/<role>/question-bank.md（OfferOS 多角色布局）。
+let _qids: Set<string> | null = null;
+function questionIds(): Set<string> {
+  if (_qids) return _qids;
+  const ids = new Set<string>();
+  const root = process.cwd();
+  const banks = [path.join(root, "prep/question-bank.md")];
+  try {
+    for (const d of fs.readdirSync(path.join(root, "prep"), { withFileTypes: true })) {
+      if (d.isDirectory())
+        banks.push(path.join(root, "prep", d.name, "question-bank.md"));
+    }
+  } catch {
+    /* 没 prep 目录就只用扁平路径 */
+  }
+  for (const f of banks) {
+    try {
+      const md = fs.readFileSync(f, "utf8");
+      for (const mm of md.matchAll(/^###\s*\[([a-z]+-\d+)\]/gim)) ids.add(mm[1]);
+    } catch {
+      /* 文件不存在跳过 */
+    }
+  }
+  _qids = ids;
+  return _qids;
+}
+
+/**
+ * 把正文里出现的题号（如 sql-11 / ab-01 / pd-01）变成跳到练习台对应题的链接
+ * → /practice?q=<id>（练习台读 ?q= 直接打开该题）。
+ * 速备包等文档里的题号清单从此可一键点进对应练习题。
+ * 只链接题库里真实存在的题号；跳过 <pre>/<code>/<a> 内部与标签属性，避免破坏代码块、既有链接与 href。
+ */
+export function linkifyQuestionIds(html: string): string {
+  const ids = questionIds();
+  if (!ids.size) return html;
+  return html
+    .split(PROTECTED_RE)
+    .map((seg, i) =>
+      // split 捕获组：奇数下标 = 受保护块/标签，原样保留；偶数下标 = 可改写文本。
+      i % 2 === 1
+        ? seg
+        : seg.replace(QID_CANDIDATE, (tok) =>
+            ids.has(tok)
+              ? `<a href="/practice?q=${tok}" class="qlink">${tok}</a>`
+              : tok
+          )
+    )
+    .join("");
 }
 
 function rewriteLinks(html: string, baseDir: string): string {
