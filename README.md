@@ -16,8 +16,8 @@
    - 或者**把仓库交给 Claude / Codex**，按 **[SETUP.md](SETUP.md)** 引导你装依赖、部署、采访配置（一条龙）。
 4. 在 **claude.ai/code** 接上仓库，对 Claude 说「读 CLAUDE.md 和 HANDOFF.md，开始帮我找工作」。
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/your-repo)
-> ☝️ 用 GitHub **「Use this template」** 生成你自己的仓库后，**首次 push** 时仓库内的一个 GitHub Action 会自动把这个按钮指向**你的**仓库（见 [`.github/workflows/personalize-deploy-button.yml`](.github/workflows/personalize-deploy-button.yml)），无需手动改。
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/genki3ng/OfferOS)
+> ☝️ 一键把 OfferOS 部署到你自己的账号：Vercel 会先把本仓库**复制进你的 GitHub**、再部署上线（部署后进站点 **/onboard** 配置成你自己的）。想先要一份可改的仓库，也可以点上面的 **「Use this template」**。
 
 详细步骤 + 之后每天怎么交互 → **[GETTING-STARTED.md](GETTING-STARTED.md)**。
 
