@@ -515,6 +515,19 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .hero .actions { margin-top: auto; padding-top: 24px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .hero.empty { align-items: flex-start; justify-content: center; min-height: 220px; }
 
+/* 紧随其后的第二场（背靠背时高亮，提醒同步准备） */
+.hero-ondeck { margin-top: 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; background: var(--tile); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 15px; transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
+.hero-ondeck:hover { border-color: color-mix(in srgb, var(--coral) 40%, var(--line)); transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+.hero-ondeck.b2b { border-color: color-mix(in srgb, var(--coral) 38%, var(--line)); background: color-mix(in srgb, var(--coral-soft) 55%, var(--tile)); }
+.hero-ondeck .od-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.hero-ondeck .od-tag { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-faint); }
+.hero-ondeck.b2b .od-tag { color: var(--coral-deep); }
+.hero-ondeck .od-tag .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); animation: pulse 2s infinite; }
+.hero-ondeck .od-body b { font-size: var(--t-md); font-weight: 700; color: var(--ink); line-height: 1.25; overflow-wrap: anywhere; }
+.hero-ondeck .od-body small { font-size: 12px; color: var(--ink-soft); }
+.hero-ondeck .od-arrow { color: var(--ink-faint); flex: none; }
+.hero-ondeck:hover .od-arrow { color: var(--coral-deep); }
+
 /* 倒计时环 */
 .countdown { display: flex; flex-direction: column; }
 .ring-wrap { display: flex; align-items: center; gap: 20px; }
