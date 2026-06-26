@@ -102,7 +102,16 @@ export default async function Today() {
   const EVENT_RE =
     /screen|电话|面试|面谈|首轮|终面|1st\s*round|onsite|panel|interview|codepair|case|assessment|coding|hackerrank|谈判|deadline|截止|offer\b/i;
   const LOG_RE = /网申|已投|已发|已交|已提交|已联系|现刷|nudge|无音|内推已|materials?\s*sent|applied|发出|发材料/i;
-  const events = upcoming.filter((a) => EVENT_RE.test(a.label) && !LOG_RE.test(a.label));
+  // 同一公司同一天常被多个来源各记一条（公司文件「关键日期」+ tracker「下一步」）→ 去重，保留首条（来源更干净的公司文件行）
+  const seenEvt = new Set<string>();
+  const events = upcoming
+    .filter((a) => EVENT_RE.test(a.label) && !LOG_RE.test(a.label))
+    .filter((a) => {
+      const k = `${a.slug ?? a.company}|${a.date}`;
+      if (seenEvt.has(k)) return false;
+      seenEvt.add(k);
+      return true;
+    });
 
   // —— 唯一下一步 ——
   const next = events[0];
@@ -115,6 +124,13 @@ export default async function Today() {
   const nextCo = next ? tracker.find((r) => r.slug === next.slug) : undefined;
   const isInterview = !!next;
   const nextJd = nextCo ? jds.find((j) => j.title.toLowerCase().includes(nextCo.name.toLowerCase())) : undefined;
+
+  // —— 紧随其后的第二场（避免只盯第一场、忘了同步准备）——
+  const secondary = events[1];
+  const secInDays = daysUntil(secondary?.date);
+  // 两场间隔 ≤ 3 天 = 背靠背，必须同步备
+  const backToBack =
+    typeof nextInDays === "number" && typeof secInDays === "number" && secInDays - nextInDays <= 3;
 
   // —— 该你出手了 ——
   const active = tracker.filter((r) => stage(r.status) >= 1 && r.slug !== next?.slug);
@@ -265,6 +281,28 @@ export default async function Today() {
                   <span>{d.today.mustAskLevel}</span>
                 </div>
               </div>
+            )}
+
+            {secondary && (
+              <Link
+                className={`hero-ondeck${backToBack ? " b2b" : ""}`}
+                href={secondary.slug ? `/companies/${secondary.slug}` : "/timeline"}
+              >
+                <div className="od-body">
+                  <span className="od-tag">
+                    {backToBack && <span className="pulse" />}
+                    {backToBack ? d.today.onDeckB2B : d.today.onDeckNext}
+                  </span>
+                  <b>{secondary.company ? `${secondary.company} · ${cleanEvt(secondary.label)}` : cleanEvt(secondary.label)}</b>
+                  <small>
+                    {whenLabel(secondary.date, d.today.dow, d.today.whenLabel)}
+                    {backToBack ? ` · ${d.today.onDeckHint}` : ""}
+                  </small>
+                </div>
+                <svg className="od-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
             )}
 
             <div className="actions">
