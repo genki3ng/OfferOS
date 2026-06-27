@@ -665,13 +665,13 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .code-box::placeholder { color: #b8aa99; }
 .code-box:focus { outline: none; border-color: var(--coral); box-shadow: var(--ring); }
 [data-theme="dark"] .code-box { background: #14110d; }
-.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-top: 8px; }
+/* 上下排布（你的解法在上、参考要点在下）——桌面也单列，让 coding 框拿满宽度 */
+.compare { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
 .compare-col { min-width: 0; }
 .compare-col .code-box { margin-top: 0; }
 .compare-label { font-size: var(--t-sm); font-weight: 700; color: var(--ink-soft); margin-bottom: 5px; }
 .compare .answer { margin-top: 0; }
 .compare-hint { margin: 10px 0 0; }
-@media (max-width: 720px) { .compare { grid-template-columns: 1fr; gap: 14px; } }
 
 /* ============================================================ 浮窗 / 派活 FAB / 主题切换 */
 .ask-fab { position: fixed; right: 20px; bottom: 20px; z-index: 60; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, #ed7257, var(--coral) 60%, var(--coral-deep)); color: #fff; border: none; border-radius: 999px; padding: 13px 20px; font-size: var(--t-base); font-weight: 800; cursor: pointer; box-shadow: 0 8px 28px rgba(216, 103, 76, 0.4); transition: transform 0.2s ease; }
