@@ -21,6 +21,12 @@ const practice = {
   drawWeakFirst: "🎲 Draw a question (weak-first)",
   askMore: "📨 Ask for more questions",
 
+  // company / source filter
+  filterByCompany: "By company/source:",
+  companyAll: "All",
+  listCount: (n: number) => `${n} questions`,
+  practicedTimes: (n: number) => `practiced ${n}×`,
+
   // question card
   lastGradeLabel: (g: string) => `Last ${g}`,
   close: "✕ Close",

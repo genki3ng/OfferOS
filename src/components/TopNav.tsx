@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NAV, isNavActive } from "@/config/nav";
 import { useDict } from "@/i18n/client";
 
@@ -11,11 +11,36 @@ import { useDict } from "@/i18n/client";
 export default function TopNav() {
   const pathname = usePathname() || "/";
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const d = useDict();
 
   const inline = NAV.filter((n) => n.tier === "primary" || n.tier === "desktop");
   const more = NAV.filter((n) => n.tier === "more" && !n.avatar);
   const moreActive = more.some((n) => isNavActive(n, pathname));
+
+  // 「更多」菜单用 fixed 定位（坐标按按钮实时算），不再放在 .nav 的 overflow 盒子里——
+  // 否则 overflow-x:auto 会把绝对定位的菜单裁掉、还冒出一条横向滚动条（旧 bug）。
+  const place = () => {
+    const b = btnRef.current?.getBoundingClientRect();
+    if (!b) return;
+    const W = 184; // 菜单宽度上限，靠右时夹住避免溢出视口
+    setPos({ top: b.bottom + 6, left: Math.max(8, Math.min(b.left, window.innerWidth - W - 8)) });
+  };
+  const toggle = () => {
+    if (!open) place();
+    setOpen((o) => !o);
+  };
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   return (
     <nav className="nav" aria-label={d.nav.primaryAria}>
@@ -31,9 +56,10 @@ export default function TopNav() {
       {more.length > 0 && (
         <div className="nav-more">
           <button
+            ref={btnRef}
             type="button"
             className={`nav-more-btn${moreActive || open ? " active" : ""}`}
-            onClick={() => setOpen((o) => !o)}
+            onClick={toggle}
             aria-haspopup="menu"
             aria-expanded={open}
           >
@@ -42,10 +68,14 @@ export default function TopNav() {
             </svg>
             {d.nav.more}
           </button>
-          {open && (
+          {open && pos && (
             <>
               <div className="nav-more-mask" onClick={() => setOpen(false)} aria-hidden />
-              <div className="nav-more-menu" role="menu">
+              <div
+                className="nav-more-menu"
+                role="menu"
+                style={{ position: "fixed", top: pos.top, left: pos.left }}
+              >
                 {more.map((n) => (
                   <Link
                     key={n.href}

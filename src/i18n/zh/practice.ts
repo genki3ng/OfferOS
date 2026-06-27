@@ -21,6 +21,12 @@ const practice = {
   drawWeakFirst: "🎲 抽一题（优先薄弱）",
   askMore: "📨 要更多题",
 
+  // company / source filter
+  filterByCompany: "按公司/来源：",
+  companyAll: "全部",
+  listCount: (n: number) => `共 ${n} 题`,
+  practicedTimes: (n: number) => `练过 ${n} 次`,
+
   // question card
   lastGradeLabel: (g: string) => `上次 ${g}`,
   close: "✕ 关闭",

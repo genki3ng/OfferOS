@@ -17,6 +17,9 @@ export default async function PracticePage() {
   const questions: PracticeQ[] = bank.map((q) => ({
     id: q.id,
     category: q.category,
+    companies: q.companies,
+    // 列表里只显示标题行（去掉 markdown 反引号），正文/要点仍是渲染好的 HTML
+    qText: q.q.split("\n")[0].replace(/[`*]/g, "").trim(),
     qHtml: renderMarkdown(q.q, "prep"),
     aHtml: renderMarkdown(q.a, "prep"),
   }));

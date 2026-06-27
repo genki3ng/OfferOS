@@ -608,8 +608,39 @@ export function getInboxQueue(): InboxItem[] {
 export interface Question {
   id: string;
   category: string;
+  companies: string[]; // 题目涉及的公司/来源标签（DoorDash / TikTok / LeetCode…），供 chip 展示 + 过滤
   q: string; // 题干（markdown，可多行）
   a: string; // 要点（markdown）
+}
+
+// 题目标题里出现即打标签——用于练习台的 chip 与公司过滤。顺序即 chip 展示优先序。
+const QUESTION_TAGS: { name: string; re: RegExp }[] = [
+  { name: "DoorDash", re: /doordash/i },
+  { name: "TikTok", re: /tiktok/i },
+  { name: "Uber", re: /uber/i },
+  { name: "Airbnb", re: /airbnb/i },
+  { name: "eBay", re: /\bebay\b/i },
+  { name: "Reddit", re: /reddit/i },
+  { name: "Pinterest", re: /pinterest/i },
+  { name: "LinkedIn", re: /linkedin/i },
+  { name: "Adobe", re: /adobe/i },
+  { name: "Snowflake", re: /snowflake/i },
+  { name: "Databricks", re: /databricks/i },
+  { name: "Stripe", re: /stripe/i },
+  { name: "Netflix", re: /netflix/i },
+  { name: "NVIDIA", re: /nvidia/i },
+  { name: "Tesla", re: /tesla/i },
+  { name: "OpenAI", re: /openai/i },
+  { name: "Google", re: /google/i },
+  { name: "ByteDance", re: /bytedance/i },
+  { name: "Instagram", re: /instagram/i },
+  { name: "YouTube", re: /youtube/i },
+  { name: "Amazon", re: /amazon/i },
+  { name: "LeetCode", re: /leetcode/i },
+];
+
+function extractTags(title: string): string[] {
+  return QUESTION_TAGS.filter((t) => t.re.test(title)).map((t) => t.name);
 }
 
 export function getQuestionBank(): Question[] {
@@ -637,7 +668,7 @@ export function getQuestionBank(): Question[] {
     const h = line.match(/^### \[([\w-]+)\]\s*(.*)$/);
     if (h) {
       flush();
-      cur = { id: h[1], category, q: h[2], a: "" };
+      cur = { id: h[1], category, companies: extractTags(h[2]), q: h[2], a: "" };
       continue;
     }
     if (!cur) continue;
