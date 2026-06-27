@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "1p3a 高亮 + 收集到 GitHub",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "在 1point3acres 论坛列表按时间高亮最近帖子；并可把面经/JD/签证等正文或截图（右键/快捷键/一键）存到 GitHub 仓库（inbox/），供 Claude 下次读取、打标签、总结。",
   "permissions": ["storage", "activeTab", "scripting", "contextMenus"],
   "host_permissions": [
