@@ -67,6 +67,19 @@ function slugify(s) {
     .slice(0, 40);
 }
 
+// 从 URL 提取稳定的条目 ID。很多详情页是 SPA：切换条目时不更新 document.title，
+// 导致每次截图 slug 相同、同分钟两次抓取撞名报错（GitHub 422）。带上 URL 里的 ID 兜底，
+// 保证不同条目文件名一定唯一（同一条目多次截图再靠时间戳秒级区分）。
+function pageIdFromUrl(url) {
+  if (!url) return "";
+  const m =
+    url.match(/\/interview\/thread\/(\d+)/) || // 1point3acres「会员专属版」SPA 详情页
+    url.match(/\/thread-(\d+)-/) ||            // Discuz 静态帖 thread-123-1-1.html
+    url.match(/[?&]tid=(\d+)/) ||              // Discuz 动态帖 ?tid=123
+    url.match(/\/jobs?\/(?:view\/)?(\d{5,})/); // LinkedIn / Greenhouse 等职位详情
+  return m ? m[1] : "";
+}
+
 // 文件名时间戳：YYYY-MM-DD_HHMMSS（带秒，避免同分钟两次抓取撞文件名被互相覆盖）
 function tsForName() {
   const d = new Date();
@@ -108,7 +121,10 @@ async function saveCapture({ types, text, image, pageInfo }) {
   if (!cfg.ghToken) throw new Error("未配置 GitHub token（在弹窗里填）");
   const typeTag = (types && types.length ? types : ["other"]).join("+");
   const stamp = tsForName();
-  const slug = slugify(pageInfo.title) || "capture";
+  const id = pageIdFromUrl(pageInfo.url);
+  // 带上条目 ID：SPA 详情页 document.title 不随条目切换，光靠 title slug 会重名撞文件；
+  // 同一条目多次截图再靠时间戳秒级区分。
+  const slug = [slugify(pageInfo.title) || "capture", id].filter(Boolean).join("_");
   const base = `${cfg.ghPath}/${stamp}_${typeTag}_${slug}`;
 
   let imageNote = "";
@@ -244,5 +260,23 @@ function grabFromPage() {
     text = toMd(root).slice(0, 60000);
     mode = (root.tagName === "BODY" ? "全页" : "正文区") + "(md)";
   }
-  return { text, mode, title: document.title, url: location.href };
+
+  // SPA 详情页常见坑：切换条目不更新 <title>，document.title 会停在上一条。
+  // 这里只对已知是 SPA 的 1point3acres「会员专属版」(/interview/) 启用——从内容区抓当前
+  // 帖标题；其它站点（旧论坛页 / LinkedIn / Greenhouse 等）document.title 本就准确，不动。
+  function pickTitle() {
+    if (!/\/interview\//.test(location.href)) return document.title;
+    const scope = document.querySelector("main, article") || document.body;
+    for (const sel of ["h1", "h2"]) {
+      for (const el of scope.querySelectorAll(sel)) {
+        const cs = getComputedStyle(el);
+        if (cs.display === "none" || cs.visibility === "hidden") continue;
+        const t = (el.textContent || "").replace(/\s+/g, " ").trim();
+        if (t.length >= 3 && t.length <= 150 && !/^(一亩三分地|1Point3Acres)/i.test(t)) return t;
+      }
+    }
+    return document.title;
+  }
+
+  return { text, mode, title: pickTitle(), url: location.href };
 }
