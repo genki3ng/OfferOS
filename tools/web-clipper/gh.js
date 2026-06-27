@@ -227,6 +227,106 @@ function grabFromPage() {
   const toMd = (root) =>
     block(root).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 
+  // v0.7：去噪正文抽取。有些站点的详情页是 SPA（如 1point3acres「会员专享版」/interview/thread/N），
+  // 整页没有干净的 <article>/<main> 包住正文 → 旧逻辑退回 document.body，把"站点导航 + 相关帖列表 +
+  // 广告 + 关注卡 + 回复框"全抓进来、正文淹没在噪声里。这里克隆 body 后按"内容安全"的规则剥掉这些
+  // 噪声块（每条规则都只命中明显的非正文，命中不了就保留，绝不误删正文），再交给 toMd。
+  // 通用规则（标签/role/链接堆）对任意页面都适用；带 1point3acres 字样的规则在别的站点是空操作。
+  function cleanForExtraction(srcBody) {
+    const body = srcBody.cloneNode(true);
+    const STAMP = /\d{4}\s*[（(]\s*\d{1,2}\s*[-–]\s*\d{1,2}\s*月\s*[)）]/; // 年份+季度，如 2026(4-6月)
+    // 1p3a 帖子的"就业状态"元信息——只在版块/相关帖卡片里出现，正文/时间线散文几乎不会有；
+    // 要"年份季度 + 就业状态"同时出现才算相关帖卡片，避免误把正文里"2026(1-3月)我面了…"当卡片删掉。
+    const CARD_META = /(在职跳槽|在校学生|应届毕业|海外身份|本科在读|硕士在读|博士在读|全职@|实习@|兼职@)/;
+    const AD_MARK = ["ByteByteGo", "看图就懂", "独家折扣", "折扣码"]; // 广告专有词
+    const isAd = (t) => /link\.1p3a\.com/i.test(t) || AD_MARK.filter((m) => t.indexOf(m) >= 0).length >= 2;
+    // 关注卡："2k+个主题 | 24k+个回复" / "帖子 2000 · 回复 24000"——主题/帖子 + 回复 + ≥2 个数字
+    const isWidget = (t) => /(主题|帖子|讨论)/.test(t) && /(回复|评论)/.test(t) && (t.match(/\d[\d.,kK万+]*/g) || []).length >= 2;
+    const HOT = /热门面试题|热门题目|相关(帖子|主题|面经|讨论)|你可能(感兴趣|还想看)|更多(面经|讨论)/;
+    const NAV_KEYS = ["热门题目精选","面试经验","普通面经","数科面经","PM面经","面试攻略","薪资数据库","最新招聘职位","系统设计","公司库","关注的公司","淘专辑","阅读历史","帮助与客服","购买通行证","功能介绍"];
+    const JUNK = ["Toggle Sidebar","会员专享版","一亩三分地面经","没有更多了","请输入回复内容","切换至高级模式","写长回复? 切换至高级模式","加载更多","展开全部","收起","举报","分享","点赞","沙发","板凳"];
+
+    const tlen = (el) => (el.textContent || "").replace(/\s+/g, "").length;
+    const all = () => Array.from(body.querySelectorAll("*"));
+    // NB: body 是 cloneNode 出来的"游离子树"——节点的 isConnected 恒为 false（它指
+    // "连到 document"），所以判活/判删一律走 body.contains / parentNode，别用 isConnected。
+    const drop = (el) => { if (el && el !== body && el.parentNode) el.parentNode.removeChild(el); };
+    const linkDensity = (el) => {
+      const total = tlen(el) || 1;
+      let l = 0;
+      el.querySelectorAll("a").forEach((a) => { l += (a.textContent || "").replace(/\s+/g, "").length; });
+      return l / total;
+    };
+    const stampedKids = (el) => {
+      let c = 0;
+      for (const ch of el.children) {
+        const tx = ch.textContent || "";
+        if (STAMP.test(tx) && CARD_META.test(tx)) c++; // 同时像"年份季度 + 就业状态"才算相关帖卡片
+      }
+      return c;
+    };
+    const navHits = (txt) => NAV_KEYS.reduce((n, k) => n + (txt.indexOf(k) >= 0 ? 1 : 0), 0);
+    // 删"命中且不超过 cap 的【最内层】块"——只取最贴合噪声的那一层，绝不顺着往上删到
+    // 把正文也包住的祖先（短帖时祖先文本也可能 < cap，外层删法会误删整段正文）。
+    const removeInnermost = (test, cap) => {
+      const hits = all().filter((e) => body.contains(e) && tlen(e) <= cap && test(e));
+      hits.forEach((e) => { if (!hits.some((h) => h !== e && e.contains(h))) drop(e); });
+    };
+    // 删"命中且不超过 cap 的【最外层】小块"——仅用于 cap 很小的纯 UI 标签（整块都是噪声）。
+    const removeOutermost = (test, cap) => {
+      const hits = all().filter((e) => body.contains(e) && tlen(e) <= cap && test(e));
+      const set = new Set(hits);
+      hits.forEach((e) => { if (!set.has(e.parentElement)) drop(e); });
+    };
+    const hasAdLink = (e) => !!(e.querySelector && e.querySelector('a[href*="link.1p3a.com"]'));
+
+    // 1) 结构性非正文标签：脚本/样式/导航/表单/按钮/媒体/页脚
+    all().forEach((e) => {
+      if (body.contains(e) && /^(SCRIPT|STYLE|NOSCRIPT|IFRAME|SVG|CANVAS|NAV|FORM|BUTTON|INPUT|SELECT|TEXTAREA|VIDEO|AUDIO|FOOTER)$/.test(e.tagName)) drop(e);
+    });
+    // 2) ARIA 角色：导航/页眉/页脚/侧栏/搜索/弹窗/菜单
+    all().forEach((e) => {
+      if (!body.contains(e) || !e.getAttribute) return;
+      if (/^(navigation|banner|contentinfo|complementary|search|dialog|menu|menubar|toolbar|tablist|tab|form)$/i.test(e.getAttribute("role") || "")) drop(e);
+      if (e.getAttribute("aria-hidden") === "true") drop(e);
+    });
+    // 3) 相关帖列表（中栏"热门面试题"）：有 ≥3 个直接子元素各自带 1p3a 帖子标签的容器
+    //    （正文的 meta 行只有 1 个标签；评论区没有标签 → 都不会被误删）
+    all().forEach((e) => {
+      if (body.contains(e) && e.children.length >= 3 && stampedKids(e) >= 3) drop(e);
+    });
+    // 4) 相关帖小标题（"…热门面试题 31 题"）：删标题本身，并连带删它后面的列表容器
+    //    （兜底无 1p3a 标签的相关帖列表——靠"标题 + 紧跟的多项列表"识别）
+    all().forEach((e) => {
+      if (!body.contains(e) || tlen(e) >= 60 || !HOT.test(e.textContent || "")) return;
+      const sib = e.nextElementSibling;
+      if (sib && sib.children.length >= 3) drop(sib);
+      drop(e);
+    });
+    // 5) 链接堆（站点导航渲染成一串链接）：≥3 个链接、文本短、链接密度高
+    all().forEach((e) => {
+      if (!body.contains(e)) return;
+      if (e.querySelectorAll("a").length >= 3 && tlen(e) < 1000 && linkDensity(e) >= 0.55) drop(e);
+    });
+    // 6) 残留的纯文本站点导航：短块里凑齐 ≥4 个导航专有词
+    all().forEach((e) => {
+      if (body.contains(e) && tlen(e) < 600 && navHits(e.textContent || "") >= 4) drop(e);
+    });
+    // 7) 广告/推广卡（多重广告专有词，或块内带 1p3a 推广跳转链接 link.1p3a.com；避免误删"顺嘴提一句"的正文）
+    removeInnermost((e) => isAd(e.textContent || "") || hasAdLink(e), 600);
+    // 8) 公司关注卡（"2k+个主题 | 24k+个回复" / "帖子 2000 · 回复 24000"）
+    removeInnermost((e) => isWidget(e.textContent || ""), 220);
+    // 9) 反应条/回复提示等纯 UI 小块（cap 很小，整块都是噪声）
+    removeOutermost((e) => /我遇到过这个问题|写长回复|切换至高级模式|没有更多了/.test(e.textContent || ""), 80);
+    // 10) 精确短标签
+    all().forEach((e) => {
+      if (!body.contains(e)) return;
+      const tx = (e.textContent || "").trim();
+      if (tx.length <= 30 && JUNK.some((j) => tx === j || tx.replace(/\s+/g, "") === j.replace(/\s+/g, ""))) drop(e);
+    });
+    return body;
+  }
+
   let text = "", mode = "";
   const sel = window.getSelection();
   if (sel && sel.rangeCount && sel.toString().trim()) {
@@ -256,9 +356,25 @@ function grabFromPage() {
     }
   }
   if (!text) {
-    const root = document.querySelector("article") || document.querySelector("main") || document.body;
-    text = toMd(root).slice(0, 60000);
-    mode = (root.tagName === "BODY" ? "全页" : "正文区") + "(md)";
+    const fullText = toMd(document.body).slice(0, 60000); // 全页文本（去噪结果的"上限"参照）
+    const rawRoot = document.querySelector("article") || document.querySelector("main") || document.body;
+    const rawText = toMd(rawRoot).slice(0, 60000);        // 旧行为：退回用的兜底
+    let cleanText = "";
+    try { cleanText = toMd(cleanForExtraction(document.body)).slice(0, 60000); } catch (e) { cleanText = ""; }
+    const titleGuess = pickTitle();
+    // 安全网：去噪结果要么明显抓到了正文（含标题，哪怕帖子很短；或够长）、且不超过全页文本，
+    // 否则退回旧行为——绝不比从前更差。
+    const cleanOk =
+      cleanText.length <= fullText.length + 50 &&
+      ((titleGuess && cleanText.indexOf(titleGuess) >= 0 && cleanText.length >= 60) ||
+        cleanText.length >= 200);
+    if (cleanOk) {
+      text = cleanText;
+      mode = "去噪正文(md)";
+    } else {
+      text = rawText;
+      mode = (rawRoot.tagName === "BODY" ? "全页" : "正文区") + "(md)";
+    }
   }
 
   // SPA 详情页常见坑：切换条目不更新 <title>，document.title 会停在上一条。

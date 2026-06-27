@@ -73,6 +73,7 @@ LinkedIn 职位描述、Greenhouse/Lever 等）抓正文；都不命中则回退
 
 ## 版本
 
+- **v0.7.2**：**正文抓取去噪**。有些站点的详情页是 SPA、整页没有干净的 `<article>/<main>`，旧逻辑退回 `document.body` 把站点导航 / 相关帖列表 / 广告 / 关注卡 / 回复框全抓进来、正文淹没在噪声里。现抓正文时先**克隆页面、按内容安全规则剥噪声块**再转 Markdown（`gh.js` 的 `grabFromPage() → cleanForExtraction()`）：通用规则（非正文标签 / ARIA role / 链接堆）对任意页面都适用，外加几条针对论坛相关帖列表 / 广告 / 关注卡的识别。判定**不依赖会随改版变化的 class 名**；每条规则只删**最贴合噪声的那一层**、命中不了就保留，并带**安全网**——去噪结果可疑（太短/丢标题/超全页）就退回旧行为，**绝不更差**。调参对照 `cleanForExtraction` 顶部常量（`NAV_KEYS` / `AD_MARK` / `isWidget` / `STAMP` 等）。⚠️ 改完到 `chrome://extensions` **重新加载扩展**才生效。
 - **v0.7.1**：修 **SPA 详情页截图重名报错**——有些站点的详情页（如 1point3acres「会员专属版」`/interview/thread/N`）是 SPA，点列表切条目时 `document.title` 不更新、停在上一条，导致每次截图 slug 全相同、同分钟两次抓取撞名报 422。① 文件名带上 URL 里的**条目 ID**（覆盖 1p3a SPA / Discuz / LinkedIn·Greenhouse 职位），不同条目一定不撞；② 在 1p3a SPA 上抓取时优先从内容区取**当前帖标题**。⚠️ 改完到 `chrome://extensions` **重新加载扩展**才生效。
 - **v0.7.0**：更名为 OfferOS Web Clipper，通用化为「任意站点收集」；1p3a 高亮降为可选模块；正文抽取加已知站点选择器。
 - v0.6.x：抓正文改存 Markdown（保留链接/表格）；整页截图支持内滚容器；提交前查 sha 修 422；文件名时间戳到秒。

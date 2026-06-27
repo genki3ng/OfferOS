@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OfferOS Web Clipper",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "一键把任意网页的面经/JD/截图（右键/快捷键/弹窗）存到你的 OfferOS 仓库（inbox/），供 Claude 读取、打标签、归档。可选：在 1point3acres 论坛列表按时间高亮最近帖子。",
   "permissions": ["storage", "activeTab", "scripting", "contextMenus"],
   "host_permissions": [
