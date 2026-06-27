@@ -13,7 +13,7 @@
 - 展示身份一律走 `getSiteConfig()` / `data/profile.json`，**绝不写死**在组件里（`Greeting` 那次硬编码名字就是教训）。
 - 样例只用虚构占位（Alex Rivera；Northwind / Vertex Cloud / Helios Media；`@example.com`）。
 - 提交前 **`npm run check` 必过**（已接进 `npm run build`）：扫源作者标识 + 模板态占位完整性 + **模板题库不点名公司**。详见 [STYLEGUIDE.md](STYLEGUIDE.md)「开发铁律」。
-- **题库去痕（面试 NDA + 开源，必守）**：进题库（`prep/<role>/question-bank.md`、`mock-interview-bank.md`）的题——**包括未来从网上面经新增的**——一律先「洗」：①**改写题干，不用逐字原题**；②抹掉公司 / 产品 / 内部代号 / 团队名；③**不打公司标签，模板默认假设题目来源未知**。公开题源（LeetCode 题号等）可照引（公开、非 NDA）。`npm run check` 模板态会拦题库题目行里的公司名。*例外：下游用户 fork 到自己私库后，可按公司给自己的题打标签（自担 NDA 风险）——但绝不可回流开源模板。*
+- **题库去痕（面试 NDA + 开源，必守）**：进题库（`prep/<role>/question-bank.md`、`mock-interview-bank.md`）的题——**包括未来从网上面经新增的**——一律先「洗」：①**改写题干，不用逐字原题**；②抹掉公司 / 产品 / 内部代号 / 团队名；③**不打公司标签，模板默认假设题目来源未知**。公开题源（LeetCode 题号等）可照引（公开、非 NDA）。**「去痕」是主动动作，不是假装不知道来源**：用户给料时多半会点名公司（"这是 X 家的面经"）——拿来做针对性备战 / 速备包没问题，但题搬进题库前必须由你洗掉公司痕迹（上面"假设来源未知"说的是**模板成品的状态**，不是你的认知）。`npm run check` 模板态会拦题库题目行里的公司名。*例外：下游用户 fork 到自己私库后，可按公司给自己的题打标签（自担 NDA 风险）——但绝不可回流开源模板。*
 
 ## 文件分工（避免重复写）
 
@@ -33,7 +33,7 @@
 3. 报告当前**模型**。
 4. **扫 [inbox/](inbox/)**：有 `status: new` 的捕获（面经/JD/截图）或**网页派活 `type: request`** 就逐个处理（按 [inbox/README.md](inbox/README.md) 的 SOP），处理完移 `inbox/archive/` 或标 `status: done`，journal 记一条。
 5. **扫 deadline**：聚合各公司「关键日期」表 + tracker「下一步」`⏰MM-DD` 项（= 站点 /agenda 数据源），**逾期或 3 天内到期的写进 HANDOFF 顶部提醒**；有明天的面试就生成/更新 `prep/briefs/` 速备包。
-6. **收到 prep guide / 面经**（用户上传 PDF、截图或贴文）：出 `prep/briefs/` 速备包，并从中**出练习题进当前角色的 `prep/<role>/question-bank.md`**（守格式契约，喂 /practice 练习台）。
+6. **收到 prep guide / 面经**（用户上传 PDF、截图或贴文）：出 `prep/briefs/` 速备包，并从中**出练习题进当前角色的 `prep/<role>/question-bank.md`**（守格式契约，喂 /practice 练习台）。用户多半会说明是哪家公司——速备包 / 私人备战可用，但**出题进题库前先去痕**：改写题干、去公司 / 产品 / 内部代号、不打公司标签（见「开发铁律：去标识化」）。
 
 ## Session 收尾仪式（宣告「完成」前必做）
 
