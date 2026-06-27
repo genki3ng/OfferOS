@@ -28,3 +28,5 @@ cat data/profile.json
 仓库**不得包含任何他人个人信息**（姓名、雇主、私人邮箱、他人的真实公司进度等）。
 所有展示身份一律走 `getSiteConfig()` / `data/profile.json`，**绝不写死**。
 提交前 `npm run check` 必须通过（已接进 `npm run build`）。
+
+**题库去痕**（面试 NDA + 开源）：进 `question-bank` / `mock-interview-bank` 的题（含未来从网上面经新增的）一律先洗——改写题干（非逐字原题）、抹掉公司/产品/内部代号、**模板里不点名来源公司**（`npm run check` 模板态会拦题目行里的公司名）。公开题源（LeetCode）可照引。下游 fork 后可在私库按公司给自己的题打标签。详见 [CLAUDE.md](CLAUDE.md)「开发铁律」。

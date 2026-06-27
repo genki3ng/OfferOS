@@ -613,7 +613,10 @@ export interface Question {
   a: string; // 要点（markdown）
 }
 
-// 题目标题里出现即打标签——用于练习台的 chip 与公司过滤。顺序即 chip 展示优先序。
+// 题目标题里出现即打标签——用于练习台的 chip 与「来源/标签」过滤。顺序即 chip 展示优先序。
+// 去标识化铁律：**开源模板的题库不点名公司**（check-no-personal-info.mjs 模板态会拦），所以模板题
+// 触发不到下面这些公司标签；此表主要服务下游用户——他们 fork 后给自己的题（标题含公司名）自动打标签。
+// 公开题源 LeetCode 例外（非 NDA，可照引）。改模板题库时务必守此铁律，别把公司名写回题目行。
 const QUESTION_TAGS: { name: string; re: RegExp }[] = [
   { name: "DoorDash", re: /doordash/i },
   { name: "TikTok", re: /tiktok/i },

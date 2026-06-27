@@ -12,7 +12,8 @@
 这个仓库是要分享出去的**模板**——**不得包含任何他人个人信息**（姓名、雇主、私人邮箱、他人真实公司进度等）。
 - 展示身份一律走 `getSiteConfig()` / `data/profile.json`，**绝不写死**在组件里（`Greeting` 那次硬编码名字就是教训）。
 - 样例只用虚构占位（Alex Rivera；Northwind / Vertex Cloud / Helios Media；`@example.com`）。
-- 提交前 **`npm run check` 必过**（已接进 `npm run build`）：扫源作者标识 + 模板态占位完整性。详见 [STYLEGUIDE.md](STYLEGUIDE.md)「开发铁律」。
+- 提交前 **`npm run check` 必过**（已接进 `npm run build`）：扫源作者标识 + 模板态占位完整性 + **模板题库不点名公司**。详见 [STYLEGUIDE.md](STYLEGUIDE.md)「开发铁律」。
+- **题库去痕（面试 NDA + 开源，必守）**：进题库（`prep/<role>/question-bank.md`、`mock-interview-bank.md`）的题——**包括未来从网上面经新增的**——一律先「洗」：①**改写题干，不用逐字原题**；②抹掉公司 / 产品 / 内部代号 / 团队名；③**不打公司标签，模板默认假设题目来源未知**。公开题源（LeetCode 题号等）可照引（公开、非 NDA）。`npm run check` 模板态会拦题库题目行里的公司名。*例外：下游用户 fork 到自己私库后，可按公司给自己的题打标签（自担 NDA 风险）——但绝不可回流开源模板。*
 
 ## 文件分工（避免重复写）
 

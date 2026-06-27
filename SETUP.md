@@ -94,6 +94,8 @@ bash tools/agent-reach/setup.sh        # 一条命令装好；`agent-reach docto
 仓库**不得包含他人个人信息**。所有展示身份一律走 `getSiteConfig()` / `data/profile.json`，**不写死**。
 `npm run check`（已接进 `npm run build`）会扫源作者标识 + 模板态占位完整性；提交前必过。详见 [CLAUDE.md](CLAUDE.md)。
 
+**题库去痕（面试 NDA）**：进题库的题——含未来从网上面经新增的——先洗：改写题干（非逐字原题）、去掉公司/产品/内部代号、**模板里不打公司标签**（假设来源未知，公开题源如 LeetCode 题号可照引）；`npm run check` 模板态会拦题库题目行里的公司名。你 fork 后可在自己私库里按公司给自己的题打标签（自担 NDA 风险）。
+
 ---
 
 配置完成后：提交并推送，告诉用户站点 ~1 分钟后重建上线，然后按 CLAUDE.md 的 session 仪式开始日常协作。

@@ -24,13 +24,13 @@
 
 | kind | Claude 处理动作 |
 |---|---|
-| 出题练习 | 按 [prep/question-bank.md](../prep/question-bank.md) 格式契约追加题目（参考 practice-log 薄弱点） |
+| 出题练习 | 按 [prep/question-bank.md](../prep/question-bank.md) 格式契约追加题目（参考 practice-log 薄弱点）；**守题库去痕铁律：非逐字原题、不点名公司**（见 [CLAUDE.md](../CLAUDE.md)「开发铁律」） |
 | 准备材料 | 写/扩对应 prep 文件（cheatsheet 补节、新练习等） |
 | Mock 面试 / 批改 | 按 [mock-interview-bank 自评表](../prep/mock-interview-bank.md) 6 维打分点评 → 结果记 practice-log + 坑点回填对应 cheatsheet |
 | 扫岗/调研 | 按 [tools/web-reach.md](../tools/web-reach.md) 通路执行，更新公司文件/intel |
 | 面试日程 | ① 记入公司文件「关键日期」表；② 生成面前速备包 `prep/briefs/YYYY-MM-DD-<co>-<round>.md`（pitch/考点 top5/必问含 PERM 话术/红线）；③ tracker 下一步加 `⏰MM-DD` |
 | 投递记录 | 记入公司文件「投递记录」表（含 quota 记账）+ 同步 tracker 状态/referrals 状态 |
-| 面试复盘 | 回填公司文件「逐轮记录」；`#卡壳` 拆成 prep 练习/题库新题；`#情报`（PERM/comp/流程）分发到 PERM 格 / comp-research / 关键日期 |
+| 面试复盘 | 回填公司文件「逐轮记录」；`#卡壳` 拆成 prep 练习/题库新题（**进题库先去痕：改写题干、不点名公司**）；`#情报`（PERM/comp/流程）分发到 PERM 格 / comp-research / 关键日期 |
 | 拍板决策 | 落实决定到 tracker/target/相关文件，清掉 HANDOFF 对应待拍板项 |
 | 改简历 | 按 master.md tailor（记得删 IC6 标注） |
 | 其他 | 自行判断归位 |
@@ -41,7 +41,7 @@
 
 1. 扫 `inbox/`，挑出 `status: new` 的项。
 2. 读内容（含截图——能直接看图 OCR），**打标签 + 总结**，归档到对应位置：
-   - 面经 → `prep/company-notes/<公司>.md`（或面经汇总）
+   - 面经 → 原始笔记可留 `prep/company-notes/<公司>.md`（你自己私库的参考用）；但**凡要进题库（question-bank / mock-interview-bank）的题，先去痕**：改写题干（非逐字原题）、抹掉公司/产品/内部代号、模板里不点名公司（面试 NDA + 开源，见 [CLAUDE.md](../CLAUDE.md)「开发铁律」）
    - JD → `intel/jd/`（按需新建）
    - 签证 → `visa/`（按需新建）
 3. 处理完：原件移到 `inbox/archive/YYYY-MM/`（或把 frontmatter 的 `status` 改 `done`），并在

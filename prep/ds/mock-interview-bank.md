@@ -27,10 +27,10 @@
 6. 实验跑到一半看着显著了，能停吗？（peeking → [A/B 坑 cheat sheet](stats-experimentation/cheatsheet-abtest-pitfalls.md)）
 
 ## C. 产品 Sense（分析推理轮）
-1. 为 **Instagram Reels / YouTube Shorts** 定义成功指标。（→ [practice-define-metrics](product-sense/practice-define-metrics.md)）
-2. **DoorDash 某城市配送时长变长了**，怎么诊断？
+1. 为**一个短视频信息流产品**定义成功指标。（→ [practice-define-metrics](product-sense/practice-define-metrics.md)）
+2. **某外卖配送平台某城市配送时长变长了**，怎么诊断？
 3. **某 ratio 指标掉了 5%**，结构化排查。（→ [diagnose-ratio-metric](product-sense/diagnose-ratio-metric.md)）
-4. 该不该给 Uber 上线"拼车"功能？用数据论证。（marketplace 取舍 → [marketplace cheat sheet](product-sense/cheatsheet-marketplace-metrics.md)）
+4. 该不该给**一个网约车平台**上线"拼车"功能？用数据论证。（marketplace 取舍 → [marketplace cheat sheet](product-sense/cheatsheet-marketplace-metrics.md)）
 5. 怎么衡量"通知"功能的价值且不惹恼用户？（增量 + 关推送护栏）
 6. 为一个**新的 AI 功能**（如 AI 客服/摘要）定义成功 & 风险指标。（若有 AI/ML 相关经验可结合）
 
