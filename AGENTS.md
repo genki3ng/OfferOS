@@ -28,3 +28,5 @@ cat data/profile.json
 仓库**不得包含任何他人个人信息**（姓名、雇主、私人邮箱、他人的真实公司进度等）。
 所有展示身份一律走 `getSiteConfig()` / `data/profile.json`，**绝不写死**。
 提交前 `npm run check` 必须通过（已接进 `npm run build`）。
+
+**题库去痕**（仅针对公开模板）：**维护公开 OfferOS 模板时**，进 `question-bank` / `mock-interview-bank` 的题（含从网上面经新增的）先洗——改写题干（非逐字原题）、抹掉公司/产品/内部代号、不点名公司（公开题源如 LeetCode 可照引）。`npm run check` 在模板态（`configured:false`）强制。**用户 fork 配置后是私人仓库——题库随意，`check` 自动放行、不需要去痕。** 详见 [CLAUDE.md](CLAUDE.md)「开发铁律」。

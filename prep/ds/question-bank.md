@@ -893,7 +893,7 @@ daily['roll_corr'] = (daily.groupby('campaign_id')
 
 ## 产品 Sense
 
-### [ps-01] 为 Instagram Reels / YouTube Shorts 定义成功指标
+### [ps-01] 为一个短视频信息流产品定义成功指标
 **要点**
 - 套路：**澄清范围 → 业务目标 → 北极星+驱动+护栏 → 取舍**（[范答](product-sense/practice-define-metrics.md)）。
 - 北极星：**满意观看时长/用户**（裸 watch time 会被刷——看完率/long-click/survey 加权）。
@@ -901,7 +901,7 @@ daily['roll_corr'] = (daily.groupby('campaign_id')
 - 护栏：举报/踩、regretted watch、对长视频/Feed 的 cannibalization、延迟。
 - 取舍：短期时长 vs 长期留存；别忘了说"会被操纵的指标不配当北极星"。
 
-### [ps-02] DoorDash 某城市配送时长变长了，怎么诊断？
+### [ps-02] 某外卖配送平台某城市的配送时长变长了，怎么诊断？
 **要点**
 - 先**澄清+量化**：多长？多久了？突变还是渐变？（突变→找 event；渐变→找 mix shift）
 - **拆解漏斗**：下单→商家接单→出餐→骑手接单→取餐→送达，定位哪段变长。
@@ -916,7 +916,7 @@ daily['roll_corr'] = (daily.groupby('campaign_id')
 - 关键 move：分母涨也会让 ratio 掉（新用户涌入稀释）——**先问分子分母**，面试官就在等这个。
 - 参考：[diagnose-ratio-metric](product-sense/diagnose-ratio-metric.md)（含 3 题范答）
 
-### [ps-04] 该不该给 Uber 上线"拼车"功能？用数据论证
+### [ps-04] 该不该给一个网约车平台上线"拼车/合乘"功能？用数据论证
 **要点**
 - 框架：**目标（谁的价值）→ 机会规模 → 实验设计 → 指标体系 → 取舍建议**。
 - 三边影响：乘客（便宜 vs 时长↑）、司机（单价↓ vs 利用率↑）、平台（单均毛利 vs 总单量、供给效率）。
@@ -938,14 +938,14 @@ daily['roll_corr'] = (daily.groupby('campaign_id')
 - 风险/护栏：幻觉率/事实错误投诉、升级人工率、延迟与成本（$/会话）、安全违规。
 - 若有相关经验：用一句话举例你怎么定 acceptance / 质量指标（很加分）。
 
-### [ps-07] 两边 marketplace（DoorDash/Airbnb/Uber）的指标体系怎么搭？
+### [ps-07] 两边 marketplace（外卖 / 短租 / 网约车这类）的指标体系怎么搭？
 **要点**
 - 三层：**需求侧**（MAU、转化、频次、留存）/ **供给侧**（活跃供给、利用率、供给留存）/ **撮合健康**（匹配率、等待时长、fill rate、流动性）。
 - 北极星=完成交易量（可持续口径，剔补贴）；**约束=供需平衡**——单侧优化必反噬。
 - 经典问法变体：补贴该给哪边？→ 看哪侧是瓶颈（constrained side）+ 弹性。
 - 参考：[marketplace cheatsheet](product-sense/cheatsheet-marketplace-metrics.md)
 
-### [ps-08] 外卖平台上线会员订阅（月费，类似 DashPass），怎么衡量它表现好不好？
+### [ps-08] 外卖平台上线会员订阅（月费，免配送费/折扣类），怎么衡量它表现好不好？
 > 三边 marketplace 样板题。三方 = 消费者 / 商家 / 配送方（骑手）。
 **要点**
 - **先澄清**：目标 = retention？GOV？margin？看绝对值还是**增量**？哪个用户群？时间窗？

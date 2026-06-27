@@ -94,6 +94,8 @@ bash tools/agent-reach/setup.sh        # 一条命令装好；`agent-reach docto
 仓库**不得包含他人个人信息**。所有展示身份一律走 `getSiteConfig()` / `data/profile.json`，**不写死**。
 `npm run check`（已接进 `npm run build`）会扫源作者标识 + 模板态占位完整性；提交前必过。详见 [CLAUDE.md](CLAUDE.md)。
 
+**题库去痕**：这是**我们维护公开 OfferOS 模板**时做的事（题库非逐字原题、不点名公司、不打公司标签），`npm run check` 在模板态（`configured:false`）强制。**你按本指南配置后（`configured:true`）= 你的私人仓库——题库随你，原题 / 公司名 / 公司标签都行，`check` 自动放行，不需要去痕。**
+
 ---
 
 配置完成后：提交并推送，告诉用户站点 ~1 分钟后重建上线，然后按 CLAUDE.md 的 session 仪式开始日常协作。

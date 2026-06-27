@@ -12,7 +12,8 @@
 这个仓库是要分享出去的**模板**——**不得包含任何他人个人信息**（姓名、雇主、私人邮箱、他人真实公司进度等）。
 - 展示身份一律走 `getSiteConfig()` / `data/profile.json`，**绝不写死**在组件里（`Greeting` 那次硬编码名字就是教训）。
 - 样例只用虚构占位（Alex Rivera；Northwind / Vertex Cloud / Helios Media；`@example.com`）。
-- 提交前 **`npm run check` 必过**（已接进 `npm run build`）：扫源作者标识 + 模板态占位完整性。详见 [STYLEGUIDE.md](STYLEGUIDE.md)「开发铁律」。
+- 提交前 **`npm run check` 必过**（已接进 `npm run build`）：扫源作者标识 + 模板态占位完整性 + **模板题库不点名公司**。详见 [STYLEGUIDE.md](STYLEGUIDE.md)「开发铁律」。
+- **题库去痕（去标识化铁律的一部分，仅针对公开模板）**：**只有在维护公开 OfferOS 模板时**才做这件事——进题库（`prep/<role>/question-bank.md`、`mock-interview-bank.md`）的题（含从网上面经新增的）先「洗」：①**改写题干，不用逐字原题**；②抹掉公司 / 产品 / 内部代号；③**不点名、不打公司标签**（公开题源如 LeetCode 题号可照引）。`npm run check` 在**模板态（`configured:false`）**强制这条。**用户 fork 配置后（`configured:true`）= 私人仓库，题库随你——原题、公司名、公司标签都行，`check` 自动放行、不需要去痕。** 换句话说：去痕是「我们对外发布模板」的责任，不是套在每个下游用户身上的负担。
 
 ## 文件分工（避免重复写）
 

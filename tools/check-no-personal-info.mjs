@@ -10,6 +10,8 @@
  *       · 雇主名 "Meta" 等通用敏感词（下游用户若真在 Meta 求职，配置后即放行）
  *       · 非样例的真人邮箱
  *       · 占位完整性（site.config 默认仍是中性占位）
+ *       · 题库去痕：question-bank / mock-interview-bank 的题目行不得点名来源公司
+ *         （开源模板假设题目来源未知；配置后的 fork 放行，可自行按公司打标签）
  *
  * 接到 `npm run build` / `npm run check`。命中即非零退出并打印 file:line。
  * 扩展个人禁用词（择一即可）：env DEID_DENYLIST="词1,词2"（逗号分隔），
@@ -52,6 +54,20 @@ const ALWAYS = loadPersonalDenylist();
 /** 仅模板态视为泄漏（下游用户配置后放行：他们可能真在这家公司求职） */
 const TEMPLATE_ONLY = [/\bMeta\b/];
 
+/**
+ * 题库去痕铁律（模板态）：开源模板的题库**不得点名来源公司**——假设题目来源未知。
+ * 面试有 NDA，所以进题库的面经一律先洗：改写题干（非逐字原题）、抹掉公司/产品/内部代号、不打公司标签。
+ * 只扫「题目行」（`## 类别` / `### [id] 标题` / mock-bank 的 `N.` 编号题），
+ * 不扫「要点」正文里的技术/产品/库名（Snowflake QUALIFY、Google S2 是工具，不是"哪家公司考的"）。
+ * 公开题源（LeetCode 题号等）可照引——公开、非 NDA。
+ * 配置后（用户自己的 fork）整体放行：可在私库里按公司给自己的题打标签（自担 NDA 风险），但绝不回流模板。
+ * 想在模板态临时放行：设 env DEID_ALLOW_BANK_COMPANIES=1。
+ */
+const BANK_FILE = /^prep\/[^/]+\/(question-bank|mock-interview-bank)\.md$/;
+const BANK_QLINE = /^(#{2,3}\s|\s*\d+\.\s)/; // 题目行：H2/H3 标题 或 编号题（跳过 `- 要点` 正文与 `> ` 引文）
+const BANK_COMPANY =
+  /\b(DoorDash|DashPass|Uber|Lyft|Airbnb|TikTok|ByteDance|Instagram|Reddit|Pinterest|Netflix|Tesla|Snapchat|Grubhub|Robinhood|Coinbase|Spotify|Palantir|WhatsApp|Twitter|YouTube|Facebook|LinkedIn|Meta|Google|Amazon|Microsoft|Apple)\b/i;
+
 /** 非样例真人邮箱（仅模板态查） */
 const EMAIL = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
 const EMAIL_ALLOW = /@example\.(com|org)\b|noreply@|@your-|@company\.com\b/i;
@@ -73,10 +89,13 @@ function isConfigured() {
 
 const configured = isConfigured();
 const patterns = configured ? ALWAYS : [...ALWAYS, ...TEMPLATE_ONLY];
+// 题库去痕只在模板态扫；可用 env 临时放行（下游配置后的 fork 自动放行）
+const scanBankCompanies = !configured && process.env.DEID_ALLOW_BANK_COMPANIES !== "1";
 const hits = [];
 
 for (const f of trackedFiles()) {
   if (f === SELF || !TEXT_EXT.test(f)) continue;
+  const isBankFile = BANK_FILE.test(f);
   let content;
   try {
     if (statSync(f).size > 2_000_000) continue;
@@ -93,6 +112,10 @@ for (const f of trackedFiles()) {
       for (const em of line.match(EMAIL) || []) {
         if (!EMAIL_ALLOW.test(em)) hits.push({ f, n: i + 1, why: em, line: line.trim().slice(0, 120) });
       }
+    }
+    if (scanBankCompanies && isBankFile && BANK_QLINE.test(line)) {
+      const m = line.match(BANK_COMPANY);
+      if (m) hits.push({ f, n: i + 1, why: `题库点名公司:${m[0]}`, line: line.trim().slice(0, 120) });
     }
   });
 }
@@ -112,7 +135,7 @@ if (!configured) {
 }
 
 if (hits.length || placeholderProbs.length) {
-  console.error("✗ 去标识化检查未通过（铁律：仓库不得含源作者个人信息）\n");
+  console.error("✗ 去标识化检查未通过（铁律：仓库不得含源作者个人信息 / 模板题库不得点名来源公司）\n");
   for (const h of hits) console.error(`  ${h.f}:${h.n}  「${h.why}」  ${h.line}`);
   for (const p of placeholderProbs) console.error(`  ${p}`);
   console.error(`\n共 ${hits.length} 处命中 + ${placeholderProbs.length} 处占位问题。`);
