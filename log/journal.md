@@ -8,6 +8,7 @@
 - 作答按题存 `localStorage(jh_practice_attempts)`、刷新/切题/无 token 都不丢；非编程题（统计/产品 Sense/行为面）保留原「出声讲 → 看要点」流程。
 - 改 `src/app/practice/PracticeApp.tsx` + `globals.css`（`.code-box` / `.compare`）+ i18n zh/en practice 字典；README 练习台描述同步。`npm run build`（含去标识化 `check`）通过、Playwright 截图人审（DS·SQL 对照态、无 page error）。
 - **跟进**：① 对照视图改**上下排布**（桌面也单列，coding 框拿满宽度）；② **code 框 Tab 缩进修复**——之前按 Tab 会把焦点跳出去，加 `onCodeKeyDown`：Tab 进 2 空格 / Shift+Tab 退 / 多行选区整体缩进、焦点留在框内。
+- **题库质量准则（同步自上游）**：STYLEGUIDE 题库格式契约加一条——**每题题目行/题干必须有「具体可作答的一问」**，别只写题型/话题标签把任务藏进「要点」；面经没留逐字原题就据描述 + 标准 schema 复原并注明。扫了模板 5 角色共 149 题，无此类「光标题没题面」缺陷。
 
 ## 2026-06-27 — 题库去痕铁律（面试 NDA + 开源）
 
