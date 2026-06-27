@@ -6,6 +6,7 @@ const timeline = {
   todoTitle: "📌 投递待办（无固定日期，跟着 pipeline 进度走）",
   goPipeline: "去 pipeline 标进度 →",
   toApply: "待投：",
+  waiting: "📨 已投·等回复：",
   interviewing: "🗣️ 面试中：",
   interviewSuffix: " — 建/查面前速备包",
   upcoming: "即将发生 / Deadline",

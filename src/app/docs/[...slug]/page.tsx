@@ -3,9 +3,26 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import path from "path";
 import { getAllDocPaths, readDoc, getTaskLines, getResumeExports } from "@/lib/data";
-import { isAllowedDoc, renderMarkdown } from "@/lib/markdown";
+import { isAllowedDoc, renderMarkdown, renderInline, parseFrontmatter } from "@/lib/markdown";
 import Prose from "@/components/Prose";
 import { getDict } from "@/i18n/server";
+
+// frontmatter 信息条：已知键给图标，其余键显示键名。顺序 = 易变信息在前。
+const FM_EMOJI: Record<string, string> = {
+  round: "🎯",
+  date: "🗓",
+  interviewers: "👤",
+  interviewer: "👤",
+  company: "🏢",
+};
+const FM_ORDER = ["round", "date", "interviewers", "interviewer", "company"];
+function fmEntries(data: Record<string, string>): [string, string][] {
+  const keys = Object.keys(data).filter((k) => data[k]);
+  return [
+    ...FM_ORDER.filter((k) => keys.includes(k)),
+    ...keys.filter((k) => !FM_ORDER.includes(k)),
+  ].map((k) => [k, data[k]]);
+}
 
 export function generateStaticParams() {
   return getAllDocPaths().map((slug) => ({ slug }));
@@ -32,6 +49,7 @@ export default async function DocPage({
   if (!isAllowedDoc(rel)) notFound();
   const md = readDoc(rel);
   if (md === null) notFound();
+  const { data: fm, body } = parseFrontmatter(md);
   const baseDir = path.posix.dirname(rel);
   const exp = getResumeExports().find((e) => e.source === rel);
   const d = await getDict();
@@ -67,11 +85,30 @@ export default async function DocPage({
           </p>
         </div>
       )}
+      {fmEntries(fm).length > 0 && (
+        <div className="doc-fm">
+          {fmEntries(fm).map(([k, v]) => (
+            <span className="doc-fm-item" key={k}>
+              {FM_EMOJI[k] ? (
+                <span className="doc-fm-ico" aria-hidden>{FM_EMOJI[k]}</span>
+              ) : (
+                <span className="doc-fm-key">{k}</span>
+              )}
+              <span
+                className="doc-fm-val"
+                dangerouslySetInnerHTML={{
+                  __html: renderInline(v, baseDir === "." ? "" : baseDir),
+                }}
+              />
+            </span>
+          ))}
+        </div>
+      )}
       <div className="card">
         <Prose
-          html={renderMarkdown(md, baseDir === "." ? "" : baseDir)}
+          html={renderMarkdown(body, baseDir === "." ? "" : baseDir)}
           path={rel}
-          tasks={getTaskLines(md).map((t) => ({ text: t.text, checked: t.checked }))}
+          tasks={getTaskLines(body).map((t) => ({ text: t.text, checked: t.checked }))}
         />
       </div>
     </>

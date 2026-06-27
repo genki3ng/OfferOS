@@ -13,6 +13,18 @@ import { getLocale, getDict } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/client";
 import "./globals.css";
 
+/** 构建时读 package.json 版本号（单一来源；页脚显示「我在哪个版本」，配 CHANGELOG 跟进升级） */
+function appVersion(): string {
+  try {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8")
+    );
+    return pkg.version ? `v${pkg.version}` : "";
+  } catch {
+    return "";
+  }
+}
+
 /** 构建时检测仓库壁纸（设置页上传后 commit 到 public/wallpaper.jpg）→ 全设备生效；内容 hash 做缓存戳 */
 function repoWallpaper(): string {
   try {
@@ -49,6 +61,7 @@ const THEME_INIT = `(function(){var d=document.documentElement;try{var t=localSt
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const wp = repoWallpaper();
+  const ver = appVersion();
   const cfg = getSiteConfig();
   const locale = await getLocale();
   const d = await getDict();
@@ -90,6 +103,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <a href={`https://github.com/${cfg.githubRepo}`} target="_blank" rel="noreferrer">
               {d.footer.github}
             </a>
+            {ver && (
+              <>
+                {" "}·{" "}
+                <Link href="/docs/CHANGELOG" title="更新日志 / 如何跟进升级">
+                  OfferOS {ver}
+                </Link>
+              </>
+            )}
           </footer>
         </LocaleProvider>
       </body>

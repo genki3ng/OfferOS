@@ -197,6 +197,7 @@ export interface Opening extends CompanyOpening {
   company: string;
   slug: string;
   tier: Tier;
+  status: string; // 公司 tracker 状态（researching/applied/recruiter/phone…）——比单岗 📮 标记可靠
 }
 
 export function getCompanySlugs(): string[] {
@@ -214,7 +215,13 @@ export function getOpenings(): Opening[] {
     if (!md) continue;
     const row = bySlug.get(slug);
     for (const o of parseCompanyOpenings(md)) {
-      out.push({ ...o, company: row?.name ?? slug, slug, tier: row?.tier ?? 3 });
+      out.push({
+        ...o,
+        company: row?.name ?? slug,
+        slug,
+        tier: row?.tier ?? 3,
+        status: row?.status ?? "",
+      });
     }
   }
   return out;
@@ -223,6 +230,19 @@ export function getOpenings(): Opening[] {
 /** 📌 投递清单里的岗（非排除），跨公司聚合 —— 首页/日程/pipeline 联动用 */
 export function getPinnedOpenings(): Opening[] {
   return getOpenings().filter((o) => o.pinned && !o.excluded);
+}
+
+/** 公司在 pipeline 里的真实阶段——由 tracker 状态推断（比单岗 📮 标记可靠、用户改状态下拉即维护）。
+ *  时间线「投递待办」据此判定：toApply=还没投·waiting=已投等回复·interview=面试中。 */
+export type PipelineStage = "toApply" | "waiting" | "interview" | "offer" | "rejected";
+export function companyStage(status: string): PipelineStage {
+  const s = (status || "").toLowerCase();
+  if (/offer|🏆/.test(s)) return "offer";
+  if (/reject|🛑|拒/.test(s)) return "rejected";
+  if (/phone|screen|interview|onsite|panel|hm|面试|面|轮/.test(s)) return "interview";
+  if (/appl|recruit|referr|内推|已投|投递/.test(s)) return "waiting";
+  // researching / 观察 / 待找 / standing watch / 空 → 还在物色 → 可投
+  return "toApply";
 }
 
 /* ---------- 内推渠道（pipeline/referrals.md） ---------- */
@@ -774,6 +794,7 @@ export interface AgendaItem {
   company: string;
   slug: string | null;
   source: string; // 来源文件相对路径
+  actionable: boolean; // true=计划/截止（过期=逾期待办）；false=历史里程碑（过期≠逾期，只是发生过）
 }
 
 const DATE_RE = /\d{4}-\d{2}-\d{2}/;
@@ -812,11 +833,13 @@ export function getAgenda(): AgendaItem[] {
         company: name,
         slug,
         source: `pipeline/companies/${slug}.md`,
+        // 关键日期表 = 历史里程碑流水：过期的是「发生过」，不是「逾期未办」。
+        actionable: false,
       });
     }
   }
 
-  // 2) tracker「下一步」里的 ⏰MM-DD 前缀
+  // 2) tracker「下一步」里的 ⏰MM-DD 前缀 = 有意安排的下一步（过期才算逾期待办）
   for (const r of tracker) {
     const m = r.next.match(/⏰\s*(\d{1,2})[-/](\d{1,2})/);
     if (!m) continue;
@@ -826,6 +849,7 @@ export function getAgenda(): AgendaItem[] {
       company: r.name,
       slug: r.slug,
       source: "pipeline/tracker.md",
+      actionable: true,
     });
   }
 
@@ -843,6 +867,7 @@ export function getAgenda(): AgendaItem[] {
           company: row[0],
           slug: null,
           source: "negotiation/offers.md",
+          actionable: true,
         });
       }
     }

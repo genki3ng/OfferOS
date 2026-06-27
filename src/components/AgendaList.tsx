@@ -20,7 +20,9 @@ export default function AgendaList({
   useEffect(() => setToday(new Date().toISOString().slice(0, 10)), []);
   if (!today) return null;
 
-  const overdue = items.filter((i) => i.date < today);
+  // 逾期只算「有意安排却滑过」的待办（tracker ⏰ / offer 截止）；
+  // 历史里程碑（关键日期表里发生过的事）过期 ≠ 逾期，归「一路走来」，不在此刷成红色。
+  const overdue = items.filter((i) => i.date < today && i.actionable);
   const upcoming = items.filter((i) => i.date >= today);
   const show = limit ? upcoming.slice(0, limit) : upcoming;
   const days = (d: string) =>

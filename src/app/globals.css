@@ -403,6 +403,20 @@ table.data td { padding: 11px 10px; border-bottom: 1px solid var(--line-soft); v
 table.data tr:last-child td { border-bottom: none; }
 table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transparent); }
 
+/* ===================================================== doc frontmatter 信息条 */
+.doc-fm {
+  display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px;
+}
+.doc-fm-item {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 13px; font-size: var(--t-sm); line-height: 1.4; max-width: 100%;
+}
+.doc-fm-ico { flex: none; }
+.doc-fm-key { color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; font-size: var(--t-xs); }
+.doc-fm-val { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+.doc-fm-val a { font-weight: 600; }
+
 /* ============================================================ markdown prose */
 .prose { font-size: var(--t-md); line-height: 1.7; }
 .prose h1 { font-size: var(--t-2xl); font-weight: 800; letter-spacing: -0.4px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }

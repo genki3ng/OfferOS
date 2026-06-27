@@ -6,6 +6,7 @@ const timeline = {
   todoTitle: "📌 To-do (applications) — no fixed date, follows pipeline progress",
   goPipeline: "Go to pipeline →",
   toApply: "To apply: ",
+  waiting: "📨 Applied · awaiting reply: ",
   interviewing: "🗣️ Interviewing: ",
   interviewSuffix: " — build/check the prep brief",
   upcoming: "Upcoming / Deadline",

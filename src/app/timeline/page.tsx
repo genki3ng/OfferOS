@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAgenda, getPinnedOpenings, getJournal } from "@/lib/data";
+import { getAgenda, getPinnedOpenings, getJournal, companyStage } from "@/lib/data";
 import { renderInline } from "@/lib/markdown";
 import AgendaList from "@/components/AgendaList";
 import { getDict } from "@/i18n/server";
@@ -12,8 +12,20 @@ export const metadata: Metadata = { title: "时间线" };
 export default async function TimelinePage() {
   const agenda = getAgenda();
   const pins = getPinnedOpenings();
-  const todo = pins.filter((o) => o.appStatus === "");
-  const interview = pins.filter((o) => o.appStatus === "interview");
+  // 阶段按公司 tracker 状态判定（不再信单岗 📮 标记——那个常年没人维护，导致已投/面试中的岗误显「待投」）。
+  // 同公司多个 pin 在「已投/面试中」只显一条（待投保留逐岗，便于挑具体 req）。
+  const todo = pins.filter((o) => companyStage(o.status) === "toApply");
+  const dedupeByCompany = (stage: string) => {
+    const seen = new Set<string>();
+    return pins.filter((o) => {
+      if (companyStage(o.status) !== stage) return false;
+      if (seen.has(o.slug)) return false;
+      seen.add(o.slug);
+      return true;
+    });
+  };
+  const waiting = dedupeByCompany("waiting");
+  const interview = dedupeByCompany("interview");
   const journal = getJournal().slice(0, 18);
   const d = await getDict();
 
@@ -25,7 +37,7 @@ export default async function TimelinePage() {
         <code>YYYY-MM-DD</code>{d.timeline.subMid}<code>⏰MM-DD</code>{d.timeline.subPost}
       </p>
 
-      {(todo.length > 0 || interview.length > 0) && (
+      {(todo.length > 0 || waiting.length > 0 || interview.length > 0) && (
         <div className="card section">
           <div className="card-title">
             {d.timeline.todoTitle}
@@ -42,6 +54,11 @@ export default async function TimelinePage() {
             {interview.map((o) => (
               <li key={o.slug + o.anchor}>
                 {d.timeline.interviewing}<Link href={`/companies/${o.slug}`}>{o.company}</Link> · {o.title}{d.timeline.interviewSuffix}
+              </li>
+            ))}
+            {waiting.map((o) => (
+              <li key={o.slug + o.anchor}>
+                {d.timeline.waiting}<Link href={`/companies/${o.slug}`}>{o.company}</Link> · {o.title}
               </li>
             ))}
           </ul>

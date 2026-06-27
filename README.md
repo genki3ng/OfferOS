@@ -1,6 +1,6 @@
 # OfferOS 🎯
 
-![version](https://img.shields.io/badge/version-0.1-ff6b6b) ![Next.js](https://img.shields.io/badge/Next.js-15-000000) ![PWA](https://img.shields.io/badge/PWA-installable-5a67d8) ![i18n](https://img.shields.io/badge/i18n-%E4%B8%AD%2FEN-2ea44f) ![license](https://img.shields.io/badge/license-MIT-blue)
+![version](https://img.shields.io/badge/version-0.2-ff6b6b) ![Next.js](https://img.shields.io/badge/Next.js-15-000000) ![PWA](https://img.shields.io/badge/PWA-installable-5a67d8) ![i18n](https://img.shields.io/badge/i18n-%E4%B8%AD%2FEN-2ea44f) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 > 拿 offer 的操作系统——一个 **「你 + Claude」协作**、端到端管理整场求职的系统：**计划 → 准备 → 投递 / 内推 → 面试 → 谈判 → 复盘**。
 
@@ -154,15 +154,38 @@ npm run build    # 部署前自检（Vercel 同款构建）
 
 ---
 
-## 🗒️ 版本 · v0.1
+## 🗒️ 版本 · v0.2
 
-**首个公开版**，已可端到端使用：
+当前 **v0.2**（站点页脚也会显示）。完整变更见 **[CHANGELOG.md](CHANGELOG.md)**。
 
-- 「仓库即数据库」的 Next.js 仪表盘：今日 / 公司 / pipeline / 备战 / 时间线 / Offers / 内推 / 情报 / 文档
-- **5 套角色题库**（DS / DE / SWE / PM / ML，约 150 题、每题带解法）+ /practice 练习台
-- **手机友好 + 可安装 PWA**；**中英双语**一键切换
-- **/onboard 向导**一键个性化 · 密码门 · Claude / Codex 编排契约 + **联网情报**（Agent‑Reach）
+- **v0.2**：修文档 frontmatter 标题渲染（不再把 `---…---` 当大标题）、时间线「逾期 / 待投」判定逻辑（历史里程碑不再误判逾期、投递待办按 tracker 真实阶段分组）；页脚版本号 + 本「保持更新」指南。
+- **v0.1**：首个公开版——5 套角色题库（DS / DE / SWE / PM / ML，约 150 题带解法）+ /practice、手机 PWA、中英双语、`/onboard` 向导、`/comp` 薪资页、Web Clipper、联网情报（Agent‑Reach）。
 
-欢迎试用与反馈（Issue / PR）。后续方向（不排期、看反馈走）：题库持续扩充、面经反推考点更自动、offer / comp 谈判更数据化。
+### 🔄 保持更新（跟进上游升级）
+
+你用 **「Use this template」/ Fork** 起步——你的仓库从此和上游各走各的。OfferOS 还在迭代，想把上游的修复 / 新功能拉到你已 clone 的仓库：
+
+**① 一次性：加一个 `upstream` 远端**
+
+```bash
+git remote add upstream https://github.com/genki3ng/OfferOS.git
+```
+
+**② 之后每次想升级：**
+
+```bash
+git fetch upstream
+git log --oneline HEAD..upstream/main   # 看上游多了啥（或直接读 CHANGELOG.md）
+git merge upstream/main                  # 或只挑想要的：git cherry-pick <提交号>
+npm install && npm run build             # 自检后再 push
+```
+
+**为什么一般不冲突**：升级几乎只动 `src/`（站点代码）；**你的数据在 `*.md` / `data/*.json` / `data/profile.json` / `src/site.config.ts`**，上游样例不碰它们。万一冲突，基本就在这些配置 / 数据文件——保留你的即可。
+
+**怎么知道有没有新版**：站点**页脚显示你当前版本**（如 `OfferOS v0.2`，点开 = [CHANGELOG](CHANGELOG.md)）；或在 GitHub 上 **Watch → Custom → Releases** 订阅。
+
+> 不想合并代码？也可以**只读 [CHANGELOG](CHANGELOG.md)**、把想要的那条改动手动抄进自己的仓库——对你的数据零风险。这是最省心的「优雅」做法。
+
+欢迎试用与反馈（Issue / PR）。
 
 > MIT License。这是个**模板**——fork 去改成你自己的，别把私人求职数据提交回公共仓库。

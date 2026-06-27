@@ -16,7 +16,7 @@ export const DOC_DIRS = [
   "negotiation",
   "summary",
 ];
-export const DOC_ROOT_FILES = ["HANDOFF.md", "README.md", "CLAUDE.md", "GETTING-STARTED.md", "SETUP.md", "AGENTS.md"];
+export const DOC_ROOT_FILES = ["HANDOFF.md", "README.md", "CLAUDE.md", "GETTING-STARTED.md", "SETUP.md", "AGENTS.md", "CHANGELOG.md"];
 
 export function isAllowedDoc(relPath: string): boolean {
   const norm = path.posix.normalize(relPath);
@@ -45,6 +45,31 @@ export function resolveMdHref(href: string, baseDir: string): string {
 }
 
 const m = new Marked({ gfm: true });
+
+/**
+ * 拆掉文档开头的 YAML frontmatter，返回 { data, body }。
+ * 不引第三方（gray-matter）；只解析 `key: value` 行，够速备包/收件箱用。
+ * 仅当确实解析出至少一个键时才剥离——避免把正文里合法的 `---` 分割线当成 frontmatter。
+ * 修复：旧逻辑把整篇（含 frontmatter）丢给 marked，`---\n…\n---` 被当成 setext 大标题渲染。
+ */
+export function parseFrontmatter(md: string): {
+  data: Record<string, string>;
+  body: string;
+} {
+  const mm = md.match(/^﻿?---\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?/);
+  if (!mm) return { data: {}, body: md };
+  const data: Record<string, string> = {};
+  for (const line of mm[1].split(/\r?\n/)) {
+    const kv = line.match(/^([A-Za-z][\w-]*):[ \t]*(.*)$/);
+    if (!kv) continue;
+    let v = kv[2].trim().replace(/\s+#.*$/, ""); // 去行尾 YAML 注释
+    const q = v.match(/^"(.*)"$/) || v.match(/^'(.*)'$/);
+    if (q) v = q[1];
+    data[kv[1]] = v.trim();
+  }
+  if (Object.keys(data).length === 0) return { data: {}, body: md };
+  return { data, body: md.slice(mm[0].length) };
+}
 
 /** 整篇 markdown → HTML，并把仓库内链接改写为站内路由 */
 export function renderMarkdown(md: string, baseDir: string): string {
