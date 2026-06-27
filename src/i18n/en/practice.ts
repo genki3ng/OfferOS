@@ -3,7 +3,7 @@ const practice = {
   title: "🏋️ Practice",
   subPre: "Question bank = ",
   subMid: (n: number) => `(${n} questions) · self-ratings auto-write to `,
-  subPost: " · I'll find weak spots from your records and produce reinforcement material. Flow: draw a question → speak aloud → show key points → self-rate (→ optionally submit for review).",
+  subPost: " · I'll find weak spots from your records and produce reinforcement material. Flow: draw a question → speak aloud / write your solution → compare with key points → self-rate (→ optionally submit for review).",
 
   // GRADES labels
   gradeStuck: "😣 Stuck",
@@ -31,6 +31,13 @@ const practice = {
   lastGradeLabel: (g: string) => `Last ${g}`,
   close: "✕ Close",
   speakHint: "Speak aloud for 2–5 min first, then view the key points → ",
+  // free coding area (SQL / Python coding questions)
+  codeHint: "✍️ Write your solution here first (like the real thing, no peeking), then “Show key points” to compare",
+  codePlaceholder: "-- Write your SQL / Python solution here…",
+  compareMine: "✍️ Your solution",
+  compareRef: "📌 Reference key points",
+  compareHint: "Compare against the reference on the right: what did you miss? what could be cleaner/better? The gaps are your next gains.",
+  submitReviewCode: "📨 Submit your solution to Claude for review (returned next day)",
   showKeyPoints: "Show key points",
   selfRate: "Self-rating:",
   reviewSummary: "✍️ Submit your spoken answer to Claude for review (6-dimension scoring, returned next day)",

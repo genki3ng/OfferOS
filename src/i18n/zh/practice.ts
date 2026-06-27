@@ -3,7 +3,7 @@ const practice = {
   title: "🏋️ 练习台",
   subPre: "题库 = ",
   subMid: (n: number) => `（${n} 题）· 自评自动写 `,
-  subPost: " · 我会按记录找薄弱点出补强材料。流程：抽题 → 出声讲 → 看要点 → 自评（→ 可选交批改）。",
+  subPost: " · 我会按记录找薄弱点出补强材料。流程：抽题 → 出声讲 / 手写解法 → 看要点对照 → 自评（→ 可选交批改）。",
 
   // GRADES labels
   gradeStuck: "😣 不会",
@@ -31,6 +31,13 @@ const practice = {
   lastGradeLabel: (g: string) => `上次 ${g}`,
   close: "✕ 关闭",
   speakHint: "先出声讲 2–5 分钟，再看要点 → ",
+  // free coding 区（SQL / Python 等编程题）
+  codeHint: "✍️ 先在框里手写解法（像实战一样、别看要点），写完再「显示要点」对照",
+  codePlaceholder: "-- 在这里写你的 SQL / Python 解法……",
+  compareMine: "✍️ 你的解法",
+  compareRef: "📌 参考要点",
+  compareHint: "对照右边的参考要点：你漏了哪些点？哪里能写得更简洁/更优？差异就是下次的提分点。",
+  submitReviewCode: "📨 把你的解法交给 Claude 批改（次日出）",
   showKeyPoints: "显示要点",
   selfRate: "自评：",
   reviewSummary: "✍️ 把口述答案交给 Claude 批改（6 维评分，次日出）",

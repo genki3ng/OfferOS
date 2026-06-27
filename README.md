@@ -42,7 +42,7 @@
 
 - **今日**：bento 首页——阶段轨、唯一下一步、倒计时、本周面试、该你出手了、漏斗。
 - **公司 / pipeline**：目标公司库 + 各家进度，状态/内推可直接在站上改。
-- **备战 · 自带题库**：**5 套角色题库（DS / DE / SWE / PM / ML），合计约 150 道，每题都配可对照的解法**——光 DS 就有 61 道（SQL 20 · Python 17 含 LeetCode/pandas · 统计与实验 · 产品 sense · 行为面 STAR），不是只给个空壳。配 /practice 练习台抽题口述 + 自评（桌面双栏：左题表 / 右题目+要点，点即换；可按**来源/标签**过滤，模板题不带公司标签）；文档/速备包里写到的题号（如 `sql-11`）会自动链到练习台对应题，点一下即开。
+- **备战 · 自带题库**：**5 套角色题库（DS / DE / SWE / PM / ML），合计约 150 道，每题都配可对照的解法**——光 DS 就有 61 道（SQL 20 · Python 17 含 LeetCode/pandas · 统计与实验 · 产品 sense · 行为面 STAR），不是只给个空壳。配 /practice 练习台抽题练习 + 自评（桌面双栏：左题表 / 右题目+要点，点即换；**编程题（SQL/Python/算法）可先在框里手写解法、点「显示要点」后与参考要点并排对照差异**；可按**来源/标签**过滤，模板题不带公司标签）；文档/速备包里写到的题号（如 `sql-11`）会自动链到练习台对应题，点一下即开。
 - **Offers**：offer 到来时的对比 + 谈判主场（offer 前是预案）。
 - **薪资 · Comp**：**levels.fyi 风格**的总包可视化——按级别的 base / 股票 / 奖金堆叠条、各公司样本、你的期望区间，给谈判一个数据锚（数据源 `negotiation/comp-research.md`，站上自动重画）。
 - **时间线**：一页看「什么时候该干什么」——待办 + 即将发生（关键日期/截止自动聚合）+ 一路走来（日志），日程与时间线已合并为一页。
@@ -68,7 +68,7 @@ Claude 在每一步帮你：打磨/按公司 tailor 简历、出题找薄弱点�
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/pipeline.png" alt="公司 / pipeline"><br><sub><b>公司 · pipeline</b> — 各家进度一屏看全，状态 / 内推站上直接改</sub></td>
-    <td width="50%"><img src="docs/screenshots/practice.png" alt="练习台"><br><sub><b>练习台</b> — 自带 5 角色约 150 题（图为 DS 61 题），抽题口述 + 自评</sub></td>
+    <td width="50%"><img src="docs/screenshots/practice.png" alt="练习台"><br><sub><b>练习台</b> — 自带 5 角色约 150 题（图为 DS 61 题），抽题练习 + 自评</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/jobs.png" alt="岗位库"><br><sub><b>岗位库</b> — 在招岗聚合 + 匹配度 + 优先级星标</sub></td>
@@ -111,7 +111,7 @@ OfferOS 是一组围绕「仓库即数据库」串起来、也可单独取用的
 |---|---|---|
 | **Dashboard 站点** | `src/` | 把全仓 markdown/JSON 渲染成仪表盘（今日 / 公司 / 备战 / Offers / 时间线） |
 | **Web Clipper（浏览器扩展）** | [`tools/web-clipper/`](tools/web-clipper/) | 任意网页的面经/JD/截图一键存进 `inbox/`（套件的输入层） |
-| **练习台 /practice** | `src/app/practice` | 抽题口述 + 自评，喂**当前角色**的题库 |
+| **练习台 /practice** | `src/app/practice` | 抽题练习 + 自评（编程题可手写解法对照要点），喂**当前角色**的题库 |
 | **内推套件** | `ReferralKit` / `ColdOutreachKit` | 内推邮件生成 + 无内推时的决策流 |
 | **inbox 捕获 / 派活 SOP** | [`inbox/`](inbox/) | 捕获与站上「📨 派活」的处理约定 |
 | **多角色备战 packs** | [`prep/<role>/`](prep/) | DS / DE / SWE / PM / ML 各一套（题库 + 冲刺 + 板块） |

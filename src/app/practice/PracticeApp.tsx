@@ -19,6 +19,10 @@ export interface QStat {
   lastTime: string;
 }
 
+// 编程题（SQL / Python / 算法）= 给 free-coding 框，让用户先手写解法再对照要点；
+// 其余（统计·产品 Sense·行为面）保留「出声讲 → 看要点」的口述流程。
+const isCoding = (category: string) => /sql|python|coding|算法|代码/i.test(category);
+
 export default function PracticeApp({
   questions,
   stats,
@@ -49,7 +53,7 @@ export default function PracticeApp({
   const [company, setCompany] = useState("");
   const [cur, setCur] = useState<PracticeQ | null>(null);
   const [revealed, setRevealed] = useState(false);
-  const [answer, setAnswer] = useState("");
+  const [attempts, setAttempts] = useState<Record<string, string>>({}); // 各题的自由作答（手写解法/笔记），本机持久、不丢已输入
   const [canWrite, setCanWrite] = useState(false);
   const [msg, setMsg] = useState("");
   const [local, setLocal] = useState<Record<string, string>>({}); // 本次会话新自评
@@ -74,6 +78,10 @@ export default function PracticeApp({
       const o = JSON.parse(localStorage.getItem("jh_practice_grades") || "{}");
       if (o && typeof o === "object") setLocal((m) => ({ ...o, ...m }));
     } catch {}
+    try {
+      const a = JSON.parse(localStorage.getItem("jh_practice_attempts") || "{}");
+      if (a && typeof a === "object") setAttempts((m) => ({ ...a, ...m }));
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -95,10 +103,23 @@ export default function PracticeApp({
   );
   const lastGrade = (id: string) => local[id] ?? stats[id]?.last ?? "";
 
+  // 当前题是否编程题 + 当前题的自由作答（编程题=手写解法，其它=口述转写），写时即存本机。
+  const coding = cur ? isCoding(cur.category) : false;
+  const curAnswer = cur ? attempts[cur.id] ?? "" : "";
+  const setAttempt = (text: string) => {
+    if (!cur) return;
+    setAttempts((m) => ({ ...m, [cur.id]: text }));
+    try {
+      const k = "jh_practice_attempts";
+      const o = JSON.parse(localStorage.getItem(k) || "{}");
+      o[cur.id] = text;
+      localStorage.setItem(k, JSON.stringify(o));
+    } catch {}
+  };
+
   const pick = (q: PracticeQ) => {
     setCur(q);
     setRevealed(false);
-    setAnswer("");
     setMsg("");
     syncUrl(q.id);
     // 单列（手机/窄屏）时，题目卡在上方——点列表后平滑滚到卡片，给出明确反馈。
@@ -145,12 +166,15 @@ export default function PracticeApp({
 
   const askReview = () => {
     if (!cur) return;
+    const mine = curAnswer.trim() || "（把你的答案粘到这里再提交）";
     window.dispatchEvent(
       new CustomEvent("ask-claude", {
         detail: {
           kind: "Mock 面试",
-          topic: `批改我的口述答案 [${cur.id}]`,
-          detail: `题目见 ${prepBase}/question-bank.md 的 [${cur.id}]。\n\n我的答案（口述转文字）：\n${answer || "（把你的答案粘到这里再提交）"}\n\n请按 mock-interview-bank 自评表打分点评，坑点回填对应 cheatsheet，并把结果记到 ${prepBase}/practice-log.md。`,
+          topic: `批改我的${coding ? "解法" : "口述答案"} [${cur.id}]`,
+          detail: coding
+            ? `题目见 ${prepBase}/question-bank.md 的 [${cur.id}]。\n\n我手写的解法（代码）：\n\`\`\`\n${mine}\n\`\`\`\n\n请对照该题要点逐条点评：正确性 / 是否漏 edge case / 能否更简洁高效 / 命名与可读性；指出与参考解法的差异，并把结果记到 ${prepBase}/practice-log.md。`
+            : `题目见 ${prepBase}/question-bank.md 的 [${cur.id}]。\n\n我的答案（口述转文字）：\n${mine}\n\n请按 mock-interview-bank 自评表打分点评，坑点回填对应 cheatsheet，并把结果记到 ${prepBase}/practice-log.md。`,
         },
       })
     );
@@ -244,15 +268,62 @@ export default function PracticeApp({
               </div>
               <div className="prose" dangerouslySetInnerHTML={{ __html: cur.qHtml }} />
               {!revealed ? (
-                <p>
-                  <span className="muted small">{d.practice.speakHint}</span>
-                  <button className="btn" onClick={() => setRevealed(true)}>
-                    {d.practice.showKeyPoints}
-                  </button>
-                </p>
+                coding ? (
+                  // 编程题：先在框里手写解法（模拟实战），再看要点
+                  <div className="code-attempt">
+                    <p className="muted small" style={{ margin: "2px 0 4px" }}>
+                      {d.practice.codeHint}
+                    </p>
+                    <textarea
+                      className="code-box"
+                      rows={10}
+                      spellCheck={false}
+                      placeholder={d.practice.codePlaceholder}
+                      value={curAnswer}
+                      onChange={(e) => setAttempt(e.target.value)}
+                    />
+                    <button className="btn" onClick={() => setRevealed(true)}>
+                      {d.practice.showKeyPoints}
+                    </button>
+                  </div>
+                ) : (
+                  <p>
+                    <span className="muted small">{d.practice.speakHint}</span>
+                    <button className="btn" onClick={() => setRevealed(true)}>
+                      {d.practice.showKeyPoints}
+                    </button>
+                  </p>
+                )
               ) : (
                 <>
-                  <div className="answer prose" dangerouslySetInnerHTML={{ __html: cur.aHtml }} />
+                  {coding ? (
+                    // 揭晓后：左=你写的解法（仍可改，当笔记），右=参考要点，并排对照差异
+                    <>
+                      <div className="compare">
+                        <div className="compare-col">
+                          <div className="compare-label">{d.practice.compareMine}</div>
+                          <textarea
+                            className="code-box"
+                            rows={10}
+                            spellCheck={false}
+                            placeholder={d.practice.codePlaceholder}
+                            value={curAnswer}
+                            onChange={(e) => setAttempt(e.target.value)}
+                          />
+                        </div>
+                        <div className="compare-col">
+                          <div className="compare-label">{d.practice.compareRef}</div>
+                          <div
+                            className="answer prose"
+                            dangerouslySetInnerHTML={{ __html: cur.aHtml }}
+                          />
+                        </div>
+                      </div>
+                      <p className="muted small compare-hint">{d.practice.compareHint}</p>
+                    </>
+                  ) : (
+                    <div className="answer prose" dangerouslySetInnerHTML={{ __html: cur.aHtml }} />
+                  )}
                   <div style={{ margin: "12px 0" }}>
                     <span className="muted small">{d.practice.selfRate}</span>
                     <div className="grade-row rate">
@@ -268,21 +339,31 @@ export default function PracticeApp({
                       </p>
                     )}
                   </div>
-                  <details>
-                    <summary className="muted small" style={{ cursor: "pointer" }}>
-                      {d.practice.reviewSummary}
-                    </summary>
-                    <textarea
-                      className="field"
-                      rows={6}
-                      placeholder={d.practice.answerPlaceholder}
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                    />
-                    <button className="btn" onClick={askReview} disabled={!answer.trim()}>
-                      {d.practice.submitReview}
+                  {coding ? (
+                    <button
+                      className="btn ghost"
+                      onClick={askReview}
+                      disabled={!curAnswer.trim()}
+                    >
+                      {d.practice.submitReviewCode}
                     </button>
-                  </details>
+                  ) : (
+                    <details>
+                      <summary className="muted small" style={{ cursor: "pointer" }}>
+                        {d.practice.reviewSummary}
+                      </summary>
+                      <textarea
+                        className="field"
+                        rows={6}
+                        placeholder={d.practice.answerPlaceholder}
+                        value={curAnswer}
+                        onChange={(e) => setAttempt(e.target.value)}
+                      />
+                      <button className="btn" onClick={askReview} disabled={!curAnswer.trim()}>
+                        {d.practice.submitReview}
+                      </button>
+                    </details>
+                  )}
                 </>
               )}
               {revealed && (

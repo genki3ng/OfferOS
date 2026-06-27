@@ -2,6 +2,12 @@
 
 > 每周/每次重要进展记一行，**倒序**（最新在上）。每场面试后顺手记。
 
+## 2026-06-27 — 练习台：编程题加「自由 coding 框 + 要点对照」
+
+- 编程题（SQL / Python / Coding / 算法，靠 `isCoding(category)` 判定）在「显示要点」前先给一个等宽暗色 coding 框手写解法（模拟实战）；揭晓后**左=你的解法 / 右=参考要点**并排对照差异，附「差异就是下次的提分点」提示 + 一键把解法交 Claude 批改。
+- 作答按题存 `localStorage(jh_practice_attempts)`、刷新/切题/无 token 都不丢；非编程题（统计/产品 Sense/行为面）保留原「出声讲 → 看要点」流程。
+- 改 `src/app/practice/PracticeApp.tsx` + `globals.css`（`.code-box` / `.compare`）+ i18n zh/en practice 字典；README 练习台描述同步。`npm run build`（含去标识化 `check`）通过、Playwright 截图人审（DS·SQL 对照态、无 page error）。
+
 ## 2026-06-27 — 题库去痕铁律（面试 NDA + 开源）
 
 - 立铁律：进题库（question-bank / mock-interview-bank）的题一律先「洗」——非逐字原题、抹掉公司/产品/内部代号、**模板不打公司标签**（假设来源未知）；公开题源如 LeetCode 题号可照引。写进 CLAUDE.md / STYLEGUIDE.md / AGENTS.md / SETUP.md / inbox SOP。

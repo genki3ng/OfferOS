@@ -652,6 +652,27 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .tag-chip { font-size: 11px; font-weight: 750; line-height: 1.55; color: var(--coral-deep); background: var(--coral-soft); padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
 .chips-filter .filter-label { margin-right: 2px; }
 
+/* 练习台：自由 coding 区（编程题先手写解法，再与参考要点并排对照） */
+.code-attempt { margin-top: 8px; }
+.code-attempt .btn { margin-top: 4px; }
+.code-box {
+  display: block; width: 100%; box-sizing: border-box;
+  font-family: var(--mono); font-size: 13px; line-height: 1.55;
+  background: #2a2622; color: #f3ece3; caret-color: var(--coral);
+  border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px; margin: 8px 0; min-height: 150px; resize: vertical; tab-size: 2;
+}
+.code-box::placeholder { color: #b8aa99; }
+.code-box:focus { outline: none; border-color: var(--coral); box-shadow: var(--ring); }
+[data-theme="dark"] .code-box { background: #14110d; }
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-top: 8px; }
+.compare-col { min-width: 0; }
+.compare-col .code-box { margin-top: 0; }
+.compare-label { font-size: var(--t-sm); font-weight: 700; color: var(--ink-soft); margin-bottom: 5px; }
+.compare .answer { margin-top: 0; }
+.compare-hint { margin: 10px 0 0; }
+@media (max-width: 720px) { .compare { grid-template-columns: 1fr; gap: 14px; } }
+
 /* ============================================================ 浮窗 / 派活 FAB / 主题切换 */
 .ask-fab { position: fixed; right: 20px; bottom: 20px; z-index: 60; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, #ed7257, var(--coral) 60%, var(--coral-deep)); color: #fff; border: none; border-radius: 999px; padding: 13px 20px; font-size: var(--t-base); font-weight: 800; cursor: pointer; box-shadow: 0 8px 28px rgba(216, 103, 76, 0.4); transition: transform 0.2s ease; }
 .ask-fab:hover { transform: translateY(-2px) scale(1.03); }
