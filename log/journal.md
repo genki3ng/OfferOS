@@ -8,7 +8,7 @@
 - 巡检：`check-no-personal-info.mjs` 新增「模板态题库题目行不点名公司」硬拦（只扫 `## ` / `### [id]` / 编号题，跳过 `- 要点` 正文里的工具名如 Snowflake / Google S2；env `DEID_ALLOW_BANK_COMPANIES=1` 可临时放行）。
 - 洗稿：DS 题库 ps-01/02/04/07/08 + mock bank 里点名 DoorDash/Uber/Instagram/YouTube/Airbnb/DashPass 的题改成中性占位（短视频产品 / 外卖平台 / 网约车 / 双边市场）。其余角色题库本就干净。
 - 决策（用户拍板）：**保留**练习台「来源/标签」过滤给下游 fork 用（用户在私库按公司给自己的题打标签、自担 NDA 风险），但**模板出厂零公司标签**。
-- 工作流澄清（用户）：来源公司通常**已知**——用户给料时会点名是哪家（用于私人备战/速备包 OK）；去痕是 **Claude 在「私人备战 → 公开题库」边界上的主动动作**，入库前由 Claude 洗，不是"假装不知道来源"。已写进 CLAUDE.md 开发铁律 + 开场仪式 step 6。
+- 范围澄清（用户）：**去痕只绑定公开 OfferOS 模板**（`configured:false`，`npm run check` 强制）。用户 fork 配置后 = 私人仓库，题库随意（原题 / 公司名 / 公司标签都行），**不强加去痕**。把上一版误塞进开场仪式 step 6 / inbox SOP 的去痕动作回退了；去痕只留在「开发铁律」并标注**仅针对公开模板**。
 - 可选后续：若想让 fork 用户「显式」打标签（不必把公司名写进标题），可加 inline/frontmatter tag 支持。
 - 验证：`npm run check` + `npm run build` 均过。
 

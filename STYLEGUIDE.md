@@ -31,7 +31,7 @@
 - **referrals.md**：主表 ≥6 列（公司/内推人/联系方式/…），取行数最多那张；**第一列须全表唯一**（站点按它定位行）；状态列格式 `已联系(YYYY-MM-DD)`（站点推进按钮自动盖日期，超 3 天显示催办提示）。
 - **角色与身份 = `data/profile.json`**：`{ schemaVersion, configured, ownerName, ownerInitials, motto, northStar, role, currentLevel, targetLevel, location, visaSponsorship, targetCompanies, createdAt }`。**当前激活角色** = `getActiveRole()`，优先级 `NEXT_PUBLIC_ROLE > profile.role > ds`；角色定义（轮次/板块/北极星模板）在 `src/config/roles.ts`（slug ∈ `ds/de/swe/pm/ml`）。站点身份由 `getSiteConfig()` 读 profile 合并（`NEXT_PUBLIC_* > profile.json > site.config 默认`）。`/onboard` 向导与 SETUP.md 都写这个文件并把 `configured` 设为 `true`。**备战内容一律按 `prep/<role>/...` 组织**（见下）。注意：`tracker.json` 里每家公司的 freetext `role` 是「这条 opening 的岗位名」，与上面的全局角色枚举是两回事，别混。
 - **sprint-plan / 各 prep 文件**（位于 `prep/<role>/`，随当前角色解析；`prep/daily-routine.md` 与 `prep/briefs/` 跨角色共享于 `prep/` 根）：`- [ ]` / `- [x]` 勾选框 → 自动算进度；**站点可直接打勾**（按"全文件第 N 个任务行"定位，文本校验兜底）。sprint-plan 周标题格式 `## Week N（M/D–M/D）：…` → 首页"今日聚焦"卡靠它定位当前周。
-- **prep/&lt;role&gt;/question-bank.md（练习台题库）**：`## 类别` → `### [id] 题目一行` → 题干补充（可选）→ 单独一行 `**要点**` → 要点内容。加题必须守这个格式，并守**去标识化铁律**（题目行不点名公司、非逐字原题——见下「开发铁律：去标识化」）；H2 类别尽量对齐该角色 `roles.ts` 的 `prepCategories.bankCategory`。**题号自动链接**：任何文档/速备包里写到的题号（如 `sql-11`）渲染时自动变成跳到 `/practice?q=<id>` 的链接（数据驱动，只认题库里真实存在的题号，`<code>`/既有链接内不改写），所以速备包只写题号即可、不必手敲链接；练习台读 `?q=` 直接打开该题。
+- **prep/&lt;role&gt;/question-bank.md（练习台题库）**：`## 类别` → `### [id] 题目一行` → 题干补充（可选）→ 单独一行 `**要点**` → 要点内容。加题守这个格式；**若在维护公开 OfferOS 模板**，另守去标识化铁律（题目行不点名公司、非逐字原题——**私人 fork 不受此限**，见下「开发铁律：去标识化」）；H2 类别尽量对齐该角色 `roles.ts` 的 `prepCategories.bankCategory`。**题号自动链接**：任何文档/速备包里写到的题号（如 `sql-11`）渲染时自动变成跳到 `/practice?q=<id>` 的链接（数据驱动，只认题库里真实存在的题号，`<code>`/既有链接内不改写），所以速备包只写题号即可、不必手敲链接；练习台读 `?q=` 直接打开该题。
 - **prep/&lt;role&gt;/practice-log.md**：4 列表（时间/题/自评/备注），站点自评自动追加行（按当前角色路径写）；Claude 据此找薄弱点。
 - **journal.md**：每条 `## YYYY-MM-DD（…）— 标题`。
 - **referral-outreach-templates.md「C. 渠道邮件模板」**：每模板 = `### 邮件模板：<渠道名>`（与 referrals.md 主表第一列一致；另有三个通用 key：`LinkedIn 连接请求`/`LinkedIn 陌生人 DM`/`熟人内推请求`，供缺口卡「🧭 解决」flow 用）+ `- to:`/`- subject:`/`- note:` 行 + 一个 ```text 代码块正文；占位符 `{{jobs}}`/`{{job_ids}}`/`{{job_title}}`/`{{job_location}}`/`{{company}}` 由站点弹窗自动填充。
@@ -47,7 +47,7 @@ OfferOS 是要分享出去的模板 —— **仓库不得包含源作者/任何�
 - **所有展示身份一律走 `getSiteConfig()` / `data/profile.json`，绝不写死**（这条规则正是 `Greeting` 那次泄漏的教训：组件别再硬编码名字/口号，从服务端 props 拿）。
 - 模板态的样例数据只用**虚构占位**：候选人 Alex Rivera、公司 Northwind / Vertex Cloud / Helios Media、`@example.com` 邮箱。
 - `tools/check-no-personal-info.mjs` 自动巡检（已接进 `npm run check` 与 `npm run build`）：源作者标识永远硬失败；模板态额外查通用雇主名、真人邮箱、占位完整性（`configured: true` 后这些放行——下游用户填自己的名字/公司是合法的）。**提交前 `npm run check` 必过。**
-- **题库去痕（面试 NDA + 开源）**：进 `question-bank.md` / `mock-interview-bank.md` 的题——含未来从网上面经新增的——一律先洗：改写题干（**非逐字原题**）、抹掉公司/产品/内部代号、**题目行不点名来源公司**（模板假设来源未知；公开题源如 LeetCode 题号可照引）。练习台的「来源/标签」过滤（`extractTags`/`QUESTION_TAGS`）对**下游 fork** 仍可用（用户在私库里给"标题含公司名"的题自动打标签、自担 NDA 风险），但**模板出厂零公司标签**——`check-no-personal-info.mjs` 模板态只扫题目行（`## ` / `### [id]` / 编号题，**跳过 `- 要点` 正文**里的工具名如 Snowflake / Google S2），命中公司名硬失败；可用 env `DEID_ALLOW_BANK_COMPANIES=1` 临时放行。
+- **题库去痕（面试 NDA + 开源，仅针对公开模板）**：**维护公开 OfferOS 模板时**，进 `question-bank.md` / `mock-interview-bank.md` 的题（含从网上面经新增的）先洗：改写题干（**非逐字原题**）、抹掉公司/产品/内部代号、**题目行不点名来源公司**（公开题源如 LeetCode 题号可照引）。`check-no-personal-info.mjs` 在**模板态（`configured:false`）**只扫题目行（`## ` / `### [id]` / 编号题，**跳过 `- 要点` 正文**里的工具名如 Snowflake / Google S2），命中公司名硬失败；env `DEID_ALLOW_BANK_COMPANIES=1` 可临时放行。**用户 fork 配置后是私库——题库随意、`check` 自动放行**；练习台的「来源/标签」过滤（`extractTags`/`QUESTION_TAGS`）此时照常给"标题含公司名"的题打标签。模板本身出厂零公司标签。
 
 ## 写通道（v2 交互）
 
