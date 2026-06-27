@@ -67,6 +67,18 @@ function slugify(s) {
     .slice(0, 40);
 }
 
+// 从 URL 提取稳定的帖子 ID。某些论坛的"会员/专属版"详情页是 SPA，
+// 切帖不更新 document.title → slug 会全部相同、同分钟两次截图撞名报错（GitHub 422）；
+// 用 URL 里的帖子 ID 兜底，保证不同帖文件名一定唯一。
+function pageIdFromUrl(url) {
+  if (!url) return "";
+  const m =
+    url.match(/\/interview\/thread\/(\d+)/) || // SPA 详情页 /interview/thread/123
+    url.match(/\/thread-(\d+)-/) ||            // Discuz 静态帖 thread-123-1-1.html
+    url.match(/[?&]tid=(\d+)/);                // Discuz 动态帖 ?tid=123
+  return m ? m[1] : "";
+}
+
 // 文件名时间戳：YYYY-MM-DD_HHMMSS（带秒，避免同分钟两次抓取撞文件名被互相覆盖）
 function tsForName() {
   const d = new Date();
@@ -108,7 +120,10 @@ async function saveCapture({ types, text, image, pageInfo }) {
   if (!cfg.ghToken) throw new Error("未配置 GitHub token（在弹窗里填）");
   const typeTag = (types && types.length ? types : ["other"]).join("+");
   const stamp = tsForName();
-  const slug = slugify(pageInfo.title) || "capture";
+  const id = pageIdFromUrl(pageInfo.url);
+  // 带上帖子 ID：SPA 详情页 document.title 不随帖切换，光靠 title slug 会重名撞文件；
+  // 同一帖多次截图再靠时间戳秒级区分。
+  const slug = [slugify(pageInfo.title) || "capture", id].filter(Boolean).join("_");
   const base = `${cfg.ghPath}/${stamp}_${typeTag}_${slug}`;
 
   let imageNote = "";
@@ -231,5 +246,22 @@ function grabFromPage() {
     text = toMd(root).slice(0, 60000);
     mode = (root.tagName === "BODY" ? "全页" : "正文区") + "(md)";
   }
-  return { text, mode, title: document.title, url: location.href };
+
+  // SPA 详情页（如 /interview/）切帖不更新 <title>，document.title 会停在上一帖。
+  // 优先从内容区抓当前帖的标题，抓不到再退回 document.title（旧版论坛页 title 本就准确）。
+  function pickTitle() {
+    if (!/\/interview\//.test(location.href)) return document.title;
+    const scope = document.querySelector("main, article") || document.body;
+    for (const sel of ["h1", "h2"]) {
+      for (const el of scope.querySelectorAll(sel)) {
+        const cs = getComputedStyle(el);
+        if (cs.display === "none" || cs.visibility === "hidden") continue;
+        const t = (el.textContent || "").replace(/\s+/g, " ").trim();
+        if (t.length >= 3 && t.length <= 150 && !/^(一亩三分地|1Point3Acres)/i.test(t)) return t;
+      }
+    }
+    return document.title;
+  }
+
+  return { text, mode, title: pickTitle(), url: location.href };
 }
