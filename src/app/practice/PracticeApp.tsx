@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { appendPracticeLog, getToken } from "@/lib/githubClient";
 import { useDict } from "@/i18n/client";
 
@@ -115,6 +115,49 @@ export default function PracticeApp({
       o[cur.id] = text;
       localStorage.setItem(k, JSON.stringify(o));
     } catch {}
+  };
+
+  // Tab 在 code 框内缩进（默认会把焦点跳出去）——Tab 进 2 空格 / Shift+Tab 退；多行选区整体缩进。
+  const onCodeKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const ta = e.currentTarget;
+    const { selectionStart: s, selectionEnd: en, value } = ta;
+    const indent = "  ";
+    const lineStart = value.lastIndexOf("\n", s - 1) + 1;
+    let next: string;
+    let ns: number;
+    let ne: number;
+    if (e.shiftKey) {
+      let firstCut = 0;
+      let totalCut = 0;
+      const dedented = value
+        .slice(lineStart, en)
+        .split("\n")
+        .map((ln, i) => {
+          const m = ln.match(/^(\t| {1,2})/);
+          const cut = m ? m[0].length : 0;
+          if (i === 0) firstCut = cut;
+          totalCut += cut;
+          return ln.slice(cut);
+        });
+      next = value.slice(0, lineStart) + dedented.join("\n") + value.slice(en);
+      ns = Math.max(lineStart, s - firstCut);
+      ne = en - totalCut;
+    } else if (s !== en && value.slice(s, en).includes("\n")) {
+      const lines = value.slice(lineStart, en).split("\n");
+      next = value.slice(0, lineStart) + lines.map((ln) => indent + ln).join("\n") + value.slice(en);
+      ns = s + indent.length;
+      ne = en + indent.length * lines.length;
+    } else {
+      next = value.slice(0, s) + indent + value.slice(en);
+      ns = ne = s + indent.length;
+    }
+    setAttempt(next);
+    requestAnimationFrame(() => {
+      ta.selectionStart = ns;
+      ta.selectionEnd = ne;
+    });
   };
 
   const pick = (q: PracticeQ) => {
@@ -281,6 +324,7 @@ export default function PracticeApp({
                       placeholder={d.practice.codePlaceholder}
                       value={curAnswer}
                       onChange={(e) => setAttempt(e.target.value)}
+                      onKeyDown={onCodeKeyDown}
                     />
                     <button className="btn" onClick={() => setRevealed(true)}>
                       {d.practice.showKeyPoints}
@@ -309,6 +353,7 @@ export default function PracticeApp({
                             placeholder={d.practice.codePlaceholder}
                             value={curAnswer}
                             onChange={(e) => setAttempt(e.target.value)}
+                            onKeyDown={onCodeKeyDown}
                           />
                         </div>
                         <div className="compare-col">

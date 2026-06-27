@@ -7,6 +7,7 @@
 - 编程题（SQL / Python / Coding / 算法，靠 `isCoding(category)` 判定）在「显示要点」前先给一个等宽暗色 coding 框手写解法（模拟实战）；揭晓后**上下排布：你的解法在上 / 参考要点在下**对照差异（桌面/手机都单列、coding 框满宽），附「差异就是下次的提分点」提示 + 一键把解法交 Claude 批改。
 - 作答按题存 `localStorage(jh_practice_attempts)`、刷新/切题/无 token 都不丢；非编程题（统计/产品 Sense/行为面）保留原「出声讲 → 看要点」流程。
 - 改 `src/app/practice/PracticeApp.tsx` + `globals.css`（`.code-box` / `.compare`）+ i18n zh/en practice 字典；README 练习台描述同步。`npm run build`（含去标识化 `check`）通过、Playwright 截图人审（DS·SQL 对照态、无 page error）。
+- **跟进**：① 对照视图改**上下排布**（桌面也单列，coding 框拿满宽度）；② **code 框 Tab 缩进修复**——之前按 Tab 会把焦点跳出去，加 `onCodeKeyDown`：Tab 进 2 空格 / Shift+Tab 退 / 多行选区整体缩进、焦点留在框内。
 
 ## 2026-06-27 — 题库去痕铁律（面试 NDA + 开源）
 
