@@ -30,13 +30,17 @@ const practice = {
   // question card
   lastGradeLabel: (g: string) => `Last ${g}`,
   close: "✕ Close",
-  speakHint: "Speak aloud for 2–5 min first, then view the key points → ",
+  speakHint: "Speak aloud for 2–5 min (like a real interview), type/dictate it into the box below, then “Show key points” to compare",
+  // voice-to-text tip for the spoken-answer box (Product Sense / stats / behavioral)
+  dictateTip: "💬 Don't want to type? Dictate with a voice-to-text app: superwhisper · Wispr Flow · MacWhisper (Mac), or built-in (iOS Dictation, Win+H voice typing).",
   // free coding area (SQL / Python coding questions)
   codeHint: "✍️ Write your solution here first (like the real thing, no peeking), then “Show key points” to compare",
   codePlaceholder: "-- Write your SQL / Python solution here…",
   compareMine: "✍️ Your solution",
+  compareMineAnswer: "✍️ Your answer",
   compareRef: "📌 Reference key points",
   compareHint: "Compare against the reference on the right: what did you miss? what could be cleaner/better? The gaps are your next gains.",
+  compareHintAnswer: "Compare with the key points: which points / frameworks / trade-offs did you miss? Was it clear? The gaps are your next gains.",
   // Claude review notes (from the practice-log notes column, shown inline in the question card)
   reviewHeading: (n: number) => `📝 Claude's review (${n} — click to open)`,
   reviewBadge: "Has Claude's review",

@@ -30,13 +30,17 @@ const practice = {
   // question card
   lastGradeLabel: (g: string) => `上次 ${g}`,
   close: "✕ 关闭",
-  speakHint: "先出声讲 2–5 分钟，再看要点 → ",
+  speakHint: "先出声讲 2–5 分钟（像真面试一样），把口述写进下面的框、再「显示要点」对照",
+  // 语言题（产品 Sense / 统计 / 行为面）口述区的语音转文字提示
+  dictateTip: "💬 懒得打字？用语音转文字 App 口述更快：superwhisper · Wispr Flow · MacWhisper（Mac），或系统自带（iOS 听写、Win+H 语音输入）。",
   // free coding 区（SQL / Python 等编程题）
   codeHint: "✍️ 先在框里手写解法（像实战一样、别看要点），写完再「显示要点」对照",
   codePlaceholder: "-- 在这里写你的 SQL / Python 解法……",
   compareMine: "✍️ 你的解法",
+  compareMineAnswer: "✍️ 你的答案",
   compareRef: "📌 参考要点",
   compareHint: "对照右边的参考要点：你漏了哪些点？哪里能写得更简洁/更优？差异就是下次的提分点。",
+  compareHintAnswer: "对照参考要点：你漏了哪些点 / 框架 / 权衡？讲清楚了吗？差异就是下次的提分点。",
   // Claude 批改点评（来自 practice-log 备注列，在题目卡里内联展示）
   reviewHeading: (n: number) => `📝 Claude 点评（${n} 条·点开看）`,
   reviewBadge: "这题有 Claude 点评",

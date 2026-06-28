@@ -354,12 +354,25 @@ export default function PracticeApp({
                     </button>
                   </div>
                 ) : (
-                  <p>
-                    <span className="muted small">{d.practice.speakHint}</span>
+                  // 语言题（产品 Sense / 统计 / 行为面）：先在框里口述作答（可语音转文字），再看要点对照
+                  <div className="answer-attempt">
+                    <p className="muted small" style={{ margin: "2px 0 4px" }}>
+                      {d.practice.speakHint}
+                    </p>
+                    <p className="muted small dictate-tip" style={{ margin: "0 0 6px" }}>
+                      {d.practice.dictateTip}
+                    </p>
+                    <textarea
+                      className="field"
+                      rows={8}
+                      placeholder={d.practice.answerPlaceholder}
+                      value={curAnswer}
+                      onChange={(e) => setAttempt(e.target.value)}
+                    />
                     <button className="btn" onClick={() => setRevealed(true)}>
                       {d.practice.showKeyPoints}
                     </button>
-                  </p>
+                  </div>
                 )
               ) : (
                 <>
@@ -389,6 +402,30 @@ export default function PracticeApp({
                       </div>
                       <p className="muted small compare-hint">{d.practice.compareHint}</p>
                     </>
+                  ) : curAnswer.trim() ? (
+                    // 语言题揭晓后：你的答案 / 参考要点 上下对照
+                    <>
+                      <div className="compare">
+                        <div className="compare-col">
+                          <div className="compare-label">{d.practice.compareMineAnswer}</div>
+                          <textarea
+                            className="field"
+                            rows={8}
+                            placeholder={d.practice.answerPlaceholder}
+                            value={curAnswer}
+                            onChange={(e) => setAttempt(e.target.value)}
+                          />
+                        </div>
+                        <div className="compare-col">
+                          <div className="compare-label">{d.practice.compareRef}</div>
+                          <div
+                            className="answer prose"
+                            dangerouslySetInnerHTML={{ __html: cur.aHtml }}
+                          />
+                        </div>
+                      </div>
+                      <p className="muted small compare-hint">{d.practice.compareHintAnswer}</p>
+                    </>
                   ) : (
                     <div className="answer prose" dangerouslySetInnerHTML={{ __html: cur.aHtml }} />
                   )}
@@ -407,31 +444,13 @@ export default function PracticeApp({
                       </p>
                     )}
                   </div>
-                  {coding ? (
-                    <button
-                      className="btn ghost"
-                      onClick={askReview}
-                      disabled={!curAnswer.trim()}
-                    >
-                      {d.practice.submitReviewCode}
-                    </button>
-                  ) : (
-                    <details>
-                      <summary className="muted small" style={{ cursor: "pointer" }}>
-                        {d.practice.reviewSummary}
-                      </summary>
-                      <textarea
-                        className="field"
-                        rows={6}
-                        placeholder={d.practice.answerPlaceholder}
-                        value={curAnswer}
-                        onChange={(e) => setAttempt(e.target.value)}
-                      />
-                      <button className="btn" onClick={askReview} disabled={!curAnswer.trim()}>
-                        {d.practice.submitReview}
-                      </button>
-                    </details>
-                  )}
+                  <button
+                    className="btn ghost"
+                    onClick={askReview}
+                    disabled={!curAnswer.trim()}
+                  >
+                    {coding ? d.practice.submitReviewCode : d.practice.submitReview}
+                  </button>
                 </>
               )}
               {revealed && (

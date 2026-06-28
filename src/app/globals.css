@@ -660,6 +660,10 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 /* 练习台：自由 coding 区（编程题先手写解法，再与参考要点并排对照） */
 .code-attempt { margin-top: 8px; }
 .code-attempt .btn { margin-top: 4px; }
+/* 语言题（产品 Sense / 统计 / 行为面）：口述作答区（推荐语音转文字），再与参考要点对照 */
+.answer-attempt { margin-top: 8px; }
+.answer-attempt .btn { margin-top: 8px; }
+.dictate-tip { line-height: 1.5; }
 .code-box {
   display: block; width: 100%; box-sizing: border-box;
   font-family: var(--mono); font-size: 13px; line-height: 1.55;
