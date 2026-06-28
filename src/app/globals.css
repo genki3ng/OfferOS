@@ -148,7 +148,9 @@ body {
 }
 a { color: var(--coral-deep); text-decoration: none; }
 a:hover { text-decoration: underline; }
-::selection { background: var(--coral-soft); }
+/* 文本选中：实色高对比、bg+字色都设。只设浅背景会出 bug——深色 code 框里浅字叠浅高亮=内容看不见；浅底色块(blockquote/answer/pill)上叠同色高亮=看不出选中。 */
+::selection { background: var(--coral-deep); color: #fff; text-shadow: none; }
+[data-theme="dark"] ::selection { background: var(--coral); color: #1f1b17; text-shadow: none; }
 :focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; border-radius: 6px; }
 
 /* 可选壁纸层（/settings 上传） */
