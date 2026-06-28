@@ -2,6 +2,11 @@
 
 > 每周/每次重要进展记一行，**倒序**（最新在上）。每场面试后顺手记。
 
+## 2026-06-28 — 今日卡 / 时间线显示面试「具体时间」（同步自上游）
+
+- 之前今日 hero 与 /timeline 只显示面试**日期**、没显示几点——时间和日期挤在公司「关键日期」表同一单元，`getAgenda` 过滤带日期单元时把时间一起丢了。
+- `AgendaItem` 加 `time` 字段 + `extractTime()`（正则抽 `HH:MM`〔可区间〕+ 可选 AM/PM + 可选时区），三处来源都填；今日 hero 日期 pill 里**高亮**时间（`.when-time`）、on-deck 也带时间；`/timeline` AgendaList 行尾 `.agenda-time`。`npm run build`（含去标识化 `check`）通过。
+
 ## 2026-06-27 — 练习台：编程题加「自由 coding 框 + 要点对照」
 
 - 编程题（SQL / Python / Coding / 算法，靠 `isCoding(category)` 判定）在「显示要点」前先给一个等宽暗色 coding 框手写解法（模拟实战）；揭晓后**上下排布：你的解法在上 / 参考要点在下**对照差异（桌面/手机都单列、coding 框满宽），附「差异就是下次的提分点」提示 + 一键把解法交 Claude 批改。

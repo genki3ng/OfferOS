@@ -793,6 +793,7 @@ export function getSprintWeeks(): { weeks: SprintWeek[]; parallel: SprintTask[] 
 
 export interface AgendaItem {
   date: string; // YYYY-MM-DD
+  time?: string; // 当天具体时间（如 "14:00 PT" / "10:30–11:00"），从同格的日期文本里抽出来
   label: string; // 渲染用 markdown
   company: string;
   slug: string | null;
@@ -801,6 +802,14 @@ export interface AgendaItem {
 }
 
 const DATE_RE = /\d{4}-\d{2}-\d{2}/;
+// 从一段文本里抽「时间」：HH:MM（可带区间 HH:MM–HH:MM）+ 可选 AM/PM + 可选时区（PT/PDT/ET/CT/MT/UTC/GMT）。
+// 时间常和日期挤在同一表格单元，getAgenda 过滤掉带日期的单元会把时间一起丢了 → 单独抽出来给卡片用。
+const TIME_RE =
+  /\b\d{1,2}:\d{2}(?:\s*[–\-~]\s*\d{1,2}:\d{2})?(?:\s*[AaPp][Mm])?(?:\s*(?:P[DS]?T|E[DS]?T|C[DS]?T|M[DS]?T|UTC|GMT))?/;
+function extractTime(s: string): string {
+  const m = (s || "").match(TIME_RE);
+  return m ? m[0].replace(/\s+/g, " ").trim() : "";
+}
 
 export function getAgenda(): AgendaItem[] {
   const out: AgendaItem[] = [];
@@ -832,6 +841,7 @@ export function getAgenda(): AgendaItem[] {
       if (!label) continue;
       out.push({
         date: d[0],
+        time: extractTime(t),
         label,
         company: name,
         slug,
@@ -848,6 +858,7 @@ export function getAgenda(): AgendaItem[] {
     if (!m) continue;
     out.push({
       date: `2026-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`,
+      time: extractTime(r.next),
       label: r.next.replace(/⏰\s*\d{1,2}[-/]\d{1,2}\s*/, ""),
       company: r.name,
       slug: r.slug,
@@ -866,6 +877,7 @@ export function getAgenda(): AgendaItem[] {
         if (!d) continue;
         out.push({
           date: d[0],
+          time: extractTime(joined),
           label: `offer：${row[0]}`,
           company: row[0],
           slug: null,

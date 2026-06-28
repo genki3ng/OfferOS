@@ -249,6 +249,7 @@ export default async function Today() {
                   <path d="M12 8v4l3 2" />
                 </svg>
                 {whenLabel(next.date, d.today.dow, d.today.whenLabel)}
+                {next.time ? <b className="when-time">{next.time}</b> : null}
               </span>
             </div>
             <h2>{next.company ? `${next.company} · ${cleanEvt(next.label)}` : cleanEvt(next.label)}</h2>
@@ -296,6 +297,7 @@ export default async function Today() {
                   <b>{secondary.company ? `${secondary.company} · ${cleanEvt(secondary.label)}` : cleanEvt(secondary.label)}</b>
                   <small>
                     {whenLabel(secondary.date, d.today.dow, d.today.whenLabel)}
+                    {secondary.time ? ` · ${secondary.time}` : ""}
                     {backToBack ? ` · ${d.today.onDeckHint}` : ""}
                   </small>
                 </div>

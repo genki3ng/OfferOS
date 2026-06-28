@@ -48,6 +48,7 @@ export default function AgendaList({
       <span>
         {i.slug ? <Link href={`/companies/${i.slug}`}>{i.company}</Link> : i.company}{" "}
         {i.label}
+        {i.time ? <b className="agenda-time"> · {i.time}</b> : null}
       </span>
     </li>
   );

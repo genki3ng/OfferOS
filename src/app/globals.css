@@ -450,6 +450,7 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .agenda-row:last-child { border-bottom: none; }
 .agenda-date { flex: 0 0 92px; font-weight: 800; white-space: nowrap; }
 .agenda-date em { display: block; font-style: normal; font-weight: 600; font-size: var(--t-xs); color: var(--ink-faint); }
+.agenda-time { color: var(--coral-deep); font-weight: 700; white-space: nowrap; }
 .agenda-date.soon { color: var(--amber-deep); }
 .agenda-date.overdue { color: var(--red); }
 
@@ -519,6 +520,8 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .hero-eyebrow .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); animation: pulse 2s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(232, 103, 76, 0.45); } 70% { box-shadow: 0 0 0 9px rgba(232, 103, 76, 0); } 100% { box-shadow: 0 0 0 0 rgba(232, 103, 76, 0); } }
 .hero .when { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--amber-deep); background: var(--amber-soft); padding: 7px 13px; border-radius: 999px; white-space: nowrap; }
+/* 面试当天具体时间——在日期 pill 里高亮（醒目分隔 + 强调色），别让用户漏看几点 */
+.hero .when .when-time { font-weight: 850; color: var(--coral-deep); padding-left: 8px; border-left: 1.5px solid color-mix(in srgb, var(--amber-deep) 35%, transparent); }
 .hero h2 { font-size: var(--t-2xl); font-weight: 800; letter-spacing: -0.6px; line-height: 1.18; color: var(--ink); margin: 0; }
 .hero .sub { font-size: var(--t-md); color: var(--ink-soft); margin-top: 11px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
 .hero .sub .chip { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; padding: 0; cursor: default; }
