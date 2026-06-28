@@ -1,6 +1,6 @@
 # OfferOS 🎯
 
-![version](https://img.shields.io/badge/version-0.2-ff6b6b) ![Next.js](https://img.shields.io/badge/Next.js-15-000000) ![PWA](https://img.shields.io/badge/PWA-installable-5a67d8) ![i18n](https://img.shields.io/badge/i18n-%E4%B8%AD%2FEN-2ea44f) ![license](https://img.shields.io/badge/license-MIT-blue)
+![version](https://img.shields.io/badge/version-0.3-ff6b6b) ![Next.js](https://img.shields.io/badge/Next.js-15-000000) ![PWA](https://img.shields.io/badge/PWA-installable-5a67d8) ![i18n](https://img.shields.io/badge/i18n-%E4%B8%AD%2FEN-2ea44f) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 > 拿 offer 的操作系统——一个 **「你 + Claude」协作**、端到端管理整场求职的系统：**计划 → 准备 → 投递 / 内推 → 面试 → 谈判 → 复盘**。
 
@@ -42,7 +42,7 @@
 
 - **今日**：bento 首页——阶段轨、唯一下一步、倒计时、本周面试、该你出手了、漏斗。
 - **公司 / pipeline**：目标公司库 + 各家进度，状态/内推可直接在站上改。
-- **备战 · 自带题库**：**5 套角色题库（DS / DE / SWE / PM / ML），合计约 150 道，每题都配可对照的解法**——光 DS 就有 61 道（SQL 20 · Python 17 含 LeetCode/pandas · 统计与实验 · 产品 sense · 行为面 STAR），不是只给个空壳。配 /practice 练习台抽题练习 + 自评（桌面双栏：左题表 / 右题目+要点，点即换；**编程题（SQL/Python/算法）可先在框里手写解法、点「显示要点」后与参考要点上下对照差异**；可按**来源/标签**过滤，模板题不带公司标签）；文档/速备包里写到的题号（如 `sql-11`）会自动链到练习台对应题，点一下即开。
+- **备战 · 自带题库**：**5 套角色题库（DS / DE / SWE / PM / ML），合计约 150 道，每题都配可对照的解法**——光 DS 就有 61 道（SQL 20 · Python 17 含 LeetCode/pandas · 统计与实验 · 产品 sense · 行为面 STAR），不是只给个空壳。配 /practice 练习台抽题练习 + 自评（桌面双栏：左题表 / 右题目+要点，点即换；**编程题（SQL/Python/算法）可先在框里手写解法、点「显示要点」后与参考要点上下对照差异**；**交给 Claude 批改后，它的点评直接挂在题目卡里——可折叠的「📝 点评」框 + 题表里有点评的题标 📝 徽章**；可按**来源/标签**过滤，模板题不带公司标签）；文档/速备包里写到的题号（如 `sql-11`）会自动链到练习台对应题，点一下即开。
 - **Offers**：offer 到来时的对比 + 谈判主场（offer 前是预案）。
 - **薪资 · Comp**：**levels.fyi 风格**的总包可视化——按级别的 base / 股票 / 奖金堆叠条、各公司样本、你的期望区间，给谈判一个数据锚（数据源 `negotiation/comp-research.md`，站上自动重画）。
 - **时间线**：一页看「什么时候该干什么」——待办 + 即将发生（关键日期/截止自动聚合）+ 一路走来（日志），日程与时间线已合并为一页。
@@ -65,40 +65,78 @@ Claude 在每一步帮你：打磨/按公司 tailor 简历、出题找薄弱点�
   <sub><b>💰 薪资 · Comp（levels.fyi 风格）</b>：按级别的总包堆叠条（Base / 股票 / 奖金，条长随总包等比）+ 各公司样本 + 你的期望区间，给谈判一个数据锚 —— 数据源 <code>negotiation/comp-research.md</code></sub>
 </p>
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/pipeline.png" alt="公司 / pipeline"><br><sub><b>公司 · pipeline</b> — 各家进度一屏看全，状态 / 内推站上直接改</sub></td>
-    <td width="50%"><img src="docs/screenshots/practice.png" alt="练习台"><br><sub><b>练习台</b> — 自带 5 角色约 150 题（图为 DS 61 题），抽题练习 + 自评</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/jobs.png" alt="岗位库"><br><sub><b>岗位库</b> — 在招岗聚合 + 匹配度 + 优先级星标</sub></td>
-    <td><img src="docs/screenshots/timeline.png" alt="时间线"><br><sub><b>时间线</b> — 待办 + 即将发生（关键日期自动聚合）+ 一路走来</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/offers.png" alt="Offers · 谈判"><br><sub><b>Offers · 谈判</b> — offer 对比 + 谈判主场（offer 前是预案）</sub></td>
-    <td><img src="docs/screenshots/company.png" alt="公司详情"><br><sub><b>公司详情</b> — 关键日期 / 内推 / 一眼面板 / 面经笔记一页归档</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/intel.png" alt="情报 · JD 深度档案"><br><sub><b>情报 · JD 档案</b> — 重点岗位 JD 全文 + 契合度 + 薪酬带</sub></td>
-    <td><img src="docs/screenshots/referrals.png" alt="内推渠道"><br><sub><b>内推渠道</b> — 内推人 / 联系方式 / 状态，邮件一键生成</sub></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/screenshots/pipeline.png" alt="公司 / pipeline" width="90%">
+  <br>
+  <sub><b>公司 · pipeline</b> — 各家进度一屏看全，状态 / 内推站上直接改</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/practice.png" alt="练习台" width="90%">
+  <br>
+  <sub><b>练习台</b> — 自带 5 角色约 150 题（图为 DS 61 题），抽题练习 + 自评，编程题可手写解法对照要点、交批改后点评内联挂在题上</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/jobs.png" alt="岗位库" width="90%">
+  <br>
+  <sub><b>岗位库</b> — 在招岗聚合 + 匹配度 + 优先级星标</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/timeline.png" alt="时间线" width="90%">
+  <br>
+  <sub><b>时间线</b> — 待办 + 即将发生（关键日期自动聚合）+ 一路走来</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/offers.png" alt="Offers · 谈判" width="90%">
+  <br>
+  <sub><b>Offers · 谈判</b> — offer 对比 + 谈判主场（offer 前是预案）</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/company.png" alt="公司详情" width="90%">
+  <br>
+  <sub><b>公司详情</b> — 关键日期 / 内推 / 一眼面板 / 面经笔记一页归档</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/intel.png" alt="情报 · JD 深度档案" width="90%">
+  <br>
+  <sub><b>情报 · JD 档案</b> — 重点岗位 JD 全文 + 契合度 + 薪酬带</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/referrals.png" alt="内推渠道" width="90%">
+  <br>
+  <sub><b>内推渠道</b> — 内推人 / 联系方式 / 状态，邮件一键生成</sub>
+</p>
 
 ### 🌙 暗色主题 · 🌐 中英双语 · 📱 手机可装 (PWA)
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/today-dark.png" alt="暗色主题"><br><sub><b>🌙 暗色主题</b> — 同一页，一键切「暖光·浅 / 暖光·夜」</sub></td>
-    <td width="50%"><img src="docs/screenshots/pipeline-en.png" alt="English UI"><br><sub><b>🌐 English</b> — 整套界面一键切中 / 英，cookie 记住偏好</sub></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/screenshots/today-dark.png" alt="暗色主题" width="90%">
+  <br>
+  <sub><b>🌙 暗色主题</b> — 同一页，一键切「暖光·浅 / 暖光·夜」</sub>
+</p>
 
 <p align="center">
-  <img src="docs/screenshots/mobile-today.png" alt="手机 · 今日" width="240">
-  &nbsp;&nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-practice.png" alt="手机 · 练习台" width="240">
+  <img src="docs/screenshots/pipeline-en.png" alt="English UI" width="90%">
   <br>
-  <sub><b>📱 手机友好 · 可装成 App</b>：底部 Tab 栏单手操作，「加到主屏」即全屏启动（左：今日 · 右：练习台）</sub>
+  <sub><b>🌐 English</b> — 整套界面一键切中 / 英，cookie 记住偏好</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/mobile-today.png" alt="手机 · 今日" width="260">
+  <br>
+  <sub><b>📱 手机 · 今日</b> — 底部 Tab 栏单手操作，「加到主屏」即像原生 App 全屏启动</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/mobile-practice.png" alt="手机 · 练习台" width="260">
+  <br>
+  <sub><b>📱 手机 · 练习台</b> — 闪卡模式抽题练习，边走边刷</sub>
 </p>
 
 ---
@@ -154,10 +192,11 @@ npm run build    # 部署前自检（Vercel 同款构建）
 
 ---
 
-## 🗒️ 版本 · v0.2
+## 🗒️ 版本 · v0.3
 
-当前 **v0.2**（站点页脚也会显示）。完整变更见 **[CHANGELOG.md](CHANGELOG.md)**。
+当前 **v0.3**（站点页脚也会显示）。完整变更见 **[CHANGELOG.md](CHANGELOG.md)**。
 
+- **v0.3**：练习台交批改后**点评内联挂在题目卡**（可折叠「📝 点评」框 + 题表 📝 徽章）、编程题**自由 coding 框**先手写再对照要点；今日卡 / 时间线显示面试**具体时间**；修文本选中在深色框看不清；题库「题面必须具体可作答」契约 + 去标识化铁律细化。
 - **v0.2**：修文档 frontmatter 标题渲染（不再把 `---…---` 当大标题）、时间线「逾期 / 待投」判定逻辑（历史里程碑不再误判逾期、投递待办按 tracker 真实阶段分组）；页脚版本号 + 本「保持更新」指南。
 - **v0.1**：首个公开版——5 套角色题库（DS / DE / SWE / PM / ML，约 150 题带解法）+ /practice、手机 PWA、中英双语、`/onboard` 向导、`/comp` 薪资页、Web Clipper、联网情报（Agent‑Reach）。
 
@@ -182,7 +221,7 @@ npm install && npm run build             # 自检后再 push
 
 **为什么一般不冲突**：升级几乎只动 `src/`（站点代码）；**你的数据在 `*.md` / `data/*.json` / `data/profile.json` / `src/site.config.ts`**，上游样例不碰它们。万一冲突，基本就在这些配置 / 数据文件——保留你的即可。
 
-**怎么知道有没有新版**：站点**页脚显示你当前版本**（如 `OfferOS v0.2`，点开 = [CHANGELOG](CHANGELOG.md)）；或在 GitHub 上 **Watch → Custom → Releases** 订阅。
+**怎么知道有没有新版**：站点**页脚显示你当前版本**（如 `OfferOS v0.3`，点开 = [CHANGELOG](CHANGELOG.md)）；或在 GitHub 上 **Watch → Custom → Releases** 订阅。
 
 > 不想合并代码？也可以**只读 [CHANGELOG](CHANGELOG.md)**、把想要的那条改动手动抄进自己的仓库——对你的数据零风险。这是最省心的「优雅」做法。
 
