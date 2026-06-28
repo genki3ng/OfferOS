@@ -2,6 +2,11 @@
 
 > 每周/每次重要进展记一行，**倒序**（最新在上）。每场面试后顺手记。
 
+## 2026-06-28 — 练习台内联显示 Claude 点评（同步自上游）
+
+- 痛点：交批改后点评写进 `prep/<role>/practice-log.md` 的「备注」列，但练习台 UI 只用了自评 emoji + 次数、把 `note` 丢了——点评只能去 `/docs/.../practice-log` 翻整张表，不挂在题上。
+- 修：`practice/page.tsx` 把备注非空的行渲染成 markdown 收进 `QStat.notes`（最新在前）；`PracticeApp.tsx` 题目卡问题文下方加可折叠「📝 Claude 点评」框（默认收起免剧透）+ 题表项加 📝 徽章；新增 `.review-box` 样式 + i18n zh/en `reviewHeading/reviewBadge`。`npm run build`（含去标识化 `check`）通过。
+
 ## 2026-06-28 — 今日卡 / 时间线显示面试「具体时间」（同步自上游）
 
 - 之前今日 hero 与 /timeline 只显示面试**日期**、没显示几点——时间和日期挤在公司「关键日期」表同一单元，`getAgenda` 过滤带日期单元时把时间一起丢了。

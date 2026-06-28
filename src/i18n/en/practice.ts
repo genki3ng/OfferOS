@@ -37,6 +37,9 @@ const practice = {
   compareMine: "✍️ Your solution",
   compareRef: "📌 Reference key points",
   compareHint: "Compare against the reference on the right: what did you miss? what could be cleaner/better? The gaps are your next gains.",
+  // Claude review notes (from the practice-log notes column, shown inline in the question card)
+  reviewHeading: (n: number) => `📝 Claude's review (${n} — click to open)`,
+  reviewBadge: "Has Claude's review",
   submitReviewCode: "📨 Submit your solution to Claude for review (returned next day)",
   showKeyPoints: "Show key points",
   selfRate: "Self-rating:",

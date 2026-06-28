@@ -26,13 +26,21 @@ export default async function PracticePage() {
 
   const stats: Record<string, QStat> = {};
   for (const r of log) {
-    const s = stats[r.qid] ?? { count: 0, last: "", lastTime: "" };
+    const s = stats[r.qid] ?? { count: 0, last: "", lastTime: "", notes: [] };
     s.count++;
     if (r.time >= s.lastTime) {
       s.last = r.grade;
       s.lastTime = r.time;
     }
+    // 备注列 = Claude 批改点评；非空才收、渲染 markdown，供练习台内联展示
+    if (r.note.trim()) {
+      s.notes.push({ time: r.time, grade: r.grade, html: renderMarkdown(r.note, "prep") });
+    }
     stats[r.qid] = s;
+  }
+  // 每题点评按时间倒序（最新点评排最前）
+  for (const s of Object.values(stats)) {
+    s.notes.sort((a, b) => (a.time < b.time ? 1 : a.time > b.time ? -1 : 0));
   }
 
   return (

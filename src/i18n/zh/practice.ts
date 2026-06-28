@@ -37,6 +37,9 @@ const practice = {
   compareMine: "✍️ 你的解法",
   compareRef: "📌 参考要点",
   compareHint: "对照右边的参考要点：你漏了哪些点？哪里能写得更简洁/更优？差异就是下次的提分点。",
+  // Claude 批改点评（来自 practice-log 备注列，在题目卡里内联展示）
+  reviewHeading: (n: number) => `📝 Claude 点评（${n} 条·点开看）`,
+  reviewBadge: "这题有 Claude 点评",
   submitReviewCode: "📨 把你的解法交给 Claude 批改（次日出）",
   showKeyPoints: "显示要点",
   selfRate: "自评：",

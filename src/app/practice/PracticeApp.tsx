@@ -13,10 +13,17 @@ export interface PracticeQ {
   aHtml: string;
 }
 
+export interface ReviewNote {
+  time: string;
+  grade: string;
+  html: string; // 点评正文（practice-log 备注列）渲染好的 HTML
+}
+
 export interface QStat {
   count: number;
   last: string; // 最近一次自评 emoji
   lastTime: string;
+  notes: ReviewNote[]; // Claude 批改点评（最新在前），仅含备注非空的记录
 }
 
 // 编程题（SQL / Python / 算法）= 给 free-coding 框，让用户先手写解法再对照要点；
@@ -106,6 +113,8 @@ export default function PracticeApp({
   // 当前题是否编程题 + 当前题的自由作答（编程题=手写解法，其它=口述转写），写时即存本机。
   const coding = cur ? isCoding(cur.category) : false;
   const curAnswer = cur ? attempts[cur.id] ?? "" : "";
+  // 当前题的 Claude 点评（来自 practice-log 备注列，最新在前）
+  const curNotes = cur ? stats[cur.id]?.notes ?? [] : [];
   const setAttempt = (text: string) => {
     if (!cur) return;
     setAttempts((m) => ({ ...m, [cur.id]: text }));
@@ -310,6 +319,20 @@ export default function PracticeApp({
                 </button>
               </div>
               <div className="prose" dangerouslySetInnerHTML={{ __html: cur.qHtml }} />
+              {curNotes.length ? (
+                <details className="review-box">
+                  <summary>{d.practice.reviewHeading(curNotes.length)}</summary>
+                  {curNotes.map((nt, i) => (
+                    <div className="review-item" key={i}>
+                      <div className="review-meta muted small">
+                        {nt.time}
+                        {nt.grade ? ` · ${nt.grade}` : ""}
+                      </div>
+                      <div className="prose" dangerouslySetInnerHTML={{ __html: nt.html }} />
+                    </div>
+                  ))}
+                </details>
+              ) : null}
               {!revealed ? (
                 coding ? (
                   // 编程题：先在框里手写解法（模拟实战），再看要点
@@ -452,6 +475,11 @@ export default function PracticeApp({
                       <span className="pill gray mini">{q.id}</span>
                       {tagChips(q.companies)}
                       {g && <span className="pi-grade">{g}</span>}
+                      {stats[q.id]?.notes?.length ? (
+                        <span className="pi-review" title={d.practice.reviewBadge}>
+                          📝
+                        </span>
+                      ) : null}
                     </div>
                     <div className="pi-q">{q.qText}</div>
                     {n > 0 && <div className="pi-meta muted small">{d.practice.practicedTimes(n)}</div>}

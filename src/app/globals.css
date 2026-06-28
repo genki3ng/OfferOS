@@ -678,6 +678,20 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .compare .answer { margin-top: 0; }
 .compare-hint { margin: 10px 0 0; }
 
+/* 练习台：Claude 点评（practice-log 备注列）——题目卡内联、可折叠、默认收起以免剧透 */
+.review-box { margin-top: 10px; border: 1px solid color-mix(in srgb, var(--coral) 32%, var(--line)); background: var(--coral-soft); border-radius: 10px; }
+.review-box > summary { cursor: pointer; padding: 8px 12px; font-size: var(--t-sm); font-weight: 700; color: var(--coral-deep); list-style: none; user-select: none; }
+.review-box > summary::-webkit-details-marker { display: none; }
+.review-box > summary::marker { content: ""; }
+.review-box[open] > summary { border-bottom: 1px solid color-mix(in srgb, var(--coral) 22%, var(--line)); }
+.review-item { padding: 8px 12px; }
+.review-item + .review-item { border-top: 1px dashed color-mix(in srgb, var(--coral) 22%, var(--line)); }
+.review-meta { margin-bottom: 3px; }
+.review-item .prose { font-size: var(--t-sm); }
+.review-item .prose > :first-child { margin-top: 0; }
+.review-item .prose > :last-child { margin-bottom: 0; }
+.pi-top .pi-review { font-size: 13px; margin-left: 4px; }
+
 /* ============================================================ 浮窗 / 派活 FAB / 主题切换 */
 .ask-fab { position: fixed; right: 20px; bottom: 20px; z-index: 60; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, #ed7257, var(--coral) 60%, var(--coral-deep)); color: #fff; border: none; border-radius: 999px; padding: 13px 20px; font-size: var(--t-base); font-weight: 800; cursor: pointer; box-shadow: 0 8px 28px rgba(216, 103, 76, 0.4); transition: transform 0.2s ease; }
 .ask-fab:hover { transform: translateY(-2px) scale(1.03); }
