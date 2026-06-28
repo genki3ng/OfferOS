@@ -43,6 +43,12 @@
 
 > **Git 工作流**：这是个人项目——改完**直接 commit 并推送 `main`**（不用 feature 分支、不开 PR）。push `main` → 若已连 Vercel 会自动重建上线。
 
+## 版本号 / CHANGELOG（用户 2026-06-28 定）
+
+- OfferOS 是公开模板，**页脚显示版本号**（点开 = `/docs/CHANGELOG`）。**每累积约 10 条更新（≈10 个 commit）就 bump 一次 minor（+0.1，如 0.2 → 0.3）**：在 [CHANGELOG.md](CHANGELOG.md) 顶部新开一节归纳这批更新、`package.json`（+ `package-lock.json`）的 `version` 同步改（`npm version <x.y.z> --no-git-tag-version`）。
+- 判断是否到点：`git log --oneline <上次版本 commit>..HEAD | wc -l` 数 commit 数；到约 10 就切版本、落当天日期。不到 10 就继续攒。
+- 这是 **OfferOS 专属**约定（私有 jobhunt 仓不需要）。
+
 ## 提交身份
 
 - **云端 Claude session**：用环境默认的 git 身份（通常平台签名，GitHub 显示 Verified）——一般别改。
