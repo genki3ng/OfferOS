@@ -74,7 +74,71 @@ export function parseFrontmatter(md: string): {
 /** 整篇 markdown → HTML，并把仓库内链接改写为站内路由 */
 export function renderMarkdown(md: string, baseDir: string): string {
   const html = m.parse(md) as string;
-  return linkifyQuestionIds(rewriteLinks(html, baseDir));
+  return linkifyQuestionIds(
+    rewriteLinks(styleCallouts(breakLongParagraphs(html)), baseDir)
+  );
+}
+
+// 句子级换行：仓库里大量段落是「一行塞满 5、6 句」的笔记（句间只用句号 。 分隔），
+// 网页上渲染成一坨文字墙。这里在渲染时把长段落按句末标点（。！？）拆成「一句一行」、
+// 每个断点加一点行距 → 文字墙变成清爽、可扫读的要点列表。
+// 安全约束：① 只认全角句末标点 。！？——英文 "." 不动（避免小数 3.2 / 缩写 e.g. / 邮件正文被误拆）；
+// ② 复用 PROTECTED_RE 只在「文本段」里拆，绝不动 <pre>/<code>/<a>/标签内部与属性；
+// ③ 短段落（纯文本 <40 字）不拆，免得显得零碎。
+// 句末标点（含其后的右括号/引号）后一律断行并吃掉随后的空白/换行——不靠「后面紧跟非空白」
+// 的前瞻，否则句末标点紧贴 <strong>/<a>（文本段边界）或后接 marked 产生的 \n 时会漏断。
+// 段末多余的那个断行再裁掉。
+const SENT_BREAK_RE = /([。！？]+[”’"'」』）)】》〉]*)\s*/g;
+
+export function breakLongParagraphs(html: string): string {
+  return html.replace(/<p>([\s\S]*?)<\/p>/g, (full, inner) => {
+    const text = inner.replace(/<[^>]+>/g, "");
+    if (text.length < 40) return full; // 短段落保持原样
+    let broken = inner
+      .split(PROTECTED_RE)
+      // split 捕获组：奇数下标 = 受保护块/标签，原样保留；偶数下标 = 可拆的纯文本。
+      .map((seg: string, i: number) =>
+        i % 2 === 1 ? seg : seg.replace(SENT_BREAK_RE, '$1<br class="sb">')
+      )
+      .join("");
+    broken = broken.replace(/<br class="sb">\s*$/, ""); // 去掉段末多余断行
+    return broken === inner ? full : `<p>${broken}</p>`;
+  });
+}
+
+// 引用块 → 语义 callout：按「引用首字符的 emoji」着色（样式见 globals.css .callout-*）。
+// 速备包/HANDOFF 等大量用 `> 🔴…/⚠️…/✅…/📌…` 标轻重缓急；着色后一眼分辨，
+// 无 emoji 的普通引用回落中性灰，不再满屏珊瑚墙。emoji 一律用基础码位（裸字符），
+// 这样带不带 variation selector(️) 都能 startsWith 命中。
+const CALLOUT_CUES: [string, string[]][] = [
+  ["danger", ["🔴", "🚩", "⚠", "❌", "🛑", "🚨", "⛔", "🔥"]],
+  ["success", ["🟢", "✅", "💚", "👑", "🏆", "🎉", "🥇"]],
+  ["warn", ["🟡", "🟠", "⏰", "⏳", "⚡", "📅"]],
+  ["info", ["📌", "🔑", "💡", "🎯", "ℹ", "📋", "🗂", "📊", "🧭", "📨", "🔍", "📍", "➡", "🔗", "🗺", "📝"]],
+];
+
+function calloutType(inner: string): string | null {
+  // 剥掉引用块开头的空白 + 首个 <p> + 可能包住 emoji 的行内强调标签，露出首字符
+  let s = inner.replace(/^\s+/, "").replace(/^<p[^>]*>/, "").replace(/^\s+/, "");
+  s = s.replace(/^(?:<(?:strong|em|b|i|code)>\s*)+/, "");
+  for (const [type, cues] of CALLOUT_CUES) {
+    for (const c of cues) if (s.startsWith(c)) return type;
+  }
+  return null;
+}
+
+/**
+ * 把行首带 emoji 提示的引用块标成语义 callout（着色见 globals.css .callout-*）。
+ * 只匹配最内层、不含嵌套的 blockquote（`(?!<\/?blockquote>)`），避免破坏 `> >` 嵌套引用。
+ */
+export function styleCallouts(html: string): string {
+  return html.replace(
+    /<blockquote>((?:(?!<\/?blockquote>)[\s\S])*?)<\/blockquote>/g,
+    (full, inner) => {
+      const t = calloutType(inner);
+      return t ? `<blockquote class="callout callout-${t}">${inner}</blockquote>` : full;
+    }
+  );
 }
 
 /** 单行/单元格 markdown → 行内 HTML */

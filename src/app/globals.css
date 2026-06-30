@@ -419,25 +419,99 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .doc-fm-val { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
 .doc-fm-val a { font-weight: 600; }
 
-/* ============================================================ markdown prose */
-.prose { font-size: var(--t-md); line-height: 1.7; }
-.prose h1 { font-size: var(--t-2xl); font-weight: 800; letter-spacing: -0.4px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
-.prose h2 { font-size: var(--t-xl); font-weight: 800; margin-top: 30px; }
-.prose h3 { font-size: var(--t-md); font-weight: 750; }
-.prose blockquote { margin: 14px 0; padding: 10px 16px; border-left: 3px solid var(--coral); background: var(--coral-soft); border-radius: 0 10px 10px 0; color: var(--ink); }
-.prose blockquote p { margin: 4px 0; }
-.prose code { background: var(--bg-2); padding: 2px 6px; border-radius: 6px; font-size: 0.88em; font-family: var(--mono); }
-.prose pre { background: #2a2622; color: #f3ece3; padding: 16px 18px; border-radius: 12px; overflow-x: auto; font-size: 13px; }
+/* ===================================================== 文档阅读页（/docs/…）
+   把面包屑 + 信息条 + 正文卡片收进一个居中的「文档列」，整页读起来像一份文档、不再是
+   贴着左侧、右半空着的大板。正文阅读列（.prose --measure）在卡内仍左对齐，卡片本身变窄居中。 */
+.doc-page { max-width: 52rem; margin-inline: auto; }
+
+/* ============================================================ markdown prose
+   阅读体验（大改）：把整仓 markdown 渲染成「文档」而非全宽文字墙。
+   1) 阅读列宽（measure）：正文/标题/列表/引用限到 ~42rem（中英混排舒适行长），
+      左对齐共用一条左边线；表格/代码/图片「破格」到更宽的 60rem。
+   2) 纵向节奏：标题上间距大、下间距小，段落/列表统一留白，可扫读。
+   3) 引用块 → 语义 callout：按行首 emoji 着色（见 markdown.ts styleCallouts），
+      无 emoji 的引用回落中性灰，不再满屏珊瑚墙。
+   4) 句子级换行：长段落按句末标点（。！？）拆成「一句一行」（见 markdown.ts
+      breakLongParagraphs）→ 一行塞满多句的笔记墙变成清爽要点列表。
+   ------------------------------------------------------------ */
+.prose {
+  font-size: var(--t-md);
+  line-height: 1.75;
+  color: var(--ink);
+  overflow-wrap: break-word;
+  --measure: 42rem;       /* 正文阅读列宽 */
+  --measure-wide: 60rem;  /* 表格 / 代码 / 图片破格上限 */
+}
+/* 阅读列：直接子元素限宽，左对齐 → 稳定的文字列、强左边线 */
+.prose > * { max-width: var(--measure); }
+/* 破格元素：宽内容不被行长限制（表格、代码块、图片、内嵌容器） */
+.prose > :is(pre, table, figure, .table-wrap) { max-width: var(--measure-wide); }
+.prose > :first-child { margin-top: 0; }
+.prose > :last-child { margin-bottom: 0; }
+
+/* —— 标题层级 —— */
+.prose h1 { font-size: var(--t-2xl); font-weight: 800; letter-spacing: -0.4px; line-height: 1.25; margin: 0 0 0.7em; padding-bottom: 0.36em; border-bottom: 1px solid var(--line); }
+.prose h2 { font-size: var(--t-xl); font-weight: 800; letter-spacing: -0.2px; line-height: 1.3; margin: 1.9em 0 0.65em; padding-bottom: 0.3em; border-bottom: 1px solid var(--line-soft); }
+.prose h3 { font-size: var(--t-lg); font-weight: 750; line-height: 1.35; margin: 1.5em 0 0.5em; }
+.prose h4 { font-size: var(--t-md); font-weight: 800; line-height: 1.4; margin: 1.3em 0 0.4em; }
+.prose h5, .prose h6 { font-size: var(--t-sm); font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin: 1.2em 0 0.4em; }
+.prose h2:first-child, .prose h3:first-child { margin-top: 0; }
+
+/* —— 段落 / 列表 / 强调 —— */
+/* 段落之间留足空气（远大于句内换行），形成清晰的两级节奏，长文不糊成一团 */
+.prose p { margin: 0 0 1.5em; }
+/* 句子级换行（markdown.ts breakLongParagraphs 注入）：长段落按句末标点拆成一句一行，
+   断点处 <br class="sb"> 当成块级、给一句一行明显的上间距（>普通折行的行距），
+   这样「一句一行」看得出是分开的点、不再是均匀一团 */
+.prose br.sb { display: block; content: ""; margin-top: 0.95em; }
+.prose ul, .prose ol { margin: 0 0 1.05em; padding-left: 1.45em; }
+.prose li { margin: 0.32em 0; }
+.prose li::marker { color: var(--coral); }
+.prose li > ul, .prose li > ol { margin: 0.3em 0; }
+.prose strong, .prose b { font-weight: 800; color: var(--ink); }
+/* GFM 任务清单：去掉 bullet、复选框与文字对齐成真·清单 */
+.prose li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.2em; }
+.prose input[type="checkbox"] { accent-color: var(--coral); margin-right: 0.5em; transform: translateY(1px); }
+
+/* —— 引用块 / 语义 callout —— */
+.prose blockquote, .prose .callout {
+  margin: 1.4em 0; padding: 0.85em 1.15em;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--ink-faint);
+  border-radius: 11px;
+  background: var(--bg-2);
+  color: var(--ink);
+}
+.prose blockquote > :first-child, .prose .callout > :first-child { margin-top: 0; }
+.prose blockquote > :last-child, .prose .callout > :last-child { margin-bottom: 0; }
+.prose blockquote p, .prose .callout p { margin: 0.4em 0; }
+/* 按行首 emoji 着色：红=风险 / 绿=已搞定 / 琥珀=待办临近 / 珊瑚=重点提示 */
+.prose .callout-danger  { border-left-color: var(--red);   background: var(--red-bg); }
+.prose .callout-success { border-left-color: var(--sage);  background: var(--sage-soft); }
+.prose .callout-warn    { border-left-color: var(--amber); background: var(--amber-soft); }
+.prose .callout-info    { border-left-color: var(--coral); background: var(--coral-soft); }
+
+/* —— 代码 —— */
+.prose code { background: var(--bg-2); border: 1px solid var(--line-soft); padding: 0.12em 0.4em; border-radius: 6px; font-size: 0.86em; font-family: var(--mono); overflow-wrap: anywhere; }
+.prose pre { background: #2a2622; color: #f3ece3; padding: 15px 18px; border-radius: 12px; overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 1.3em 0; }
 [data-theme="dark"] .prose pre { background: #14110d; border: 1px solid var(--line); }
-.prose pre code { background: none; padding: 0; color: inherit; }
-.prose table { border-collapse: collapse; font-size: 13.5px; display: block; overflow-x: auto; max-width: 100%; }
-.prose th { text-align: left; color: var(--ink-faint); font-size: var(--t-sm); border-bottom: 1.5px solid var(--line); padding: 7px 10px; white-space: nowrap; }
-.prose td { border-bottom: 1px solid var(--line-soft); padding: 8px 10px; vertical-align: top; min-width: 70px; }
-.prose img { max-width: 100%; border-radius: 10px; }
-.prose input[type="checkbox"] { accent-color: var(--coral); margin-right: 6px; }
-.prose li { margin: 4px 0; }
-.prose hr { border: none; border-top: 1px solid var(--line); margin: 26px 0; }
-.prose a { color: var(--coral-deep); font-weight: 600; }
+.prose pre code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+
+/* —— 表格（破格 + 表头底纹 + 斑马纹）—— */
+.prose table { border-collapse: collapse; font-size: 13.5px; display: block; overflow-x: auto; margin: 1.4em 0; }
+.prose thead th { background: var(--bg-2); }
+.prose th { text-align: left; color: var(--ink-soft); font-weight: 800; font-size: var(--t-sm); border-bottom: 1.5px solid var(--line); padding: 9px 12px; white-space: nowrap; }
+.prose td { border-bottom: 1px solid var(--line-soft); padding: 9px 12px; vertical-align: top; min-width: 70px; }
+.prose tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--bg-2) 50%, transparent); }
+.prose tbody tr:last-child td { border-bottom: none; }
+
+/* —— 图片 / 分隔线 / 链接 —— */
+.prose img { max-width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
+.prose figure { margin: 1.4em 0; }
+.prose figcaption { font-size: var(--t-sm); color: var(--ink-faint); text-align: center; margin-top: 0.5em; }
+.prose hr { border: none; height: 1px; margin: 2.4em 0; background: linear-gradient(90deg, var(--line) 0%, var(--line) 62%, transparent 100%); }
+.prose a { color: var(--coral-deep); font-weight: 600; text-underline-offset: 2px; }
+.prose a:hover { text-decoration: underline; }
 /* 题号自动链接（速备包里的 sql-11/pd-01… → 练习台对应题）：点线下划提示可点 */
 .prose a.qlink { border-bottom: 1px dashed currentColor; }
 

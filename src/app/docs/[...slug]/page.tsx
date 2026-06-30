@@ -55,7 +55,7 @@ export default async function DocPage({
   const d = await getDict();
 
   return (
-    <>
+    <div className="doc-page">
       <p className="small">
         <Link href="/docs">{d.docsDoc.back}</Link>{" "}
         <span className="muted">
@@ -111,6 +111,6 @@ export default async function DocPage({
           tasks={getTaskLines(body).map((t) => ({ text: t.text, checked: t.checked }))}
         />
       </div>
-    </>
+    </div>
   );
 }
