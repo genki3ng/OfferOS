@@ -460,10 +460,11 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 /* —— 段落 / 列表 / 强调 —— */
 /* 段落之间留足空气（远大于句内换行），形成清晰的两级节奏，长文不糊成一团 */
 .prose p { margin: 0 0 1.5em; }
-/* 句子级换行（markdown.ts breakLongParagraphs 注入）：长段落按句末标点拆成一句一行，
-   断点处 <br class="sb"> 当成块级、给一句一行明显的上间距（>普通折行的行距），
-   这样「一句一行」看得出是分开的点、不再是均匀一团 */
-.prose br.sb { display: block; content: ""; margin-top: 0.95em; }
+/* 句子级换行（markdown.ts breakLongParagraphs 注入）：长段落按句末标点拆成一句一行。
+   断点 = 一个空的块级 span，用「显式高度」撑出句间空隙（明显大于普通折行的行距），
+   这样「段间距 > 行间距」一眼看得出、不再均匀糊成一团。
+   （注：<br> 设 display:block 后 margin 不生效 → gap 仍只有一个行高，故改用带高度的块 span。） */
+.prose .sb { display: block; height: 0.85em; }
 .prose ul, .prose ol { margin: 0 0 1.05em; padding-left: 1.45em; }
 .prose li { margin: 0.32em 0; }
 .prose li::marker { color: var(--coral); }

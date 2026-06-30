@@ -97,11 +97,13 @@ export function breakLongParagraphs(html: string): string {
     let broken = inner
       .split(PROTECTED_RE)
       // split 捕获组：奇数下标 = 受保护块/标签，原样保留；偶数下标 = 可拆的纯文本。
+      // 断点插一个空的块级 <span class="sb">：它既换行、又用显式高度撑出句间空隙
+      //（<br> 设 display:block 后 margin 不生效＝gap 仍只有一个行高，看不出分段——已实测）。
       .map((seg: string, i: number) =>
-        i % 2 === 1 ? seg : seg.replace(SENT_BREAK_RE, '$1<br class="sb">')
+        i % 2 === 1 ? seg : seg.replace(SENT_BREAK_RE, '$1<span class="sb"></span>')
       )
       .join("");
-    broken = broken.replace(/<br class="sb">\s*$/, ""); // 去掉段末多余断行
+    broken = broken.replace(/<span class="sb"><\/span>\s*$/, ""); // 去掉段末多余空隙
     return broken === inner ? full : `<p>${broken}</p>`;
   });
 }
