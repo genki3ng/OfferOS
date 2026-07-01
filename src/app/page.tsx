@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Countdown from "./Countdown";
+import FollowupRadar from "./FollowupRadar";
 import Greeting from "@/components/Greeting";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { getDict } from "@/i18n/server";
@@ -181,6 +182,18 @@ export default async function Today() {
   if (waits[0]) todayList.push({ t: d.today.todoFollowUp(waits[0].name), href: `/companies/${waits[0].slug}` });
 
   // —— 统计 ——
+  // —— 跟进雷达（哪家沉默太久该催）：只传结构化字段给客户端，天数在浏览器实时算 ——
+  const followupRows = tracker
+    .filter((r) => r.awaiting && r.lastContact)
+    .map((r) => ({
+      slug: r.slug,
+      name: r.name,
+      perm: r.perm,
+      role: r.role,
+      lastContact: r.lastContact,
+      awaiting: r.awaiting,
+    }));
+
   const activeOpenings = openings.filter((o) => !o.excluded).length;
   const pct = sprint.total ? Math.round((sprint.done / sprint.total) * 100) : 0;
   const greetSub =
@@ -336,6 +349,9 @@ export default async function Today() {
 
         {/* 倒计时环 */}
         <Countdown interviews={interviewing} />
+
+        {/* 跟进雷达：哪家沉默太久该催 */}
+        {followupRows.length > 0 && <FollowupRadar rows={followupRows} />}
 
         {/* 也在今天 */}
         <section className="tile c4">

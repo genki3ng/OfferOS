@@ -169,6 +169,7 @@ export function getTracker(): TrackerRow[] {
         companies: Array<{
           name: string; slug: string | null; careers: string | null; role: string;
           tier: Tier; status: string; perm: string; referral: string; next: string;
+          lastContact?: string; awaiting?: string;
         }>;
       };
       return (data.companies ?? []).map((c) => ({
@@ -182,6 +183,8 @@ export function getTracker(): TrackerRow[] {
         referral: c.referral ?? "",
         next: c.next ?? "",
         tier: (c.tier ?? 3) as Tier,
+        lastContact: c.lastContact,
+        awaiting: c.awaiting,
       }));
     } catch {
       /* JSON 坏了就回退 markdown */

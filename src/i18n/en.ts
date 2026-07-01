@@ -10,6 +10,7 @@ import countdown from "./en/countdown";
 import dailyGuide from "./en/dailyGuide";
 import docs from "./en/docs";
 import docsDoc from "./en/docsDoc";
+import followup from "./en/followup";
 import greeting from "./en/greeting";
 import intel from "./en/intel";
 import jobs from "./en/jobs";
@@ -78,6 +79,7 @@ const en: Dict = {
   dailyGuide,
   docs,
   docsDoc,
+  followup,
   greeting,
   intel,
   jobs,

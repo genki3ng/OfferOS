@@ -41,6 +41,7 @@
 ## ✨ 它能做什么
 
 - **今日**：bento 首页——阶段轨、唯一下一步、倒计时、本周面试、该你出手了、漏斗。
+- **跟进雷达**：首页自动算出每家「已投 / 已内推 / 面完」后**沉默了几天**，按 SLA 标 🔴 该催 / 🟡 快到线 / 🟢 还在等——红条直接给下一步动作，别让 offer 因为"忘了催"而凉掉（阈值可调：内推 14 天 · 自投 21 天 · 面后 7 天 · 连接 7 天；天数浏览器实时算、不会过期）。
 - **公司 / pipeline**：目标公司库 + 各家进度，状态/内推可直接在站上改。
 - **备战 · 自带题库**：**5 套角色题库（DS / DE / SWE / PM / ML），合计约 150 道，每题都配可对照的解法**——光 DS 就有 61 道（SQL 20 · Python 17 含 LeetCode/pandas · 统计与实验 · 产品 sense · 行为面 STAR），不是只给个空壳。配 /practice 练习台抽题练习 + 自评（桌面双栏：左题表 / 右题目+要点，点即换；**编程题（SQL/Python/算法）可先在框里手写解法、点「显示要点」后与参考要点上下对照差异**；**交给 Claude 批改后，它的点评直接挂在题目卡里——可折叠的「📝 点评」框 + 题表里有点评的题标 📝 徽章**；可按**来源/标签**过滤，模板题不带公司标签）；文档/速备包里写到的题号（如 `sql-11`）会自动链到练习台对应题，点一下即开。
 - **Offers**：offer 到来时的对比 + 谈判主场（offer 前是预案）。
@@ -64,6 +65,12 @@ Claude 在每一步帮你：打磨/按公司 tailor 简历、出题找薄弱点�
   <img src="docs/screenshots/comp.png" alt="薪资 · Comp（levels.fyi 风格）" width="92%">
   <br>
   <sub><b>💰 薪资 · Comp（levels.fyi 风格）</b>：按级别的总包堆叠条（Base / 股票 / 奖金，条长随总包等比）+ 各公司样本 + 你的期望区间，给谈判一个数据锚 —— 数据源 <code>negotiation/comp-research.md</code></sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/followup-radar.png" alt="跟进雷达 · 哪家沉默太久该催" width="92%">
+  <br>
+  <sub><b>📮 跟进雷达</b>：每家「已投 / 已内推 / 面完」后沉默了几天实时算出来，按 SLA 标 🔴 该催 / 🟡 快到线 / 🟢 还在等，红条直接给动作 —— 数据来自 <code>data/tracker.json</code> 的 <code>lastContact</code> + <code>awaiting</code></sub>
 </p>
 
 <p align="center">

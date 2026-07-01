@@ -11,6 +11,7 @@ import countdown from "./zh/countdown";
 import dailyGuide from "./zh/dailyGuide";
 import docs from "./zh/docs";
 import docsDoc from "./zh/docsDoc";
+import followup from "./zh/followup";
 import greeting from "./zh/greeting";
 import intel from "./zh/intel";
 import jobs from "./zh/jobs";
@@ -79,6 +80,7 @@ const zh = {
   dailyGuide,
   docs,
   docsDoc,
+  followup,
   greeting,
   intel,
   jobs,

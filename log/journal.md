@@ -2,6 +2,12 @@
 
 > 每周/每次重要进展记一行，**倒序**（最新在上）。每场面试后顺手记。
 
+## 2026-07-01 — 📮 跟进雷达（哪家沉默太久该催，同步自上游）
+
+- 新功能：首页倒计时下方新增「跟进雷达」卡——把每家「已投 / 已内推 / 面完」后**沉默了几天**实时算出来（客户端 `new Date()`，不吃构建时间、不会过期），按分类 SLA 标 🔴 该催 / 🟡 快到线 / 🟢 还在等，红条直接给下一步动作。
+- 实现：`data/tracker.json` 每家新增可选 `lastContact`（YYYY-MM-DD）+ `awaiting`（recruiter-referred/recruiter-applied/next-round/connection）字段；纯逻辑 `src/lib/followup.ts`（SLA 标准档 = 内推14/自投21/面后7/连接7，改这里调力度）；客户端组件 `src/app/FollowupRadar.tsx`；i18n zh/en `followup` 命名空间；CSS 复用 `.moves` 风格。骨架 tracker 用虚构 Northwind 演示（recruiter-referred，守去标识化）。
+- 验收：`npm run build`（含去标识化 `check`）通过；Playwright 截图人审（Northwind 红条、零 page error）。README「✨ 它能做什么」+「📸 界面一览」（followup-radar.png，一行一个）+ CHANGELOG 未发布段 + STYLEGUIDE 数据契约均已同步。自 0.3.0 累计 5 commit、未到 bump 节奏。
+
 ## 2026-06-28 — 练习台内联显示 Claude 点评（同步自上游）
 
 - 痛点：交批改后点评写进 `prep/<role>/practice-log.md` 的「备注」列，但练习台 UI 只用了自评 emoji + 次数、把 `note` 丢了——点评只能去 `/docs/.../practice-log` 翻整张表，不挂在题上。
