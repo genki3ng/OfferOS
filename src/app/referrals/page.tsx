@@ -7,11 +7,12 @@ import {
   getOutreachTemplates,
   readDoc,
 } from "@/lib/data";
-import { renderInline, renderMarkdown } from "@/lib/markdown";
+import { renderInline, renderMarkdown, splitLogSegments } from "@/lib/markdown";
 import ReferralAdvance from "@/components/ReferralAdvance";
 import ReferralKit, { type KitJob } from "@/components/ReferralKit";
 import ColdOutreachKit from "@/components/ColdOutreachKit";
 import ClampHtml from "@/components/ClampHtml";
+import LogSteps from "@/components/LogSteps";
 import { getDict } from "@/i18n/server";
 
 export const metadata: Metadata = { title: "内推渠道" };
@@ -96,12 +97,38 @@ export default async function ReferralsPage() {
                         </td>
                       ) : j === 0 ? (
                         <td key={j} data-label={(header[j] ?? "").replace(/\*\*/g, "")} style={{ minWidth: 110, fontWeight: 650 }}>
-                          <span dangerouslySetInnerHTML={{ __html: renderInline(c, "pipeline") }} />
+                          {(() => {
+                            // 「TikTok（recruiter inbound · 电商/Shop）」→ 主名一行 + 括注小字一行
+                            const m = c.match(/^([^（(]+)[（(](.+)[）)]\s*$/);
+                            return m ? (
+                              <>
+                                <span dangerouslySetInnerHTML={{ __html: renderInline(m[1].trim(), "pipeline") }} />
+                                <small className="ref-qual" dangerouslySetInnerHTML={{ __html: renderInline(m[2].trim(), "pipeline") }} />
+                              </>
+                            ) : (
+                              <span dangerouslySetInnerHTML={{ __html: renderInline(c, "pipeline") }} />
+                            );
+                          })()}
                           <ReferralKit channel={c} template={templateFor(c)} jobs={jobsFor(c)} />
                         </td>
                       ) : (
                         <td key={j} data-label={(header[j] ?? "").replace(/\*\*/g, "")}>
-                          <ClampHtml html={renderInline(c, "pipeline")} lines={3} />
+                          {splitLogSegments(c).length > 1 ? (
+                            <LogSteps
+                              items={splitLogSegments(c).map((g) => ({
+                                icon: g.icon,
+                                html: renderInline(g.text, "pipeline"),
+                              }))}
+                              max={3}
+                            />
+                          ) : (
+                            // 长文格给保底列宽（cell-wide），短格（处理速度等）不占
+                            <ClampHtml
+                              className={Array.from(c.replace(/[*`~]/g, "")).length > 16 ? "cell-wide" : ""}
+                              html={renderInline(c, "pipeline")}
+                              lines={3}
+                            />
+                          )}
                         </td>
                       )
                     )}

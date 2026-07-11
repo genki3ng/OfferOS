@@ -149,6 +149,36 @@ export function renderInline(md: string, baseDir = ""): string {
   return linkifyQuestionIds(rewriteLinks(html, baseDir));
 }
 
+/* ---------- 日志式长句 → 结构化步骤（tracker「下一步」/「内推」等字段的排版出口） ----------
+   这类字段是流水句：「🎉过首轮→终轮邀请(…)。✅已回信(…)；⏳等排期」——整段灌出来没版式。
+   按「顶层 。；;」拆成步骤（括号内的分隔符不拆），行首 emoji 提出来当步骤图标，
+   配 <LogSteps> 组件渲染成带图标的分行清单。 */
+export interface LogSeg {
+  icon: string; // 行首状态 emoji（✅🎉⏳…），无则空
+  text: string; // 该步骤正文（markdown，交 renderInline）
+}
+export function splitLogSegments(raw: string): LogSeg[] {
+  const s = (raw || "").trim();
+  const parts: string[] = [];
+  let depth = 0;
+  let cur = "";
+  for (const ch of s) {
+    if (ch === "（" || ch === "(" || ch === "[" || ch === "「") depth++;
+    else if (ch === "）" || ch === ")" || ch === "]" || ch === "」") depth = Math.max(0, depth - 1);
+    if (depth === 0 && (ch === "。" || ch === "；" || ch === ";")) {
+      if (cur.trim()) parts.push(cur.trim());
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts.map((t) => {
+    const m2 = t.match(/^([\p{Extended_Pictographic}️‍]+)\s*/u);
+    return m2 ? { icon: m2[1], text: t.slice(m2[0].length).trim() } : { icon: "", text: t };
+  });
+}
+
 // 候选题号 token（宽松形状）；是否真链接由"题库里是否存在该 id"决定 → 零误报。
 const QID_CANDIDATE = /\b[a-z]{2,6}-\d+\b/g;
 // 受保护块：<pre>/<code>/既有 <a> 内部 + 任意标签本体（属性里）都不改写。

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTracker, getOpenings, pillClass } from "@/lib/data";
-import { renderInline } from "@/lib/markdown";
+import { renderInline, splitLogSegments } from "@/lib/markdown";
 import { getDict } from "@/i18n/server";
 import StatusCell from "./StatusCell";
 import PipelineCompanyJobs, { PipelineJob } from "./PipelineCompanyJobs";
 import LivePipeline, { LiveBadge, StatusHint } from "./LivePipeline";
-import ClampHtml from "@/components/ClampHtml";
+import LogSteps from "@/components/LogSteps";
+import NoteField from "@/components/NoteField";
 
 export const metadata: Metadata = { title: "公司" };
 
@@ -110,26 +111,26 @@ export default async function PipelinePage() {
 
                       <div className="cmd-meta">
                         <StatusCell companyCell={r.company} companyName={r.name} status={r.status} />
-                        <span
-                          className={`${pillClass(r.perm)} note`}
-                          dangerouslySetInnerHTML={{ __html: renderInline(r.perm, "pipeline") }}
-                        />
+                        <NoteField value={r.perm} />
                         <StatusHint slug={r.slug ?? ""} initial={pinned} />
                       </div>
 
                       {r.referral && (
                         <div className="cmd-ref">
                           <span className="lbl">{d.pipeline.referral}</span>
-                          <span
-                            className={`${pillClass(r.referral)} note`}
-                            dangerouslySetInnerHTML={{ __html: renderInline(r.referral, "pipeline") }}
-                          />
+                          <NoteField value={r.referral} />
                         </div>
                       )}
 
                       {r.next && (
                         <div className="cmd-next">
-                          <ClampHtml html={renderInline(r.next, "pipeline")} lines={3} />
+                          <LogSteps
+                            items={splitLogSegments(r.next).map((g) => ({
+                              icon: g.icon,
+                              html: renderInline(g.text, "pipeline"),
+                            }))}
+                            max={3}
+                          />
                         </div>
                       )}
 

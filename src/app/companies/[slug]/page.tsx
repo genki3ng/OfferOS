@@ -11,10 +11,11 @@ import {
   getTaskLines,
   pillClass,
 } from "@/lib/data";
-import { renderMarkdown, renderInline } from "@/lib/markdown";
+import { renderMarkdown, renderInline, splitLogSegments } from "@/lib/markdown";
 import Prose from "@/components/Prose";
 import QuickPanel from "@/components/QuickPanel";
-import ClampHtml from "@/components/ClampHtml";
+import LogSteps from "@/components/LogSteps";
+import NoteField from "@/components/NoteField";
 import { getDict } from "@/i18n/server";
 
 export function generateStaticParams() {
@@ -108,19 +109,23 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
         {row && (
           <div className="cmd-meta">
             <span className="pill blue">{row.status}</span>
-            <span className={`${pillClass(row.perm)} note`}
-              dangerouslySetInnerHTML={{ __html: "PERM " + renderInline(row.perm, "pipeline") }} />
-            {row.referral && (
-              <span className={`${pillClass(row.referral)} note`}
-                dangerouslySetInnerHTML={{ __html: "内推 " + renderInline(row.referral, "pipeline") }} />
-            )}
+            <NoteField value={row.perm} prefix="PERM" />
+            {row.referral && <NoteField value={row.referral} prefix="内推" />}
           </div>
         )}
 
         {row?.next && (
           <div className="co-next">
             <span className="lbl">{d.company.nextStep}</span>
-            <ClampHtml className="val" html={renderInline(row.next, "pipeline")} lines={4} />
+            <div className="val">
+              <LogSteps
+                items={splitLogSegments(row.next).map((g) => ({
+                  icon: g.icon,
+                  html: renderInline(g.text, "pipeline"),
+                }))}
+                max={4}
+              />
+            </div>
           </div>
         )}
 
