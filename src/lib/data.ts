@@ -797,7 +797,8 @@ export function getSprintWeeks(): { weeks: SprintWeek[]; parallel: SprintTask[] 
 export interface AgendaItem {
   date: string; // YYYY-MM-DD
   time?: string; // 当天具体时间（如 "14:00 PT" / "10:30–11:00"），从同格的日期文本里抽出来
-  label: string; // 渲染用 markdown
+  label: string; // 原始全文（markdown）：关键词过滤 / hover 全文用
+  labelShort: string; // 摘要后的一行事件名：所有卡片/列表渲染一律用它（见 shortEvtLabel）
   company: string;
   slug: string | null;
   source: string; // 来源文件相对路径
@@ -812,6 +813,45 @@ const TIME_RE =
 function extractTime(s: string): string {
   const m = (s || "").match(TIME_RE);
   return m ? m[0].replace(/\s+/g, " ").trim() : "";
+}
+
+/** 事件 label 摘要器：关键日期 / 「下一步」常是日志式长句（细节、括注、多个句子），
+ *  卡片一行放不下 → 全站渲染一律走这里出的短标题，全文留在 label（hover title / 公司文件可看）。
+ *  规则：去 markdown 与状态记号 → 剥掉日期列已单独显示的日期/星期/时间 →
+ *  砍长括注（细节堆叠）留短括注（人名/轮次/状态）→ 只留第一句 → 超长先丢尾部括注再硬截 64 字。 */
+export function shortEvtLabel(raw: string): string {
+  let s = (raw || "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // markdown 链接 → 纯文本
+    .replace(/[*`~]/g, "")
+    .replace(/^[\s·\-—:：\p{Extended_Pictographic}️]+/u, "")
+    .trim();
+  // 日期/星期/时间在卡片里单独有「日期列」→ 从标题里剥掉，避免重复占位
+  s = s
+    .replace(/(?:周[一二三四五六日天]\s*)?\d{4}-\d{1,2}-\d{1,2}\s*(?:[（(]\s*周[一二三四五六日天]\s*[)）])?\s*/g, "")
+    .replace(
+      /\d{1,2}:\d{2}(?:\s*[–\-~]\s*\d{1,2}:\d{2})?(?:\s*[AaPp][Mm])?(?:\s*(?:P[DS]?T|E[DS]?T|C[DS]?T|M[DS]?T|UTC|GMT))?/g,
+      ""
+    )
+    .replace(/^\d{1,2}[-/]\d{1,2}\s*/, "") // 行首孤立 MM-DD（⏰ 前缀已在上游剥掉日期本体时可能残留）
+    .replace(/\s*·\s*(?=·|[=（(/／]|$)/g, " ")
+    .replace(/^[\s·\-—:：]+/, "")
+    .replace(/\s{2,}/g, " ");
+  // 括注：短的是关键信息（人名/轮次/状态），留；长的是细节堆叠，砍
+  s = s.replace(/（([^（）]*)）|\(([^()]*)\)/g, (m, a, b) =>
+    Array.from(a ?? b ?? "").length > 20 ? "" : m
+  );
+  // 只留第一句（。；换行前；「——」后面是引文/细节）——全文仍在 label 里
+  const stop = s.search(/[。；;\n]|——/);
+  if (stop > 0) s = s.slice(0, stop);
+  s = s.replace(/[·:：=\-–—\s]+$/, "").trim();
+  // 超长：先从尾部丢括注，再硬截兜底
+  let chars = Array.from(s);
+  while (chars.length > 64 && /（[^（）]*）\s*$|\([^()]*\)\s*$/.test(s)) {
+    s = s.replace(/（[^（）]*）\s*$|\([^()]*\)\s*$/, "").replace(/[·:：=\-–—\s]+$/, "").trim();
+    chars = Array.from(s);
+  }
+  if (chars.length > 64) s = chars.slice(0, 63).join("").trimEnd() + "…";
+  return s;
 }
 
 export function getAgenda(): AgendaItem[] {
@@ -846,6 +886,7 @@ export function getAgenda(): AgendaItem[] {
         date: d[0],
         time: extractTime(t),
         label,
+        labelShort: shortEvtLabel(label),
         company: name,
         slug,
         source: `pipeline/companies/${slug}.md`,
@@ -859,10 +900,12 @@ export function getAgenda(): AgendaItem[] {
   for (const r of tracker) {
     const m = r.next.match(/⏰\s*(\d{1,2})[-/](\d{1,2})/);
     if (!m) continue;
+    const nextLabel = r.next.replace(/⏰\s*\d{1,2}[-/]\d{1,2}\s*/, "");
     out.push({
       date: `2026-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`,
       time: extractTime(r.next),
-      label: r.next.replace(/⏰\s*\d{1,2}[-/]\d{1,2}\s*/, ""),
+      label: nextLabel,
+      labelShort: shortEvtLabel(nextLabel),
       company: r.name,
       slug: r.slug,
       source: "pipeline/tracker.md",
@@ -882,6 +925,7 @@ export function getAgenda(): AgendaItem[] {
           date: d[0],
           time: extractTime(joined),
           label: `offer：${row[0]}`,
+          labelShort: shortEvtLabel(`offer：${row[0]}`),
           company: row[0],
           slug: null,
           source: "negotiation/offers.md",

@@ -525,6 +525,7 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .agenda-list { list-style: none; margin: 0; padding: 0; }
 .agenda-row { display: flex; gap: 13px; padding: 11px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--t-base); align-items: baseline; }
 .agenda-row:last-child { border-bottom: none; }
+.agenda-row .agenda-label { min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .agenda-date { flex: 0 0 92px; font-weight: 800; white-space: nowrap; }
 .agenda-date em { display: block; font-style: normal; font-weight: 600; font-size: var(--t-xs); color: var(--ink-faint); }
 .agenda-time { color: var(--coral-deep); font-weight: 700; white-space: nowrap; }
@@ -599,7 +600,7 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .hero .when { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--amber-deep); background: var(--amber-soft); padding: 7px 13px; border-radius: 999px; white-space: nowrap; }
 /* 面试当天具体时间——在日期 pill 里高亮（醒目分隔 + 强调色），别让用户漏看几点 */
 .hero .when .when-time { font-weight: 850; color: var(--coral-deep); padding-left: 8px; border-left: 1.5px solid color-mix(in srgb, var(--amber-deep) 35%, transparent); }
-.hero h2 { font-size: var(--t-2xl); font-weight: 800; letter-spacing: -0.6px; line-height: 1.18; color: var(--ink); margin: 0; }
+.hero h2 { font-size: var(--t-2xl); font-weight: 800; letter-spacing: -0.6px; line-height: 1.18; color: var(--ink); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .hero .sub { font-size: var(--t-md); color: var(--ink-soft); margin-top: 11px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
 .hero .sub .chip { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; padding: 0; cursor: default; }
 .hero .sub .chip svg { color: var(--ink-faint); flex: none; }
@@ -612,13 +613,13 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 
 /* 紧随其后的第二场（背靠背时高亮，提醒同步准备） */
 .hero-ondeck { margin-top: 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; background: var(--tile); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 15px; transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
-.hero-ondeck:hover { border-color: color-mix(in srgb, var(--coral) 40%, var(--line)); transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+.hero-ondeck:hover { text-decoration: none; border-color: color-mix(in srgb, var(--coral) 40%, var(--line)); transform: translateY(-1px); box-shadow: var(--shadow-soft); }
 .hero-ondeck.b2b { border-color: color-mix(in srgb, var(--coral) 38%, var(--line)); background: color-mix(in srgb, var(--coral-soft) 55%, var(--tile)); }
 .hero-ondeck .od-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
 .hero-ondeck .od-tag { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-faint); }
 .hero-ondeck.b2b .od-tag { color: var(--coral-deep); }
 .hero-ondeck .od-tag .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); animation: pulse 2s infinite; }
-.hero-ondeck .od-body b { font-size: var(--t-md); font-weight: 700; color: var(--ink); line-height: 1.25; overflow-wrap: anywhere; }
+.hero-ondeck .od-body b { font-size: var(--t-md); font-weight: 700; color: var(--ink); line-height: 1.25; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .hero-ondeck .od-body small { font-size: 12px; color: var(--ink-soft); }
 .hero-ondeck .od-arrow { color: var(--ink-faint); flex: none; }
 .hero-ondeck:hover .od-arrow { color: var(--coral-deep); }
@@ -663,7 +664,7 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .events .body { flex: 1; padding: 3px 0; min-width: 0; }
 .events .body .ttl { font-size: var(--t-base); font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .events .body .ttl .when2 { font-size: 12px; font-weight: 700; color: var(--coral); }
-.events .body .desc { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+.events .body .desc { font-size: 13px; color: var(--ink-soft); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* 该你出手了（公司） */
 .moves { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
@@ -850,7 +851,7 @@ table.data tr:hover td { background: color-mix(in srgb, var(--coral) 4%, transpa
 .co-date-row .d { flex: 0 0 86px; font-weight: 800; color: var(--ink); white-space: nowrap; }
 .co-date-row .d.soon { color: var(--amber-deep); }
 .co-date-row .d.past { color: var(--ink-faint); font-weight: 600; }
-.co-date-row .lab { color: var(--ink-soft); }
+.co-date-row .lab { color: var(--ink-soft); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .co-links { display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px dashed var(--line); padding-top: 14px; }
 .co-link { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 11px; border: 1px solid var(--line); background: var(--tile); color: var(--ink-soft); }
 .co-link:hover { border-color: color-mix(in srgb, var(--coral) 35%, var(--line)); color: var(--ink); text-decoration: none; }

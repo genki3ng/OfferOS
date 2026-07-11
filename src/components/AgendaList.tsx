@@ -45,9 +45,9 @@ export default function AgendaList({
         {i.date.slice(5)}
         <em>{od ? d.agendaList.overdue(-days(i.date)) : days(i.date) === 0 ? d.agendaList.today : d.agendaList.daysOut(days(i.date))}</em>
       </span>
-      <span>
+      <span className="agenda-label" title={i.label}>
         {i.slug ? <Link href={`/companies/${i.slug}`}>{i.company}</Link> : i.company}{" "}
-        {i.label}
+        {i.labelShort || i.label}
         {i.time ? <b className="agenda-time"> · {i.time}</b> : null}
       </span>
     </li>

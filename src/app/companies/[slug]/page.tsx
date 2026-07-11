@@ -133,7 +133,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
               return (
                 <div className="co-date-row" key={i}>
                   <span className={`d ${cls}`}>{evt.date.slice(5)} <span className="muted" style={{ fontWeight: 500 }}>· {rel}</span></span>
-                  <span className="lab">{cleanEvt(evt.label)}</span>
+                  <span className="lab" title={cleanEvt(evt.label)}>{evt.labelShort}</span>
                 </div>
               );
             })}

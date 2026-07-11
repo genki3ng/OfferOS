@@ -265,7 +265,7 @@ export default async function Today() {
                 {next.time ? <b className="when-time">{next.time}</b> : null}
               </span>
             </div>
-            <h2>{next.company ? `${next.company} · ${cleanEvt(next.label)}` : cleanEvt(next.label)}</h2>
+            <h2 title={cleanEvt(next.label)}>{next.company ? `${next.company} · ${next.labelShort}` : next.labelShort}</h2>
             <div className="sub">
               {nextCo?.role && (
                 <span className="chip">
@@ -307,7 +307,7 @@ export default async function Today() {
                     {backToBack && <span className="pulse" />}
                     {backToBack ? d.today.onDeckB2B : d.today.onDeckNext}
                   </span>
-                  <b>{secondary.company ? `${secondary.company} · ${cleanEvt(secondary.label)}` : cleanEvt(secondary.label)}</b>
+                  <b title={cleanEvt(secondary.label)}>{secondary.company ? `${secondary.company} · ${secondary.labelShort}` : secondary.labelShort}</b>
                   <small>
                     {whenLabel(secondary.date, d.today.dow, d.today.whenLabel)}
                     {secondary.time ? ` · ${secondary.time}` : ""}
@@ -407,7 +407,7 @@ export default async function Today() {
                       <div className="ttl">
                         {ev.slug ? <Link href={`/companies/${ev.slug}`}>{ev.company || ev.label}</Link> : ev.company || ev.label}
                       </div>
-                      <div className="desc">{cleanEvt(ev.label)}</div>
+                      <div className="desc" title={cleanEvt(ev.label)}>{ev.labelShort}</div>
                     </div>
                   </li>
                 );
