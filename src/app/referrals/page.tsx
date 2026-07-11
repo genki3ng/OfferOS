@@ -11,6 +11,7 @@ import { renderInline, renderMarkdown } from "@/lib/markdown";
 import ReferralAdvance from "@/components/ReferralAdvance";
 import ReferralKit, { type KitJob } from "@/components/ReferralKit";
 import ColdOutreachKit from "@/components/ColdOutreachKit";
+import ClampHtml from "@/components/ClampHtml";
 import { getDict } from "@/i18n/server";
 
 export const metadata: Metadata = { title: "内推渠道" };
@@ -99,11 +100,9 @@ export default async function ReferralsPage() {
                           <ReferralKit channel={c} template={templateFor(c)} jobs={jobsFor(c)} />
                         </td>
                       ) : (
-                        <td
-                          key={j}
-                          data-label={(header[j] ?? "").replace(/\*\*/g, "")}
-                          dangerouslySetInnerHTML={{ __html: renderInline(c, "pipeline") }}
-                        />
+                        <td key={j} data-label={(header[j] ?? "").replace(/\*\*/g, "")}>
+                          <ClampHtml html={renderInline(c, "pipeline")} lines={3} />
+                        </td>
                       )
                     )}
                   </tr>

@@ -4,6 +4,7 @@ import agendaList from "./en/agendaList";
 import ask from "./en/ask";
 import askButton from "./en/askButton";
 import coldOutreach from "./en/coldOutreach";
+import common from "./en/common";
 import company from "./en/company";
 import comp from "./en/comp";
 import countdown from "./en/countdown";
@@ -73,6 +74,7 @@ const en: Dict = {
   ask,
   askButton,
   coldOutreach,
+  common,
   company,
   comp,
   countdown,

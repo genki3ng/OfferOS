@@ -5,6 +5,7 @@ import agendaList from "./zh/agendaList";
 import ask from "./zh/ask";
 import askButton from "./zh/askButton";
 import coldOutreach from "./zh/coldOutreach";
+import common from "./zh/common";
 import company from "./zh/company";
 import comp from "./zh/comp";
 import countdown from "./zh/countdown";
@@ -74,6 +75,7 @@ const zh = {
   ask,
   askButton,
   coldOutreach,
+  common,
   company,
   comp,
   countdown,

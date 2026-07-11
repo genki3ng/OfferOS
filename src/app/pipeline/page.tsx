@@ -6,6 +6,7 @@ import { getDict } from "@/i18n/server";
 import StatusCell from "./StatusCell";
 import PipelineCompanyJobs, { PipelineJob } from "./PipelineCompanyJobs";
 import LivePipeline, { LiveBadge, StatusHint } from "./LivePipeline";
+import ClampHtml from "@/components/ClampHtml";
 
 export const metadata: Metadata = { title: "公司" };
 
@@ -98,7 +99,7 @@ export default async function PipelinePage() {
                             {r.slug ? <Link href={`/companies/${r.slug}`}>{r.name}</Link> : r.name}
                             <span className={`tier-badge tier-${r.tier}`}>{tierName[r.tier]}</span>
                           </span>
-                          <span className="role">{r.role}</span>
+                          <span className="role">{r.role.replace(/[*_`~]/g, "")}</span>
                         </div>
                         {r.careers && (
                           <a className="cmd-careers" href={r.careers} target="_blank" rel="noopener noreferrer" title={d.pipeline.careersTitle}>
@@ -110,8 +111,7 @@ export default async function PipelinePage() {
                       <div className="cmd-meta">
                         <StatusCell companyCell={r.company} companyName={r.name} status={r.status} />
                         <span
-                          className={pillClass(r.perm)}
-                          style={{ whiteSpace: "normal" }}
+                          className={`${pillClass(r.perm)} note`}
                           dangerouslySetInnerHTML={{ __html: renderInline(r.perm, "pipeline") }}
                         />
                         <StatusHint slug={r.slug ?? ""} initial={pinned} />
@@ -121,15 +121,16 @@ export default async function PipelinePage() {
                         <div className="cmd-ref">
                           <span className="lbl">{d.pipeline.referral}</span>
                           <span
-                            className={pillClass(r.referral)}
-                            style={{ whiteSpace: "normal" }}
+                            className={`${pillClass(r.referral)} note`}
                             dangerouslySetInnerHTML={{ __html: renderInline(r.referral, "pipeline") }}
                           />
                         </div>
                       )}
 
                       {r.next && (
-                        <div className="cmd-next" dangerouslySetInnerHTML={{ __html: renderInline(r.next, "pipeline") }} />
+                        <div className="cmd-next">
+                          <ClampHtml html={renderInline(r.next, "pipeline")} lines={3} />
+                        </div>
                       )}
 
                       {r.slug && <PipelineCompanyJobs slug={r.slug} companyName={r.name} jobs={pinned} />}

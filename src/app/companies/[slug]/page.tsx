@@ -14,6 +14,7 @@ import {
 import { renderMarkdown, renderInline } from "@/lib/markdown";
 import Prose from "@/components/Prose";
 import QuickPanel from "@/components/QuickPanel";
+import ClampHtml from "@/components/ClampHtml";
 import { getDict } from "@/i18n/server";
 
 export function generateStaticParams() {
@@ -107,10 +108,10 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
         {row && (
           <div className="cmd-meta">
             <span className="pill blue">{row.status}</span>
-            <span className={pillClass(row.perm)} style={{ whiteSpace: "normal" }}
+            <span className={`${pillClass(row.perm)} note`}
               dangerouslySetInnerHTML={{ __html: "PERM " + renderInline(row.perm, "pipeline") }} />
             {row.referral && (
-              <span className={pillClass(row.referral)} style={{ whiteSpace: "normal" }}
+              <span className={`${pillClass(row.referral)} note`}
                 dangerouslySetInnerHTML={{ __html: "内推 " + renderInline(row.referral, "pipeline") }} />
             )}
           </div>
@@ -119,7 +120,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
         {row?.next && (
           <div className="co-next">
             <span className="lbl">{d.company.nextStep}</span>
-            <span className="val" dangerouslySetInnerHTML={{ __html: renderInline(row.next, "pipeline") }} />
+            <ClampHtml className="val" html={renderInline(row.next, "pipeline")} lines={4} />
           </div>
         )}
 

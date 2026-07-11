@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getToken, saveOpeningPin, saveOpeningAttitude } from "@/lib/githubClient";
 import { useDict } from "@/i18n/client";
+import ClampHtml from "@/components/ClampHtml";
 
 export interface JobItem {
   company: string;
@@ -17,7 +18,9 @@ export interface JobItem {
   title: string;
   location: string;
   anchor: string; // 写回定位用（行内链接或标题）
-  html: string; // 已渲染好的原文行
+  appIcon: string; // 投递进度 emoji（📮/🗣️/🏆/🛑，无则空）
+  descHtml: string; // 说明段（已去掉标题/地点，渲染好的行内 HTML）
+  searchText: string; // 原文行（只喂关键词搜索，不渲染）
   sectionDate: string;
 }
 
@@ -134,7 +137,7 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
       .filter((j) => (company ? j.company === company : true))
       .filter((j) =>
         kw
-          ? (j.title + j.location + j.company + j.html).toLowerCase().includes(kw)
+          ? (j.title + j.location + j.company + j.searchText).toLowerCase().includes(kw)
           : true
       )
       .sort(sorters[sortBy] ?? byDefault);
@@ -263,7 +266,13 @@ export default function JobsTable({ jobs }: { jobs: JobItem[] }) {
                     {j.hot ? "🎯" : ""}
                     {"⭐".repeat(j.stars)}
                   </td>
-                  <td data-label={d.jobs.dlRole} dangerouslySetInnerHTML={{ __html: j.html }} />
+                  <td data-label={d.jobs.dlRole} className="job-cell">
+                    <div className="job-title">
+                      {j.appIcon && <span className="job-status">{j.appIcon}</span>}
+                      {j.title}
+                    </div>
+                    {j.descHtml && <ClampHtml html={j.descHtml} lines={2} className="job-desc" />}
+                  </td>
                   <td className="muted" data-label={d.jobs.dlLocation}>{j.location}</td>
                   <td className="muted small" data-label={d.jobs.dlFetched} style={{ whiteSpace: "nowrap" }}>
                     {j.sectionDate}
