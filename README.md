@@ -1,6 +1,6 @@
 # OfferOS 🎯
 
-![version](https://img.shields.io/badge/version-0.3-ff6b6b) ![Next.js](https://img.shields.io/badge/Next.js-15-000000) ![PWA](https://img.shields.io/badge/PWA-installable-5a67d8) ![i18n](https://img.shields.io/badge/i18n-%E4%B8%AD%2FEN-2ea44f) ![license](https://img.shields.io/badge/license-MIT-blue)
+![version](https://img.shields.io/badge/version-0.4-ff6b6b) ![Next.js](https://img.shields.io/badge/Next.js-15-000000) ![PWA](https://img.shields.io/badge/PWA-installable-5a67d8) ![i18n](https://img.shields.io/badge/i18n-%E4%B8%AD%2FEN-2ea44f) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 > 拿 offer 的操作系统——一个 **「你 + Claude」协作**、端到端管理整场求职的系统：**计划 → 准备 → 投递 / 内推 → 面试 → 谈判 → 复盘**。
 
@@ -201,9 +201,11 @@ npm run build    # 部署前自检（Vercel 同款构建）
 
 ---
 
-## 🗒️ 版本 · v0.3
+## 🗒️ 版本 · v0.4
 
-当前 **v0.3**（站点页脚也会显示）。完整变更见 **[CHANGELOG.md](CHANGELOG.md)**。
+当前 **v0.4**（站点页脚也会显示）。完整变更见 **[CHANGELOG.md](CHANGELOG.md)**。
+
+- **v0.4**：**全站排版打磨**——事件标题自动摘要成一行事件名（hover 全文）、「下一步」等流水句拆成**带状态图标的步骤清单**、PERM/内推长句走**彩色便签块**、岗位库说明列「标题 + 折叠说明」、内推表列宽修根；新增**跟进雷达**（沉默天数 + SLA 该催提示）；`/docs` 文档阅读体验大改（阅读列宽 / 语义 callout / 句子级换行）；练习台语言题也支持口述作答对照。
 
 - **v0.3**：练习台交批改后**点评内联挂在题目卡**（可折叠「📝 点评」框 + 题表 📝 徽章）、编程题**自由 coding 框**先手写再对照要点；今日卡 / 时间线显示面试**具体时间**；修文本选中在深色框看不清；题库「题面必须具体可作答」契约 + 去标识化铁律细化。
 - **v0.2**：修文档 frontmatter 标题渲染（不再把 `---…---` 当大标题）、时间线「逾期 / 待投」判定逻辑（历史里程碑不再误判逾期、投递待办按 tracker 真实阶段分组）；页脚版本号 + 本「保持更新」指南。
